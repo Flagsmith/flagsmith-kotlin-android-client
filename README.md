@@ -38,8 +38,6 @@ In new gradle version 7+ write at file "settings.gradle"
 
 ## Tutorial 
 
-see full Android Tutorial Project https://github.com/AbdallahAndroid/Flagsmith_tutorial_android
-
 ### Android App Screens
 
 
