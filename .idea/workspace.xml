@@ -9,7 +9,10 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f19fd5b2-9167-4101-9f10-32d88f9cd0f2" name="Changes" comment="updated README" />
+    <list default="true" id="f19fd5b2-9167-4101-9f10-32d88f9cd0f2" name="Changes" comment="remove test tutorial">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/drawable-v24/ic_launcher_foreground.xml" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -202,7 +205,14 @@
       <option name="project" value="LOCAL" />
       <updated>1664783825180</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="remove test tutorial">
+      <created>1664784440834</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1664784440834</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -220,6 +230,7 @@
     <MESSAGE value="Updated commit with example app. Overriding previous commit due to account issues" />
     <MESSAGE value="Updated workspace files." />
     <MESSAGE value="updated README" />
-    <option name="LAST_COMMIT_MESSAGE" value="updated README" />
+    <MESSAGE value="remove test tutorial" />
+    <option name="LAST_COMMIT_MESSAGE" value="remove test tutorial" />
   </component>
 </project>
