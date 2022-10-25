@@ -10,12 +10,10 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.flagsmith.builder.Flagsmith
-import com.flagsmith.interfaces.ITraitUpdate
-import com.flagsmith.response.ResponseTraitUpdate
-import com.flagmsith.R
+import com.flagmsith.android.R
 
 import com.flagsmith.android.helper.Helper
-
+import com.flagsmith.response.Trait
 
 
 class TraitCreateActivity : AppCompatActivity() {
@@ -51,15 +49,13 @@ class TraitCreateActivity : AppCompatActivity() {
 
     }
 
-
     private fun initBuilder() {
         flagBuilder = Flagsmith.Builder()
-            .tokenApi( Helper.tokenApiKey)
-            .environmentId(Helper.environmentDevelopmentKey)
-            .identity( Helper.identifierUserKey)
+            .apiAuthToken( Helper.tokenApiKey)
+            .environmentKey(Helper.environmentDevelopmentKey)
+            .context(baseContext)
             .build()
     }
-
 
     private fun setupButtonSave() {
         bt_save_trait.setOnClickListener {
@@ -89,36 +85,18 @@ class TraitCreateActivity : AppCompatActivity() {
     }
 
     private fun apiStart( key : String , value : String ) {
-
         //progress start
         prg_pageTraitCreate.visibility = View.VISIBLE
 
-        //listener
-        flagBuilder.createTrait(  key, value, object  : ITraitUpdate {
-            override fun success(response: ResponseTraitUpdate) {
-
-
-                Helper.callViewInsideThread( activity) {
-                    //progress end
-                    prg_pageTraitCreate.visibility = View.GONE
-
-                    finishClassAfterSeeToast()
-                }
-
+        flagBuilder.setTrait(Trait(key = key, value = value), Helper.identity) { result ->
+            Helper.callViewInsideThread(activity) {
+                prg_pageTraitCreate.visibility = View.GONE
+                result.fold(
+                    onSuccess = { finishClassAfterSeeToast() },
+                    onFailure = { t -> Toast.makeText(activity, t.localizedMessage , Toast.LENGTH_SHORT).show() }
+                )
             }
-
-            override fun failed(str: String) {
-
-
-                Helper.callViewInsideThread( activity) {
-                    //progress end
-                    prg_pageTraitCreate.visibility = View.GONE
-
-                    Toast.makeText(activity, str , Toast.LENGTH_SHORT).show()
-                }
-
-            }
-        })
+        }
     }
 
     private fun finishClassAfterSeeToast() {

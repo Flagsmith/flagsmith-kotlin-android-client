@@ -9,12 +9,6 @@ import java.util.concurrent.TimeUnit
 
 
 class ApiManager {
-
-
-    object BaseUrl{
-        const val Url ="https://edge.api.flagsmith.com/api/v1/"
-    }
-
     var url: String
     var passBody: HashMap<String, String>? = null
     var postJsonRaw: String? = null
@@ -27,8 +21,8 @@ class ApiManager {
     var res: String? = null
 
     //status of request
-    var request_status = false
-    var request_failed_msg: String? = null
+    var responseStatusSuccessful: Boolean = false
+    var requestFailedException: Exception? = null
     var isCompleteBefore //to called interface finish, to avoid call two times
             = false
     var headers: HashMap<String, String>?
@@ -38,13 +32,9 @@ class ApiManager {
         headers: HashMap<String, String>?,
         iFinish: INetworkListener?
     ) {
-
         this.url = url
         this.headers = headers
         this.iFinish = iFinish
-        println("OkhttpNetwork - start url: $url")
-        println("OkhttpNetwork - param:  $passBody")
-        //start
         startApi()
     }
 
@@ -71,8 +61,8 @@ class ApiManager {
     }
 
     private fun chooseTypeOfRequestStatus() {
-        val isValidResponse = res != null && res!!.isNotEmpty()
-        if (request_status && isValidResponse) {
+        val isValidResponse = res != null
+        if (responseStatusSuccessful && isValidResponse) {
             finishSuccess()
             return
         } else {
@@ -82,14 +72,13 @@ class ApiManager {
     }
 
     private fun finishSuccess() {
-
         //check called before
         if (isCompleteBefore) return
+
         if (iFinish != null) {
-            iFinish!!.success(res)
+            iFinish?.success(res)
         }
         isCompleteBefore = true
-
     }
 
     private fun finishFailed() {
@@ -98,7 +87,7 @@ class ApiManager {
             return
         }
         if (iFinish != null) {
-            iFinish!!.failed(request_failed_msg)
+            iFinish?.failed(requestFailedException ?: IllegalStateException("Request failed for unknown reason"))
         }
         isCompleteBefore = true
     }
@@ -107,14 +96,14 @@ class ApiManager {
         try {
             val response = client!!.newCall(request!!).execute()
             res = response.body!!.string()
-            request_status = true
+            responseStatusSuccessful = response.isSuccessful
         } catch (es: SecurityException) {
-            request_status = false
-            request_failed_msg = es.toString()
+            responseStatusSuccessful = false
+            requestFailedException = es
             return
         } catch (e: Exception) {
-            request_failed_msg = e.toString()
-            request_status = false
+            requestFailedException = e
+            responseStatusSuccessful = false
             return
         }
     }
@@ -195,9 +184,7 @@ class ApiManager {
         request = requestBuilder!!.build()
     }
 
-
     private fun addHeaders() {
-
         requestBuilder!!.header("Content-Type", "application/json")
 
         if (headers == null) return
@@ -206,7 +193,6 @@ class ApiManager {
             requestBuilder!!.header(it.key, it.value)
         }
     }
-
 
     private fun clientWithRetry(): OkHttpClient {
         val client = OkHttpClient.Builder()

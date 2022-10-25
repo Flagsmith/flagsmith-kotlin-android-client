@@ -1,8 +1,8 @@
 package com.flagsmith.interfaces
 
-import com.flagsmith.response.ResponseFlagElement
+import com.flagsmith.response.Flag
 
 interface IFlagSingle {
-    fun success(flag: ResponseFlagElement)
+    fun success(flag: Flag)
     fun failed(str: String)
 }

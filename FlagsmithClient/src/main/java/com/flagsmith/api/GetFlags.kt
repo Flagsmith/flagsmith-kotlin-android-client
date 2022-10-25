@@ -1,23 +1,22 @@
 package com.flagsmith.api
 
 
+import android.net.Uri
 import com.flagsmith.builder.Flagsmith
-import com.flagsmith.interfaces.IFlagArrayResult
-import com.flagsmith.response.ResponseFlagElement
+import com.flagsmith.response.Flag
 import com.flagsmith.interfaces.INetworkListener
 import com.flagsmith.android.network.NetworkFlag
 import com.flagsmith.android.network.ApiManager
+import com.flagsmith.interfaces.IFlagArrayResult
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.net.URLEncoder
 
-class Flag(builder: Flagsmith, finish: IFlagArrayResult) {
-
-
+class GetFlags(builder: Flagsmith, finish: IFlagArrayResult) {
     var finish: IFlagArrayResult
     var builder: Flagsmith
 
     init {
-
         this.finish = finish
         this.builder = builder
 
@@ -25,27 +24,24 @@ class Flag(builder: Flagsmith, finish: IFlagArrayResult) {
     }
 
     private fun startAPI() {
-        val url = ApiManager.BaseUrl.Url + "flags/"
+        val url = builder.baseUrl + "flags/"
 
-        ApiManager(url, NetworkFlag.getNetworkHeader(builder), object :
-            INetworkListener {
+        ApiManager(url, NetworkFlag.getNetworkHeader(builder), object : INetworkListener {
             override fun success(response: String?) {
                 _parse(response!!, finish)
             }
 
-            override fun failed(error: String?) {
-                finish.failed(error!!)
+            override fun failed(exception: Exception) {
+                finish.failed(exception.localizedMessage ?: "Error getting flags")
             }
-
         })
     }
-
 
     fun _parse(json: String, finish: IFlagArrayResult) {
         try {
             val gson = Gson()
-            val type = object : TypeToken<ArrayList<ResponseFlagElement>>() {}.type
-            val responseFromJson: ArrayList<ResponseFlagElement> = gson.fromJson(json, type)
+            val type = object : TypeToken<ArrayList<Flag>>() {}.type
+            val responseFromJson: ArrayList<Flag> = gson.fromJson(json, type)
             println("parse() - responseFromJson: $responseFromJson")
 
             //finish
@@ -54,6 +50,4 @@ class Flag(builder: Flagsmith, finish: IFlagArrayResult) {
             finish.failed("exception: $e")
         }
     }
-
-
 }

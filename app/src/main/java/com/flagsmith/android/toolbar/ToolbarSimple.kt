@@ -3,7 +3,7 @@ package com.flagsmith.android.toolbar
 import android.app.Activity
 import android.view.View
 import android.widget.TextView
-import com.flagmsith.R
+import com.flagmsith.android.R
 
 class ToolbarSimple(activity: Activity, resIdInclude: Int, var title: String) {
 

@@ -10,9 +10,8 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flagsmith.builder.Flagsmith
-import com.flagsmith.interfaces.IFlagArrayResult
-import com.flagsmith.response.ResponseFlagElement
-import com.flagmsith.R
+import com.flagsmith.response.Flag
+import com.flagmsith.android.R
 import com.flagsmith.android.adapter.FlagAdapter
 import com.flagsmith.android.adapter.FlagPickerSelect
 
@@ -43,10 +42,10 @@ class FlagListActivity : AppCompatActivity() {
         rv_flags = findViewById(R.id.rv_flags);
         prg_flags = findViewById(R.id.prg_flags)
 
-        initBuilder();
-
-        setupToolbar();
-
+        initBuilder()
+        setupToolbar()
+        checkWithHasFeatureFlag()
+        checkWithGetValueForFeature()
     }
 
     private fun setupToolbar() {
@@ -56,60 +55,69 @@ class FlagListActivity : AppCompatActivity() {
 
     private fun initBuilder() {
         flagBuilder = Flagsmith.Builder()
-            .tokenApi( Helper.tokenApiKey)
-            .environmentId(Helper.environmentDevelopmentKey)
-            .identity( Helper.identifierUserKey)
+            .apiAuthToken( Helper.tokenApiKey)
+            .environmentKey(Helper.environmentDevelopmentKey)
+            .context(context)
             .build();
     }
 
+    private fun checkWithHasFeatureFlag() {
+        println("************************* checkWithHasFeatureFlag *************************")
+        flagBuilder.hasFeatureFlag("no-value") {
+            println("hasFeatureFlag 'no-value' $it")
+        }
+        flagBuilder.hasFeatureFlag("not-found") {
+            println("hasFeatureFlag 'not-found' $it")
+        }
+    }
+
+    private fun checkWithGetValueForFeature() {
+        println("************************* checkWithGetValueForFeature *************************")
+        flagBuilder.getValueForFeature("no-value") {
+            println("getValueForFeature 'no-value' $it")
+        }
+        flagBuilder.getValueForFeature("not-found") {
+            println("getValueForFeature 'not-found' $it")
+        }
+        flagBuilder.getValueForFeature("with-value") {
+            println("getValueForFeature 'with-value' $it")
+        }
+    }
 
     private fun getAllData() {
-
         //progress
         prg_flags.visibility = View.VISIBLE
 
         //listener
-        flagBuilder.getFeatureFlags(   object : IFlagArrayResult{
-            override fun success(list: ArrayList<ResponseFlagElement>) {
+        flagBuilder.getFeatureFlags(Helper.identity) { result ->
+            Helper.callViewInsideThread( activity) {
+                prg_flags.visibility = View.GONE
 
-                Helper.callViewInsideThread( activity) {
-                    //progress
-                    prg_flags.visibility = View.GONE
+                result.fold(
+                    onSuccess = { list ->
+                        if (list.isEmpty()) {
+                            Toast.makeText(this@FlagListActivity, "No Data Found", Toast.LENGTH_SHORT)
+                                .show()
+                            return@callViewInsideThread;
+                        }
 
-                    //check size
-                    if (list.size == 0) {
-                        Toast.makeText(this@FlagListActivity, "No Data Found", Toast.LENGTH_SHORT)
-                            .show()
-                        return@callViewInsideThread;
+                        //list
+                        createAdapterFlag(list);
+                    },
+                    onFailure = { e ->
+                        Toast.makeText(activity, e.localizedMessage, Toast.LENGTH_SHORT).show()
                     }
-
-                    //list
-                    createAdapterFlag(list);
-                }
-
+                )
             }
-            override fun failed(str: String) {
-
-                Helper.callViewInsideThread( activity) {
-                    //progress
-                    prg_flags.visibility = View.GONE
-
-                    //toast
-                    Toast.makeText(activity, str, Toast.LENGTH_SHORT).show()
-                }
-
-
-            }
-        })
+        }
     }
 
-
-    private fun createAdapterFlag(list: ArrayList<ResponseFlagElement>) {
+    private fun createAdapterFlag(list: List<Flag>) {
         val manager = LinearLayoutManager(context )
         manager.orientation = LinearLayoutManager.VERTICAL
         rv_flags.layoutManager = manager
         val customAdapter = FlagAdapter(  context , list, object : FlagPickerSelect{
-            override fun click(favContact: ResponseFlagElement?) {
+            override fun click(favContact: Flag?) {
 
             }
         })

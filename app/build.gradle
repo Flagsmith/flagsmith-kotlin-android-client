@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace 'com.flagmsith'
+    namespace 'com.flagmsith.android'
     compileSdk 33
 
     defaultConfig {

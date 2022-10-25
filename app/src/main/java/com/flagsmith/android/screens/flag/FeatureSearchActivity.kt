@@ -8,8 +8,8 @@ import android.widget.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flagsmith.builder.Flagsmith
-import com.flagsmith.response.ResponseFlagElement
-import com.flagmsith.R
+import com.flagsmith.response.Flag
+import com.flagmsith.android.R
 import com.flagsmith.android.adapter.FlagAdapter
 import com.flagsmith.android.adapter.FlagPickerSelect
 
@@ -24,9 +24,7 @@ class FeatureSearchActivity : AppCompatActivity() {
     lateinit var prg_pageFeatureSearch : ProgressBar
     lateinit var rv_featureResult : RecyclerView
 
-
     lateinit var flagBuilder : Flagsmith
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,9 +47,9 @@ class FeatureSearchActivity : AppCompatActivity() {
 
     private fun initBuilder() {
         flagBuilder = Flagsmith.Builder()
-            .tokenApi( Helper.tokenApiKey)
-            .environmentId(Helper.environmentDevelopmentKey)
-            .identity( Helper.identifierUserKey)
+            .apiAuthToken( Helper.tokenApiKey)
+            .environmentKey(Helper.environmentDevelopmentKey)
+            .context(baseContext)
             .build()
     }
 
@@ -80,26 +78,60 @@ class FeatureSearchActivity : AppCompatActivity() {
         //keybaord
         Helper.keyboardHidden( activity )
 
-        flagBuilder.getFeatureFlags(searchText)
+        flagBuilder.getFeatureFlags(Helper.identity) { result ->
+            Helper.callViewInsideThread( activity) {
+                prg_pageFeatureSearch.visibility = View.GONE
+                result.fold(
+                    onSuccess = { flags ->
+                        val flag = flags.find { flag -> flag.feature.name == searchText }
+                        if (flag != null) {
+                            createAdapterFlag(flag)
+                        } else {
+//                            Toast.makeText(this@FeatureSearchActivity, "Couldn't find feature", Toast.LENGTH_SHORT)
+//                                .show()
+                        }
+                    },
+                    onFailure = { e ->
+                        Toast.makeText(activity, e.localizedMessage, Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
+        }
+
+        // Also check with hasFeatureFlag to ensure that we're clocking the search on the analytics
+        flagBuilder.hasFeatureFlag(searchText, Helper.identity) { result ->
+            Helper.callViewInsideThread( activity) {
+                result.fold(
+                    onSuccess = { result ->
+                        if (result) {
+                            Toast.makeText(this@FeatureSearchActivity, "Feature found", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this@FeatureSearchActivity, "Couldn't find feature with hasFeatureFlag", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onFailure = { e ->
+                        Toast.makeText(activity, e.localizedMessage, Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
+        }
     }
 
 
-    private fun createAdapterFlag( flag: ResponseFlagElement) {
-
-        val list: ArrayList<ResponseFlagElement> = ArrayList()
+    private fun createAdapterFlag( flag: Flag) {
+        val list: ArrayList<Flag> = ArrayList()
         list.add( flag )
-
 
         val manager = LinearLayoutManager( activity )
         manager.orientation = LinearLayoutManager.VERTICAL
         rv_featureResult.layoutManager = manager
         val customAdapter = FlagAdapter(  activity , list, object : FlagPickerSelect {
-            override fun click(favContact: ResponseFlagElement?) {
+            override fun click(favContact: Flag?) {
 
             }
         })
-        rv_featureResult.adapter = customAdapter
 
+        rv_featureResult.adapter = customAdapter
         rv_featureResult.visibility = View.VISIBLE
     }
 
