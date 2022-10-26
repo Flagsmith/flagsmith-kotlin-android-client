@@ -5,6 +5,8 @@ install:
   - echo "Running a custom install command"
   - ./gradlew clean :FlagSmithClient:build -xtest  # needs to be install?
   - echo "Copying the build output"
-  - cp -r FlagsmithClient/build .
+  - ls -al
+  - pwd
+  - cp -r ./FlagsmithClient/build .
 env:
   MYVAR: "custom environment variable"
