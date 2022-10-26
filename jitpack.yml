@@ -1,5 +1,4 @@
-#jdk:
-#  - openjdk8 - this should be the default
+jdk: openjdk11
 #before_install:
 #  - ./custom_setup.sh
 install:
