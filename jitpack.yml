@@ -1,4 +1,9 @@
 jdk:
-  - openjdk11
-  - before_install:
-      - ./scripts/prepareJitpackEnvironment.sh
+  - openjdk8
+#before_install:
+#  - ./custom_setup.sh
+install:
+  - echo "Running a custom install command"
+  - ./gradlew clean build -xtest # needs to be install?
+env:
+  MYVAR: "custom environment variable"
