@@ -4,6 +4,8 @@ plugins {
     id 'maven-publish'
 }
 
+// group='com.flagsmith'
+
 android {
     compileSdk 33
 
@@ -16,6 +18,8 @@ android {
 
         versionCode 2
         versionName "0.0.2"
+
+        namespace 'com.flagsmith.kotlin'
     }
 
     buildTypes {
