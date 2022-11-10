@@ -9,9 +9,9 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.flagsmith.builder.Flagsmith
-import com.flagsmith.response.Flag
-import com.flagmsith.android.R
+import com.flagsmith.Flagsmith
+import com.flagsmith.entities.Flag
+import com.flagsmith.android.R
 import com.flagsmith.android.adapter.FlagAdapter
 import com.flagsmith.android.adapter.FlagPickerSelect
 
@@ -21,7 +21,7 @@ import com.flagsmith.android.toolbar.ToolbarSimple
 
 class FlagListActivity : AppCompatActivity() {
 
-    lateinit var flagBuilder : Flagsmith
+    lateinit var flagsmith : Flagsmith
 
     lateinit var activity: Activity
     lateinit var context : Context;
@@ -44,8 +44,6 @@ class FlagListActivity : AppCompatActivity() {
 
         initBuilder()
         setupToolbar()
-        checkWithHasFeatureFlag()
-        checkWithGetValueForFeature()
     }
 
     private fun setupToolbar() {
@@ -54,34 +52,7 @@ class FlagListActivity : AppCompatActivity() {
 
 
     private fun initBuilder() {
-        flagBuilder = Flagsmith.Builder()
-            .apiAuthToken( Helper.tokenApiKey)
-            .environmentKey(Helper.environmentDevelopmentKey)
-            .context(context)
-            .build();
-    }
-
-    private fun checkWithHasFeatureFlag() {
-        println("************************* checkWithHasFeatureFlag *************************")
-        flagBuilder.hasFeatureFlag("no-value") {
-            println("hasFeatureFlag 'no-value' $it")
-        }
-        flagBuilder.hasFeatureFlag("not-found") {
-            println("hasFeatureFlag 'not-found' $it")
-        }
-    }
-
-    private fun checkWithGetValueForFeature() {
-        println("************************* checkWithGetValueForFeature *************************")
-        flagBuilder.getValueForFeature("no-value") {
-            println("getValueForFeature 'no-value' $it")
-        }
-        flagBuilder.getValueForFeature("not-found") {
-            println("getValueForFeature 'not-found' $it")
-        }
-        flagBuilder.getValueForFeature("with-value") {
-            println("getValueForFeature 'with-value' $it")
-        }
+        flagsmith = Flagsmith(environmentKey = Helper.environmentDevelopmentKey, context = context)
     }
 
     private fun getAllData() {
@@ -89,7 +60,7 @@ class FlagListActivity : AppCompatActivity() {
         prg_flags.visibility = View.VISIBLE
 
         //listener
-        flagBuilder.getFeatureFlags(Helper.identity) { result ->
+        flagsmith.getFeatureFlags(Helper.identity) { result ->
             Helper.callViewInsideThread( activity) {
                 prg_flags.visibility = View.GONE
 

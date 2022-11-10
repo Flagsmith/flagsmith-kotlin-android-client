@@ -1,20 +1,18 @@
-package com.flagsmith.api
+package com.flagsmith.internal
 
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
-import com.flagsmith.android.network.AnalyticsTrackFlagAPI
-import com.flagsmith.builder.Flagsmith
-import com.flagsmith.interfaces.IEventUpdate
+import android.util.Log
+import com.flagsmith.Flagsmith
+import com.github.kittinunf.fuel.Fuel
 import org.json.JSONException
 import org.json.JSONObject
 
 class FlagsmithAnalytics constructor(
-    private val builder: Flagsmith,
     private val context: Context,
-    private val flushPeriod: Int,
-
+    private val flushPeriod: Int
 ) {
     private val applicationContext: Context = context.applicationContext
     private val currentEvents = getMap()
@@ -22,16 +20,14 @@ class FlagsmithAnalytics constructor(
 
     private val timerRunnable = object : Runnable {
         override fun run() {
-            println("Handler called on main thread")
             if (currentEvents.isNotEmpty()) {
-                AnalyticsTrackFlagAPI(builder, currentEvents, object : IEventUpdate {
-                    override fun success() {
-                        resetMap()
+                Fuel.request(FlagsmithApi.postAnalytics(eventMap = currentEvents))
+                    .response { _, _, res ->
+                        res.fold(
+                            success = { resetMap() },
+                            failure = { err -> Log.e("FLAGSMITH","Failed posting analytics - ${err.localizedMessage}") }
+                        )
                     }
-                    override fun failed(exception: Exception) {
-                        println("Failed posting analytics - ${exception.localizedMessage}")
-                    }
-                })
             }
             timerHandler.postDelayed(this, flushPeriod.toLong() * 1000)
         }
@@ -50,7 +46,7 @@ class FlagsmithAnalytics constructor(
         val currentFlagCount = currentEvents[flagName] ?: 0
         currentEvents[flagName] = currentFlagCount + 1;
 
-        //update events cache
+        // Update events cache
         setMap(currentEvents)
     }
 
@@ -82,7 +78,7 @@ class FlagsmithAnalytics constructor(
                 }
             }
         } catch (e: JSONException) {
-            e.printStackTrace()
+            Log.e("FLAGSMITH", "Exception in getMap Analytics - ${e.stackTraceToString()}")
         }
         return outputMap
     }

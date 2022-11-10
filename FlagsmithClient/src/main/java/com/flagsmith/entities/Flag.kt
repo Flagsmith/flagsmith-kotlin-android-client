@@ -1,7 +1,17 @@
-package com.flagsmith.response
+package com.flagsmith.entities
 
+import com.github.kittinunf.fuel.core.ResponseDeserializable
+import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import com.google.gson.reflect.TypeToken
+import java.io.Reader
 
+class FlagListDeserializer: ResponseDeserializable<List<Flag>> {
+    override fun deserialize(reader: Reader): List<Flag>? {
+        val type = object : TypeToken<ArrayList<Flag>>() {}.type
+        return Gson().fromJson<ArrayList<Flag>?>(reader, type)
+    }
+}
 
 data class Flag(
     val feature: Feature,

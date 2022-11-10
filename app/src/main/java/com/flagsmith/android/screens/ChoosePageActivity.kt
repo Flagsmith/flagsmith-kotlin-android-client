@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import com.flag.android.screens.flag.FeatureSearchActivity
-import com.flagmsith.android.R
+import com.flagsmith.android.R
 import com.flagsmith.android.screens.flag.FlagListActivity
 import com.flagsmith.android.screens.trait.TraitsActivity
 

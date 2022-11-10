@@ -19,5 +19,5 @@ For full documentation visit [https://docs.flagsmith.com/clients/android](https:
 To run the unit tests and develop using this repository you'll need to set your environment key using the environment variable `ENVIRONMENT_KEY`. E.g. to run the unit tests:
 
 ```bash
-ENVIRONMENT_KEY=F5X.... ./gradlew  :FlagSmithClient:testDebugUnitTest
+ENVIRONMENT_KEY=F5X.... ./gradlew  :FlagsmithClient:testDebugUnitTest
 ```

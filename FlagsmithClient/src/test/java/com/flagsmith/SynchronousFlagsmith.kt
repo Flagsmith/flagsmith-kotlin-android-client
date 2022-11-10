@@ -1,10 +1,9 @@
 package com.flagsmith
 
-import com.flagsmith.builder.Flagsmith
-import com.flagsmith.response.Flag
-import com.flagsmith.response.IdentityFlagsAndTraits
-import com.flagsmith.response.Trait
-import com.flagsmith.response.TraitWithIdentity
+import com.flagsmith.entities.Flag
+import com.flagsmith.entities.IdentityFlagsAndTraits
+import com.flagsmith.entities.Trait
+import com.flagsmith.entities.TraitWithIdentity
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 

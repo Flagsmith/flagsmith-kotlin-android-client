@@ -8,8 +8,8 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
-import com.flagsmith.response.Trait
-import com.flagmsith.android.R
+import com.flagsmith.entities.Trait
+import com.flagsmith.android.R
 
 
 interface TraitPickerSelect {

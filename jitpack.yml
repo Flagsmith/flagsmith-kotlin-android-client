@@ -4,7 +4,7 @@ jdk: openjdk11
 install:
   - echo "Running a custom install command"
   # - ./gradlew clean build -xtest  # needs to be install?
-  - ./gradlew clean :FlagSmithClient:compileDebugKotlin :FlagSmithClient:compileDebugKotlin -xtest
+  - ./gradlew clean :FlagsmithClient:compileDebugKotlin :FlagsmithClient:compileDebugKotlin -xtest
   - echo "Copying the build output"
   - ls -al
   - pwd

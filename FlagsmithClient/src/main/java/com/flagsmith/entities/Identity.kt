@@ -1,4 +1,4 @@
-package com.flagsmith.response
+package com.flagsmith.entities
 
 data class Identity(
     val identifier: String

@@ -1,17 +1,13 @@
 package com.flagsmith
 
-import com.flagsmith.builder.Flagsmith
-import com.flagsmith.response.Trait
+import com.flagsmith.entities.Trait
 import junit.framework.Assert.*
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
 class TraitsTests {
 
-    private val flagsmith = Flagsmith.Builder()
-        .environmentKey(System.getenv("ENVIRONMENT_KEY") ?: "")
-        .enableAnalytics(false)
-        .build();
+    private val flagsmith = Flagsmith(environmentKey = System.getenv("ENVIRONMENT_KEY") ?: "", enableAnalytics = false)
 
     @Test
     fun testGetTraitsDefinedForPerson() {
