@@ -31,7 +31,7 @@ class Flagsmith constructor(
         const val DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS = 10
     }
 
-    fun getFeatureFlags(identity: String?, result: (Result<List<Flag>>) -> Unit) {
+    fun getFeatureFlags(identity: String? = null, result: (Result<List<Flag>>) -> Unit) {
         if (identity != null) {
             Fuel.request(
                 FlagsmithApi.getIdentityFlagsAndTraits(identity = identity))
