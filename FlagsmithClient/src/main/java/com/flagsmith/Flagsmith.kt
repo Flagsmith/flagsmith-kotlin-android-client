@@ -12,7 +12,7 @@ import com.github.kittinunf.fuel.Fuel
  * The main interface to all of the Flagsmith functionality
  *
  * @property environmentKey Take this API key from the Flagsmith dashboard and pass here
- * @property baseUrl By default we'll connect to the Flagsmith backend, but if you self-host you can configur here
+ * @property baseUrl By default we'll connect to the Flagsmith backend, but if you self-host you can configure here
  * @property context The current context is required to use the Flagsmith Analytics functionality
  * @property enableAnalytics Enable analytics - default true
  * @property analyticsFlushPeriod The period in seconds between attempts by the Flagsmith SDK to push analytic events to the server
