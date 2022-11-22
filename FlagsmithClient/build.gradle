@@ -37,8 +37,6 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
     }
-
-    ext.environmentKey = System.getenv('ENVIRONMENT_KEY') ?: ""
 }
 
 dependencies {
