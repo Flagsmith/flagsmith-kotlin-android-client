@@ -5,7 +5,6 @@ import com.flagsmith.internal.FlagsmithApi
 import com.flagsmith.internal.*
 import com.flagsmith.entities.*
 import com.github.kittinunf.fuel.Fuel
-import kotlin.reflect.KProperty1
 import com.github.kittinunf.result.Result as FuelResult
 
 /**
@@ -59,29 +58,19 @@ class Flagsmith constructor(
     }
 
     fun hasFeatureFlag(
-        forFeatureId: String,
+        featureId: String,
         identity: String? = null,
         result: (Result<Boolean>) -> Unit
-    ) = getFeatureFlags(identity) { res ->
-        result(res.map { flags ->
-            val foundFlag =
-                flags.find { flag -> flag.feature.name == forFeatureId && flag.enabled }
-            analytics?.trackEvent(forFeatureId)
-            foundFlag != null
-        })
+    ) = getFeatureFlag(featureId, identity) { res ->
+        result(res.map { flag -> flag != null })
     }
 
     fun getValueForFeature(
-        searchFeatureId: String,
+        featureId: String,
         identity: String? = null,
         result: (Result<Any?>) -> Unit
-    ) = getFeatureFlags(identity) { res ->
-        result(res.map { flags ->
-            val foundFlag =
-                flags.find { flag -> flag.feature.name == searchFeatureId && flag.enabled }
-            analytics?.trackEvent(searchFeatureId)
-            foundFlag?.featureStateValue
-        })
+    ) = getFeatureFlag(featureId, identity) { res ->
+        result(res.map { flag -> flag?.featureStateValue })
     }
 
     fun getTrait(id: String, identity: String, result: (Result<Trait?>) -> Unit) =
@@ -103,6 +92,18 @@ class Flagsmith constructor(
 
     fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
         getIdentityFlagsAndTraits(identity, result)
+
+    private fun getFeatureFlag(
+        featureId: String,
+        identity: String?,
+        result: (Result<Flag?>) -> Unit
+    ) = getFeatureFlags(identity) { res ->
+        result(res.map { flags ->
+            val foundFlag = flags.find { flag -> flag.feature.name == featureId && flag.enabled }
+            analytics?.trackEvent(featureId)
+            foundFlag
+        })
+    }
 
     private fun getIdentityFlagsAndTraits(
         identity: String,
