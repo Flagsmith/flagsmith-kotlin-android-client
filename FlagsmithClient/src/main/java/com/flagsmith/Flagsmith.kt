@@ -21,7 +21,7 @@ import com.github.kittinunf.result.Result as FuelResult
  */
 class Flagsmith constructor(
     private val environmentKey: String,
-    private val baseUrl: String? = null,
+    private val baseUrl: String = "https://edge.api.flagsmith.com/api/v1",
     private val context: Context? = null,
     private val enableAnalytics: Boolean = DEFAULT_ENABLE_ANALYTICS,
     private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS
@@ -35,7 +35,7 @@ class Flagsmith constructor(
         if (enableAnalytics && context == null) {
             throw IllegalArgumentException("Flagsmith requires a context to use the analytics feature")
         }
-        FlagsmithApi.baseUrl = baseUrl ?: "https://edge.api.flagsmith.com/api/v1"
+        FlagsmithApi.baseUrl = baseUrl
         FlagsmithApi.environmentKey = environmentKey
     }
 
