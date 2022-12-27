@@ -17,7 +17,7 @@ class TraitsTests {
             val result = flagsmith.getTraitsSync("person")
             assertTrue(result.isSuccess)
             assertTrue(result.getOrThrow().isNotEmpty())
-            assertEquals(result.getOrThrow().find { trait -> trait.key == "favourite-colour" }?.value, "electric pink")
+            assertEquals("electric pink", result.getOrThrow().find { trait -> trait.key == "favourite-colour" }?.value)
         }
     }
 
@@ -36,7 +36,7 @@ class TraitsTests {
         runBlocking {
             val result = flagsmith.getTraitSync("favourite-colour", "person")
             assertTrue(result.isSuccess)
-            assertEquals(result.getOrThrow()?.value, "electric pink")
+            assertEquals("electric pink", result.getOrThrow()?.value)
         }
     }
 
@@ -54,9 +54,9 @@ class TraitsTests {
         runBlocking {
             val result = flagsmith.setTraitSync(Trait(key = "set-from-client", value = "12345"), "person")
             assertTrue(result.isSuccess)
-            assertEquals(result.getOrThrow().key, "set-from-client")
-            assertEquals(result.getOrThrow().value, "12345")
-            assertEquals(result.getOrThrow().identity.identifier, "person")
+            assertEquals("set-from-client", result.getOrThrow().key)
+            assertEquals("12345", result.getOrThrow().value)
+            assertEquals("person", result.getOrThrow().identity.identifier)
         }
     }
 
@@ -67,7 +67,7 @@ class TraitsTests {
             assertTrue(result.isSuccess)
             assertTrue(result.getOrThrow().traits.isNotEmpty())
             assertTrue(result.getOrThrow().flags.isNotEmpty())
-            assertEquals(result.getOrThrow().traits.find { trait -> trait.key == "favourite-colour" }?.value, "electric pink")
+            assertEquals("electric pink", result.getOrThrow().traits.find { trait -> trait.key == "favourite-colour" }?.value)
         }
     }
 }

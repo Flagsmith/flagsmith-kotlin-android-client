@@ -38,7 +38,7 @@ class FeatureFlagTests {
 
             val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
             assertNotNull(found)
-            assertEquals(found?.featureStateValue, 7.0)
+            assertEquals(7.0, found?.featureStateValue)
         }
     }
 
@@ -50,7 +50,7 @@ class FeatureFlagTests {
 
             val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
             assertNotNull(found)
-            assertEquals(found?.featureStateValue, 756.0)
+            assertEquals(756.0, found?.featureStateValue)
         }
     }
 
@@ -59,7 +59,7 @@ class FeatureFlagTests {
         runBlocking {
             val result = flagsmith.getValueForFeatureSync("with-value", identity = null)
             assertTrue(result.isSuccess)
-            assertEquals(result.getOrThrow(), 7.0)
+            assertEquals(7.0, result.getOrThrow())
         }
     }
 
@@ -68,7 +68,7 @@ class FeatureFlagTests {
         runBlocking {
             val result = flagsmith.getValueForFeatureSync("with-value", identity = "person")
             assertTrue(result.isSuccess)
-            assertEquals(result.getOrThrow(), 756.0)
+            assertEquals(756.0, result.getOrThrow())
         }
     }
 
