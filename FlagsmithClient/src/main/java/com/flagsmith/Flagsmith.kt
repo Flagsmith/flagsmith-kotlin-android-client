@@ -47,7 +47,7 @@ class Flagsmith constructor(
                 result(res.map { it.flags })
             }
         } else {
-            Fuel.request(FlagsmithApi.getFlags())
+            Fuel.request(FlagsmithApi.GetFlags)
                 .responseObject(FlagListDeserializer()) { _, _, res ->
                     result(res.convertToResult())
                 }
@@ -81,7 +81,7 @@ class Flagsmith constructor(
         }
 
     fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) {
-        Fuel.request(FlagsmithApi.setTrait(trait = trait, identity = identity))
+        Fuel.request(FlagsmithApi.SetTrait(trait = trait, identity = identity))
             .responseObject(TraitWithIdentityDeserializer()) { _, _, res ->
                 result(res.convertToResult())
             }
@@ -105,7 +105,7 @@ class Flagsmith constructor(
     private fun getIdentityFlagsAndTraits(
         identity: String,
         result: (Result<IdentityFlagsAndTraits>) -> Unit
-    ) = Fuel.request(FlagsmithApi.getIdentityFlagsAndTraits(identity = identity))
+    ) = Fuel.request(FlagsmithApi.GetIdentityFlagsAndTraits(identity = identity))
         .responseObject(IdentityFlagsAndTraitsDeserializer()) { _, _, res ->
             result(res.convertToResult())
         }
