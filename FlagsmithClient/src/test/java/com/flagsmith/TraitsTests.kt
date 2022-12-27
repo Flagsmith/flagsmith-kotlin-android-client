@@ -1,8 +1,10 @@
 package com.flagsmith
 
 import com.flagsmith.entities.Trait
-import junit.framework.Assert.*
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TraitsTests {
