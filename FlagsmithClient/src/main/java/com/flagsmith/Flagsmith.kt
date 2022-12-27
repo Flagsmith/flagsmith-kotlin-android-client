@@ -47,10 +47,9 @@ class Flagsmith constructor(
 
     fun getFeatureFlags(identity: String? = null, result: (Result<List<Flag>>) -> Unit) {
         if (identity != null) {
-            Fuel.request(FlagsmithApi.getIdentityFlagsAndTraits(identity = identity))
-                .responseObject(IdentityFlagsAndTraitsDeserializer()) { _, _, res ->
-                    result(res.convertToResult(IdentityFlagsAndTraits::flags))
-                }
+            getIdentityFlagsAndTraits(identity) { res ->
+                result(res.map { it.flags })
+            }
         } else {
             Fuel.request(FlagsmithApi.getFlags())
                 .responseObject(FlagListDeserializer()) { _, _, res ->
@@ -63,51 +62,37 @@ class Flagsmith constructor(
         forFeatureId: String,
         identity: String? = null,
         result: (Result<Boolean>) -> Unit
-    ) {
-        getFeatureFlags(identity) { res ->
-            res.fold(
-                onSuccess = { flags ->
-                    val foundFlag =
-                        flags.find { flag -> flag.feature.name == forFeatureId && flag.enabled }
-                    analytics?.trackEvent(forFeatureId)
-                    result(Result.success(foundFlag != null))
-                },
-                onFailure = { err -> result(Result.failure(err)) }
-            )
-        }
+    ) = getFeatureFlags(identity) { res ->
+        result(res.map { flags ->
+            val foundFlag =
+                flags.find { flag -> flag.feature.name == forFeatureId && flag.enabled }
+            analytics?.trackEvent(forFeatureId)
+            foundFlag != null
+        })
     }
 
     fun getValueForFeature(
         searchFeatureId: String,
         identity: String? = null,
         result: (Result<Any?>) -> Unit
-    ) {
-        getFeatureFlags(identity) { res ->
-            res.fold(
-                onSuccess = { flags ->
-                    val foundFlag =
-                        flags.find { flag -> flag.feature.name == searchFeatureId && flag.enabled }
-                    analytics?.trackEvent(searchFeatureId)
-                    result(Result.success(foundFlag?.featureStateValue))
-                },
-                onFailure = { err -> result(Result.failure(err)) }
-            )
+    ) = getFeatureFlags(identity) { res ->
+        result(res.map { flags ->
+            val foundFlag =
+                flags.find { flag -> flag.feature.name == searchFeatureId && flag.enabled }
+            analytics?.trackEvent(searchFeatureId)
+            foundFlag?.featureStateValue
+        })
+    }
+
+    fun getTrait(id: String, identity: String, result: (Result<Trait?>) -> Unit) =
+        getIdentityFlagsAndTraits(identity) { res ->
+            result(res.map { value -> value.traits.find { it.key == id } })
         }
-    }
 
-    fun getTrait(id: String, identity: String, result: (Result<Trait?>) -> Unit) {
-        Fuel.request(FlagsmithApi.getIdentityFlagsAndTraits(identity = identity))
-            .responseObject(IdentityFlagsAndTraitsDeserializer()) { _, _, res ->
-                result(res.convertToResult { value -> value.traits.find { it.key == id } })
-            }
-    }
-
-    fun getTraits(identity: String, result: (Result<List<Trait>>) -> Unit) {
-        Fuel.request(FlagsmithApi.getIdentityFlagsAndTraits(identity = identity))
-            .responseObject(IdentityFlagsAndTraitsDeserializer()) { _, _, res ->
-                result(res.convertToResult(IdentityFlagsAndTraits::traits))
-            }
-    }
+    fun getTraits(identity: String, result: (Result<List<Trait>>) -> Unit) =
+        getIdentityFlagsAndTraits(identity) { res ->
+            result(res.map { it.traits })
+        }
 
     fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) {
         Fuel.request(FlagsmithApi.setTrait(trait = trait, identity = identity))
@@ -116,22 +101,20 @@ class Flagsmith constructor(
             }
     }
 
-    fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) {
-        Fuel.request(FlagsmithApi.getIdentityFlagsAndTraits(identity = identity))
-            .responseObject(IdentityFlagsAndTraitsDeserializer()) { _, _, res ->
-                result(res.convertToResult())
-            }
-    }
+    fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
+        getIdentityFlagsAndTraits(identity, result)
+
+    private fun getIdentityFlagsAndTraits(
+        identity: String,
+        result: (Result<IdentityFlagsAndTraits>) -> Unit
+    ) = Fuel.request(FlagsmithApi.getIdentityFlagsAndTraits(identity = identity))
+        .responseObject(IdentityFlagsAndTraitsDeserializer()) { _, _, res ->
+            result(res.convertToResult())
+        }
 
     private fun <A, B : Exception> FuelResult<A, B>.convertToResult(): Result<A> =
-        convertToResult { it }
-
-    private fun <A, B : Exception, O> FuelResult<A, B>.convertToResult(prop: KProperty1<A, O>): Result<O> =
-        convertToResult { prop(it) }
-
-    private fun <A, B : Exception, O> FuelResult<A, B>.convertToResult(map: (A) -> O): Result<O> =
         fold(
-            success = { value -> Result.success(map(value)) },
+            success = { value -> Result.success(value) },
             failure = { err -> Result.failure(err) }
         )
 }
