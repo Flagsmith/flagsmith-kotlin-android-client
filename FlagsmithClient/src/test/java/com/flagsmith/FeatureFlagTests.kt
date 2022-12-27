@@ -1,19 +1,41 @@
 package com.flagsmith
 
+import com.flagsmith.mockResponses.MockEndpoint
+import com.flagsmith.mockResponses.mockResponseFor
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
+import org.mockserver.integration.ClientAndServer
 
 class FeatureFlagTests {
 
-    private val flagsmith = Flagsmith(environmentKey = System.getenv("ENVIRONMENT_KEY") ?: "", enableAnalytics = false)
+    private lateinit var mockServer: ClientAndServer
+    private lateinit var flagsmith: Flagsmith
+
+    @Before
+    fun setup() {
+        mockServer = ClientAndServer.startClientAndServer()
+        flagsmith = Flagsmith(
+            environmentKey = System.getenv("ENVIRONMENT_KEY") ?: "",
+            baseUrl = "http://localhost:${mockServer.localPort}",
+            enableAnalytics = false
+        )
+    }
+
+    @After
+    fun tearDown() {
+        mockServer.stop()
+    }
 
     @Test
     fun testHasFeatureFlagWithFlag() {
+        mockServer.mockResponseFor(MockEndpoint.GET_FLAGS)
         runBlocking {
             val result = flagsmith.hasFeatureFlagSync("no-value")
             assertTrue(result.isSuccess)
@@ -23,6 +45,7 @@ class FeatureFlagTests {
 
     @Test
     fun testHasFeatureFlagWithoutFlag() {
+        mockServer.mockResponseFor(MockEndpoint.GET_FLAGS)
         runBlocking {
             val result = flagsmith.hasFeatureFlagSync("doesnt-exist")
             assertTrue(result.isSuccess)
@@ -32,6 +55,7 @@ class FeatureFlagTests {
 
     @Test
     fun testGetFeatureFlags() {
+        mockServer.mockResponseFor(MockEndpoint.GET_FLAGS)
         runBlocking {
             val result = flagsmith.getFeatureFlagsSync()
             assertTrue(result.isSuccess)
@@ -44,6 +68,7 @@ class FeatureFlagTests {
 
     @Test
     fun testGetFeatureFlagsWithIdentity() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         runBlocking {
             val result = flagsmith.getFeatureFlagsSync(identity = "person")
             assertTrue(result.isSuccess)
@@ -56,6 +81,7 @@ class FeatureFlagTests {
 
     @Test
     fun testGetValueForFeatureExisting() {
+        mockServer.mockResponseFor(MockEndpoint.GET_FLAGS)
         runBlocking {
             val result = flagsmith.getValueForFeatureSync("with-value", identity = null)
             assertTrue(result.isSuccess)
@@ -65,6 +91,7 @@ class FeatureFlagTests {
 
     @Test
     fun testGetValueForFeatureExistingOverriddenWithIdentity() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         runBlocking {
             val result = flagsmith.getValueForFeatureSync("with-value", identity = "person")
             assertTrue(result.isSuccess)
@@ -74,6 +101,7 @@ class FeatureFlagTests {
 
     @Test
     fun testGetValueForFeatureNotExisting() {
+        mockServer.mockResponseFor(MockEndpoint.GET_FLAGS)
         runBlocking {
             val result = flagsmith.getValueForFeatureSync("not-existing", identity = null)
             assertTrue(result.isSuccess)
@@ -83,8 +111,10 @@ class FeatureFlagTests {
 
     @Test
     fun testHasFeatureForNoIdentity() {
+        mockServer.mockResponseFor(MockEndpoint.GET_FLAGS)
         runBlocking {
-            val result = flagsmith.hasFeatureFlagSync("with-value-just-person-enabled", identity = null)
+            val result =
+                flagsmith.hasFeatureFlagSync("with-value-just-person-enabled", identity = null)
             assertTrue(result.isSuccess)
             assertFalse(result.getOrThrow())
         }
@@ -92,8 +122,10 @@ class FeatureFlagTests {
 
     @Test
     fun testHasFeatureWithIdentity() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         runBlocking {
-            val result = flagsmith.hasFeatureFlagSync("with-value-just-person-enabled", identity = "person")
+            val result =
+                flagsmith.hasFeatureFlagSync("with-value-just-person-enabled", identity = "person")
             assertTrue(result.isSuccess)
             assertTrue(result.getOrThrow())
         }
