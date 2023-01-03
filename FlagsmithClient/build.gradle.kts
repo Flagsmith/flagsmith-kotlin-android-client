@@ -1,5 +1,7 @@
+import groovy.time.TimeCategory
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import java.util.Date
 
 plugins {
     id("com.android.library")
@@ -80,17 +82,49 @@ tasks.withType(Test::class) {
         }
         info.events = debug.events
         info.exceptionFormat = debug.exceptionFormat
-
-        afterSuite(KotlinClosure2({ desc: TestDescriptor, result: TestResult ->
-            if (desc.parent == null) {
-                val output =
-                    "|  Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)  |"
-                val repeatLength = output.length
-                println("\n${"-".repeat(repeatLength)}\n$output\n${"-".repeat(repeatLength)}")
-            }
-        }))
     }
+
+    afterSuite(KotlinClosure2({ desc: TestDescriptor, result: TestResult ->
+        if (desc.parent == null) {
+            val summary = "Results: ${result.resultType} " +
+                    "(" +
+                    "${result.testCount} tests, " +
+                    "${result.successfulTestCount} passed, " +
+                    "${result.failedTestCount} failed, " +
+                    "${result.skippedTestCount} skipped" +
+                    ")"
+            val fullSummaryLine = summary.contentLine(summary.length)
+            val lineLength = fullSummaryLine.length
+            val suiteDescription = "${this.project.name}:${this.name}"
+            val duration = "in ${TimeCategory.minus(Date(result.endTime), Date(result.startTime))}"
+            val separator = tableLine(lineLength, "│", "│")
+            println("""
+                ${tableLine(lineLength, "┌", "┐")}
+                ${suiteDescription.contentLine(lineLength)}
+                $separator
+                $fullSummaryLine
+                $separator
+                ${duration.contentLine(lineLength)}
+                ${tableLine(lineLength, "└", "┘")}
+                Report file: ./${this.reports.html.entryPoint.relativeTo(rootProject.rootDir)}
+            """.trimIndent()
+            )
+        }
+    }))
 }
+
+fun String.padToLength(length: Int) =
+    this + " ".repeat(maxOf(length - this.length, 0))
+
+fun String.wrapWith(leading: String, trailing: String = leading) =
+    "$leading$this$trailing"
+
+fun String.contentLine(length: Int, extraPadding: String = "  ") =
+    "$extraPadding$this$extraPadding".padToLength(length - 2)
+        .wrapWith("│")
+
+fun tableLine(length: Int, leading: String, trailing: String) =
+    "─".repeat(length - 2).wrapWith(leading, trailing)
 
 publishing {
     publications {
