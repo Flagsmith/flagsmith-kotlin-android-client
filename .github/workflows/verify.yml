@@ -25,10 +25,12 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run unit tests
-        run: ./gradlew check
-      - name: Generate coverage reports
+        run: ./gradlew check -x koverVerify
+      - name: Generate coverage report
         run: ./gradlew koverReport
       - name: Upload coverage report
         uses: codecov/codecov-action@v2
         with:
           files: FlagsmithClient/build/reports/kover/report.xml
+      - name: Verify code coverage level
+        run: ./gradlew koverVerify
