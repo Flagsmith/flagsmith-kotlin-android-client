@@ -37,6 +37,6 @@ jobs:
           title: Code Coverage
           update-comment: true
           min-coverage-overall: 60
-          min-converage-changed-files: 80
+          min-coverage-changed-files: 80
       - name: Verify code coverage level
         run: ./gradlew koverVerify
