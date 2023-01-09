@@ -22,7 +22,7 @@ class FeatureFlagTests {
     fun setup() {
         mockServer = ClientAndServer.startClientAndServer()
         flagsmith = Flagsmith(
-            environmentKey = System.getenv("ENVIRONMENT_KEY") ?: "",
+            environmentKey = "",
             baseUrl = "http://localhost:${mockServer.localPort}",
             enableAnalytics = false
         )
