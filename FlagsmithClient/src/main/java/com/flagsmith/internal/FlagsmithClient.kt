@@ -1,14 +1,12 @@
 package com.flagsmith.internal
 
-import com.flagsmith.endpoints.FlagsmithEndpoint
-import com.flagsmith.endpoints.FlagsmithGetEndpoint
-import com.flagsmith.endpoints.FlagsmithPostEndpoint
+import com.flagsmith.endpoints.Endpoint
+import com.flagsmith.endpoints.GetEndpoint
+import com.flagsmith.endpoints.PostEndpoint
 import com.github.kittinunf.fuel.Fuel
-import com.github.kittinunf.fuel.core.HeaderValues
-import com.github.kittinunf.fuel.core.Method
-import com.github.kittinunf.fuel.core.Parameters
-import com.github.kittinunf.fuel.core.Request
+import com.github.kittinunf.fuel.core.*
 import com.github.kittinunf.fuel.util.FuelRouting
+import com.github.kittinunf.result.Result as FuelResult
 
 class FlagsmithClient(
     private val baseUrl: String,
@@ -18,21 +16,30 @@ class FlagsmithClient(
         "X-Environment-Key" to listOf(environmentKey),
     )
 
-    fun request(endpoint: FlagsmithEndpoint): Request =
+    fun <Response : Any> request(endpoint: Endpoint<Response>, handler: (Result<Response>) -> Unit) =
         Fuel.request(createRequest(endpoint))
+            .responseObject(endpoint.deserializer) { _, _, res ->
+                handler(convertToKotlinResult(res))
+            }
 
-    private fun createRequest(endpoint: FlagsmithEndpoint): FuelRouting {
+    private fun <Response : Any> createRequest(endpoint: Endpoint<Response>): FuelRouting {
         return object : FuelRouting {
             override val basePath = baseUrl
             override val body: String? = endpoint.body
             override val bytes: ByteArray? = null
             override val headers: Map<String, HeaderValues> = defaultHeaders + endpoint.headers
             override val method: Method = when (endpoint) {
-                is FlagsmithGetEndpoint -> Method.GET
-                is FlagsmithPostEndpoint -> Method.POST
+                is GetEndpoint -> Method.GET
+                is PostEndpoint -> Method.POST
             }
             override val params: Parameters? = endpoint.params
             override val path: String = endpoint.path
         }
     }
+
+    private fun <A, B : Exception> convertToKotlinResult(result: FuelResult<A, B>): Result<A> =
+        result.fold(
+            success = { value -> Result.success(value) },
+            failure = { err -> Result.failure(err) }
+        )
 }

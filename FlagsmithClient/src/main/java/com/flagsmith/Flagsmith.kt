@@ -4,10 +4,12 @@ import android.content.Context
 import com.flagsmith.endpoints.FlagsEndpoint
 import com.flagsmith.endpoints.IdentityFlagsAndTraitsEndpoint
 import com.flagsmith.endpoints.TraitsEndpoint
-import com.flagsmith.entities.*
+import com.flagsmith.entities.Flag
+import com.flagsmith.entities.IdentityFlagsAndTraits
+import com.flagsmith.entities.Trait
+import com.flagsmith.entities.TraitWithIdentity
 import com.flagsmith.internal.FlagsmithAnalytics
 import com.flagsmith.internal.FlagsmithClient
-import com.github.kittinunf.result.Result as FuelResult
 
 /**
  * Flagsmith
@@ -48,10 +50,7 @@ class Flagsmith constructor(
                 result(res.map { it.flags })
             }
         } else {
-            client.request(FlagsEndpoint)
-                .responseObject(FlagListDeserializer()) { _, _, res ->
-                    result(res.convertToResult())
-                }
+            client.request(FlagsEndpoint, result)
         }
     }
 
@@ -81,12 +80,8 @@ class Flagsmith constructor(
             result(res.map { it.traits })
         }
 
-    fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) {
-        client.request(TraitsEndpoint(trait = trait, identity = identity))
-            .responseObject(TraitWithIdentityDeserializer()) { _, _, res ->
-                result(res.convertToResult())
-            }
-    }
+    fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) =
+        client.request(TraitsEndpoint(trait = trait, identity = identity), result)
 
     fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
         getIdentityFlagsAndTraits(identity, result)
@@ -106,14 +101,5 @@ class Flagsmith constructor(
     private fun getIdentityFlagsAndTraits(
         identity: String,
         result: (Result<IdentityFlagsAndTraits>) -> Unit
-    ) = client.request(IdentityFlagsAndTraitsEndpoint(identity = identity))
-        .responseObject(IdentityFlagsAndTraitsDeserializer()) { _, _, res ->
-            result(res.convertToResult())
-        }
-
-    private fun <A, B : Exception> FuelResult<A, B>.convertToResult(): Result<A> =
-        fold(
-            success = { value -> Result.success(value) },
-            failure = { err -> Result.failure(err) }
-        )
+    ) = client.request(IdentityFlagsAndTraitsEndpoint(identity = identity), result)
 }

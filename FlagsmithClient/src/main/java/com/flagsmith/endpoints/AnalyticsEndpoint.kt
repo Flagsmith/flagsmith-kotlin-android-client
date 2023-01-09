@@ -1,6 +1,11 @@
 package com.flagsmith.endpoints
 
+import com.flagsmith.internal.EmptyDeserializer
 import com.google.gson.Gson
 
 data class AnalyticsEndpoint(private val eventMap: Map<String, Int?>) :
-    FlagsmithPostEndpoint(path = "/analytics/flags", body = Gson().toJson(eventMap))
+    PostEndpoint<Unit>(
+        path = "/analytics/flags",
+        body = Gson().toJson(eventMap),
+        deserializer = EmptyDeserializer
+    )

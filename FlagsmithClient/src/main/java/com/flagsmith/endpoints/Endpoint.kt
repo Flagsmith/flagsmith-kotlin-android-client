@@ -1,26 +1,31 @@
 package com.flagsmith.endpoints
 
-sealed interface FlagsmithEndpoint {
+import com.flagsmith.internal.Deserializer
+
+sealed interface Endpoint<Response : Any> {
     val body: String?
     val path: String
     val params: List<Pair<String, Any?>>?
     val headers: Map<String, Collection<String>>
+    val deserializer: Deserializer<Response>
 }
 
-sealed class FlagsmithGetEndpoint(
+sealed class GetEndpoint<Response : Any>(
     final override val path: String,
     final override val params: List<Pair<String, Any?>> = emptyList(),
-    final override val headers: Map<String, Collection<String>> = emptyMap()
-) : FlagsmithEndpoint {
+    final override val headers: Map<String, Collection<String>> = emptyMap(),
+    final override val deserializer: Deserializer<Response>
+) : Endpoint<Response> {
     final override val body: String? = null
 }
 
-sealed class FlagsmithPostEndpoint(
+sealed class PostEndpoint<Response : Any>(
     final override val path: String,
     final override val body: String,
     final override val params: List<Pair<String, Any?>> = emptyList(),
-    headers: Map<String, Collection<String>> = emptyMap()
-) : FlagsmithEndpoint {
+    headers: Map<String, Collection<String>> = emptyMap(),
+    final override val deserializer: Deserializer<Response>
+) : Endpoint<Response> {
     final override val headers: Map<String, Collection<String>> =
         headers + mapOf("Content-Type" to listOf("application/json"))
 }

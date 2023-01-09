@@ -21,13 +21,16 @@ class FlagsmithAnalytics constructor(
     private val timerRunnable = object : Runnable {
         override fun run() {
             if (currentEvents.isNotEmpty()) {
-                client.request(AnalyticsEndpoint(eventMap = currentEvents))
-                    .response { _, _, res ->
-                        res.fold(
-                            success = { resetMap() },
-                            failure = { err -> Log.e("FLAGSMITH","Failed posting analytics - ${err.localizedMessage}") }
-                        )
-                    }
+                client.request(AnalyticsEndpoint(eventMap = currentEvents)) {
+                    it
+                        .onSuccess { resetMap() }
+                        .onFailure { err ->
+                            Log.e(
+                                "FLAGSMITH",
+                                "Failed posting analytics - ${err.localizedMessage}"
+                            )
+                        }
+                }
             }
             timerHandler.postDelayed(this, flushPeriod.toLong() * 1000)
         }
