@@ -1,26 +1,54 @@
 package com.flagsmith
 
 import com.flagsmith.entities.Trait
-import junit.framework.Assert.*
+import com.flagsmith.mockResponses.MockEndpoint
+import com.flagsmith.mockResponses.mockResponseFor
 import kotlinx.coroutines.runBlocking
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
+import org.mockserver.integration.ClientAndServer
 
 class TraitsTests {
 
-    private val flagsmith = Flagsmith(environmentKey = System.getenv("ENVIRONMENT_KEY") ?: "", enableAnalytics = false)
+    private lateinit var mockServer: ClientAndServer
+    private lateinit var flagsmith: Flagsmith
+
+    @Before
+    fun setup() {
+        mockServer = ClientAndServer.startClientAndServer()
+        flagsmith = Flagsmith(
+            environmentKey = "",
+            baseUrl = "http://localhost:${mockServer.localPort}",
+            enableAnalytics = false
+        )
+    }
+
+    @After
+    fun tearDown() {
+        mockServer.stop()
+    }
 
     @Test
     fun testGetTraitsDefinedForPerson() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         runBlocking {
             val result = flagsmith.getTraitsSync("person")
             assertTrue(result.isSuccess)
             assertTrue(result.getOrThrow().isNotEmpty())
-            assertEquals(result.getOrThrow().find { trait -> trait.key == "favourite-colour" }?.value, "electric pink")
+            assertEquals(
+                "electric pink",
+                result.getOrThrow().find { trait -> trait.key == "favourite-colour" }?.value
+            )
         }
     }
 
     @Test
     fun testGetTraitsNotDefinedForPerson() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         runBlocking {
             val result = flagsmith.getTraitsSync("person")
             assertTrue(result.isSuccess)
@@ -31,15 +59,17 @@ class TraitsTests {
 
     @Test
     fun testGetTraitById() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         runBlocking {
             val result = flagsmith.getTraitSync("favourite-colour", "person")
             assertTrue(result.isSuccess)
-            assertEquals(result.getOrThrow()?.value, "electric pink")
+            assertEquals("electric pink", result.getOrThrow()?.value)
         }
     }
 
     @Test
     fun testGetUndefinedTraitById() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         runBlocking {
             val result = flagsmith.getTraitSync("favourite-cricketer", "person")
             assertTrue(result.isSuccess)
@@ -49,23 +79,29 @@ class TraitsTests {
 
     @Test
     fun testSetTrait() {
+        mockServer.mockResponseFor(MockEndpoint.SET_TRAIT)
         runBlocking {
-            val result = flagsmith.setTraitSync(Trait(key = "set-from-client", value = "12345"), "person")
+            val result =
+                flagsmith.setTraitSync(Trait(key = "set-from-client", value = "12345"), "person")
             assertTrue(result.isSuccess)
-            assertEquals(result.getOrThrow().key, "set-from-client")
-            assertEquals(result.getOrThrow().value, "12345")
-            assertEquals(result.getOrThrow().identity.identifier, "person")
+            assertEquals("set-from-client", result.getOrThrow().key)
+            assertEquals("12345", result.getOrThrow().value)
+            assertEquals("person", result.getOrThrow().identity.identifier)
         }
     }
 
     @Test
     fun testGetIdentity() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         runBlocking {
             val result = flagsmith.getIdentitySync("person")
             assertTrue(result.isSuccess)
             assertTrue(result.getOrThrow().traits.isNotEmpty())
             assertTrue(result.getOrThrow().flags.isNotEmpty())
-            assertEquals(result.getOrThrow().traits.find { trait -> trait.key == "favourite-colour" }?.value, "electric pink")
+            assertEquals(
+                "electric pink",
+                result.getOrThrow().traits.find { trait -> trait.key == "favourite-colour" }?.value
+            )
         }
     }
 }

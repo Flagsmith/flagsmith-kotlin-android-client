@@ -9,11 +9,11 @@ import com.github.kittinunf.fuel.core.Parameters
 import com.github.kittinunf.fuel.util.FuelRouting
 import com.google.gson.Gson
 
-sealed class FlagsmithApi: FuelRouting {
-    class getIdentityFlagsAndTraits(val identity: String): FlagsmithApi()
-    class getFlags(): FlagsmithApi()
-    class setTrait(val trait: Trait, val identity: String): FlagsmithApi()
-    class postAnalytics(val eventMap: Map<String, Int?>): FlagsmithApi()
+sealed class FlagsmithApi : FuelRouting {
+    class GetIdentityFlagsAndTraits(val identity: String) : FlagsmithApi()
+    object GetFlags : FlagsmithApi()
+    class SetTrait(val trait: Trait, val identity: String) : FlagsmithApi()
+    class PostAnalytics(val eventMap: Map<String, Int?>) : FlagsmithApi()
 
     companion object {
         var environmentKey: String? = null
@@ -29,52 +29,48 @@ sealed class FlagsmithApi: FuelRouting {
             }
         }
     override val body: String?
-        get() {
-            return when(this) {
-                is setTrait -> Gson().toJson(TraitWithIdentity(key = trait.key, value = trait.value, identity = Identity(identity)))
-                is postAnalytics -> Gson().toJson(eventMap)
-                else -> null
-            }
+        get() = when (this) {
+            is SetTrait -> Gson().toJson(
+                TraitWithIdentity(
+                    key = trait.key,
+                    value = trait.value,
+                    identity = Identity(identity)
+                )
+            )
+            is PostAnalytics -> Gson().toJson(eventMap)
+            else -> null
         }
 
-    override val bytes: ByteArray?
-        get() = null
+    override val bytes: ByteArray? = null
 
     override val headers: Map<String, HeaderValues>?
-        get() {
-            val headers = mutableMapOf<String, HeaderValues>("X-Environment-Key" to listOf(environmentKey ?: ""))
+        get() = mutableMapOf<String, HeaderValues>(
+            "X-Environment-Key" to listOf(environmentKey ?: "")
+        ).apply {
             if (method == Method.POST) {
-                headers["Content-Type"] = listOf("application/json")
+                this += "Content-Type" to listOf("application/json")
             }
-            return headers
         }
 
     override val method: Method
-        get() {
-            return when(this) {
-                is getIdentityFlagsAndTraits -> Method.GET
-                is getFlags -> Method.GET
-                is setTrait -> Method.POST
-                is postAnalytics -> Method.POST
-            }
+        get() = when (this) {
+            is GetIdentityFlagsAndTraits -> Method.GET
+            is GetFlags -> Method.GET
+            is SetTrait -> Method.POST
+            is PostAnalytics -> Method.POST
         }
 
     override val params: Parameters?
-        get() {
-            return when(this) {
-                is getIdentityFlagsAndTraits -> listOf("identifier" to this.identity)
-                is setTrait -> listOf("identifier" to this.identity)
-                else -> null
-            }
+        get() = when (this) {
+            is GetIdentityFlagsAndTraits -> listOf("identifier" to this.identity)
+            else -> null
         }
 
     override val path: String
-        get() {
-            return when(this) {
-                is getIdentityFlagsAndTraits -> "/identities"
-                is getFlags -> "/flags"
-                is setTrait -> "/traits"
-                is postAnalytics -> "/analytics/flags"
-            }
+        get() = when (this) {
+            is GetIdentityFlagsAndTraits -> "/identities"
+            is GetFlags -> "/flags"
+            is SetTrait -> "/traits"
+            is PostAnalytics -> "/analytics/flags"
         }
 }
