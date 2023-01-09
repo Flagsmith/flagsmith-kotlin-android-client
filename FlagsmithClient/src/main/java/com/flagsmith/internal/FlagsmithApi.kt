@@ -63,7 +63,6 @@ sealed class FlagsmithApi : FuelRouting {
     override val params: Parameters?
         get() = when (this) {
             is GetIdentityFlagsAndTraits -> listOf("identifier" to this.identity)
-            is SetTrait -> listOf("identifier" to this.identity)
             else -> null
         }
 
