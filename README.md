@@ -1,23 +1,32 @@
 <img width="100%" src="https://github.com/Flagsmith/flagsmith/raw/main/static-files/hero.png"/>
 
+[![Download](https://img.shields.io/maven-central/v/com.flagsmith/flagsmith-kotlin-android-client)](https://mvnrepository.com/artifact/com.flagsmith/flagsmith-kotlin-android-client)
+![build](https://github.com/Flagsmith/flagsmith-kotlin-android-client/actions/workflows/verify.yml/badge.svg)
+
 # Flagsmith Kotlin Android Client
 
-The SDK client for Kotlin based Android applications for [https://www.flagsmith.com/](https://www.flagsmith.com/). Flagsmith allows you to manage feature flags and remote config across multiple projects, environments and organisations.
+> Flagsmith allows you to manage feature flags and remote config across multiple projects, environments and organisations.
+
+The SDK client for Kotlin based Android applications for [https://www.flagsmith.com/](https://www.flagsmith.com/).
 
 ## Adding to your project
 
 For full documentation visit [https://docs.flagsmith.com/clients/android](https://docs.flagsmith.com/clients/android)
 
-## Resources
+## Contributing
 
-- [Website](https://www.flagsmith.com/)
-- [Documentation](https://docs.flagsmith.com/)
-- If you have any questions about our projects you can email [support@flagsmith.com](mailto:support@flagsmith.com)
+Please read [CONTRIBUTING.md](https://gist.github.com/kyle-ssg/c36a03aebe492e45cbd3eefb21cb0486) for details on our code of conduct, and the process for submitting pull requests
 
-## Development
+## Getting Help
 
-To run the integration tests and develop using this repository you'll need to set your environment key using the environment variable `ENVIRONMENT_KEY`. E.g. to run the integration tests:
+If you encounter a bug or feature request we would like to hear about it. Before you submit an issue please search existing issues in order to prevent duplicates.
 
-```bash
-ENVIRONMENT_KEY=F5X.... ./gradlew clean :FlagsmithClient:testDebugUnitTest
-```
+## Get in touch
+
+If you have any questions about our projects you can email <a href="mailto:support@flagsmith.com">support@flagsmith.com</a>.
+
+## Useful links
+
+[Website](https://www.flagsmith.com/)
+
+[Documentation](https://docs.flagsmith.com/)
