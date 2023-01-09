@@ -157,7 +157,7 @@ fun tableLine(length: Int, leading: String, trailing: String) =
 publishing {
     publications {
         register<MavenPublication>("release") {
-            groupId = "com.github.Flagsmith"
+            groupId = "com.flagsmith"
             artifactId = "flagsmith-kotlin-android-client"
             version = "1.0.0"
 
