@@ -23,11 +23,17 @@ android {
         consumerProguardFiles("consumer-rules.pro")
         version = "1.0.0"
         namespace = "com.flagsmith.kotlin"
+        aarMetadata {
+            minCompileSdk = 31
+        }
+        testFixtures {
+            enable = true
+        }
     }
 
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -39,7 +45,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
     testOptions {
@@ -119,7 +125,8 @@ tasks.withType(Test::class) {
             val suiteDescription = "${this.project.name}:${this.name}"
             val duration = "in ${TimeCategory.minus(Date(result.endTime), Date(result.startTime))}"
             val separator = tableLine(lineLength, "│", "│")
-            println("""
+            println(
+                """
                 ${tableLine(lineLength, "┌", "┐")}
                 ${suiteDescription.contentLine(lineLength)}
                 $separator
