@@ -134,7 +134,7 @@ tasks.withType(Test::class) {
                 $separator
                 ${duration.contentLine(lineLength)}
                 ${tableLine(lineLength, "└", "┘")}
-                Report file: ./${this.reports.html.entryPoint.relativeTo(rootProject.rootDir)}
+                Report: file:///${this.reports.html.entryPoint}
             """.trimIndent()
             )
         }
