@@ -5,7 +5,6 @@ import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.flagsmith.Flagsmith
 import com.github.kittinunf.fuel.Fuel
 import org.json.JSONException
 import org.json.JSONObject
@@ -21,7 +20,7 @@ class FlagsmithAnalytics constructor(
     private val timerRunnable = object : Runnable {
         override fun run() {
             if (currentEvents.isNotEmpty()) {
-                Fuel.request(FlagsmithApi.postAnalytics(eventMap = currentEvents))
+                Fuel.request(FlagsmithApi.PostAnalytics(eventMap = currentEvents))
                     .response { _, _, res ->
                         res.fold(
                             success = { resetMap() },
@@ -44,7 +43,7 @@ class FlagsmithAnalytics constructor(
     /// Counts the instances of a `Flag` being queried.
     fun trackEvent(flagName: String) {
         val currentFlagCount = currentEvents[flagName] ?: 0
-        currentEvents[flagName] = currentFlagCount + 1;
+        currentEvents[flagName] = currentFlagCount + 1
 
         // Update events cache
         setMap(currentEvents)

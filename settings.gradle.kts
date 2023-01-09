@@ -7,13 +7,15 @@ pluginManagement {
         mavenCentral()
     }
 }
+
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
     }
 }
-rootProject.name = "Flagsmith"
-include ':FlagsmithClient'
 
+rootProject.name = "Flagsmith"
+
+include(":FlagsmithClient")
