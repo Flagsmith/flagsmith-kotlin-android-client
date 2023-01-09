@@ -1,10 +1,12 @@
 package com.flagsmith
 
 import android.content.Context
-import com.flagsmith.internal.FlagsmithApi
-import com.flagsmith.internal.*
+import com.flagsmith.endpoints.FlagsEndpoint
+import com.flagsmith.endpoints.IdentityFlagsAndTraitsEndpoint
+import com.flagsmith.endpoints.TraitsEndpoint
 import com.flagsmith.entities.*
-import com.github.kittinunf.fuel.Fuel
+import com.flagsmith.internal.FlagsmithAnalytics
+import com.flagsmith.internal.FlagsmithClient
 import com.github.kittinunf.result.Result as FuelResult
 
 /**
@@ -26,14 +28,13 @@ class Flagsmith constructor(
     private val enableAnalytics: Boolean = DEFAULT_ENABLE_ANALYTICS,
     private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS
 ) {
-    private val analytics: FlagsmithAnalytics? =
-        if (!enableAnalytics) null
-        else if (context != null) FlagsmithAnalytics(context, analyticsFlushPeriod)
-        else throw IllegalArgumentException("Flagsmith requires a context to use the analytics feature")
+    private val analytics: FlagsmithAnalytics?
+    private val client: FlagsmithClient = FlagsmithClient(baseUrl, environmentKey)
 
     init {
-        FlagsmithApi.baseUrl = baseUrl
-        FlagsmithApi.environmentKey = environmentKey
+        analytics = if (!enableAnalytics) null
+        else if (context != null) FlagsmithAnalytics(context, client, analyticsFlushPeriod)
+        else throw IllegalArgumentException("Flagsmith requires a context to use the analytics feature")
     }
 
     companion object {
@@ -47,7 +48,7 @@ class Flagsmith constructor(
                 result(res.map { it.flags })
             }
         } else {
-            Fuel.request(FlagsmithApi.GetFlags)
+            client.request(FlagsEndpoint)
                 .responseObject(FlagListDeserializer()) { _, _, res ->
                     result(res.convertToResult())
                 }
@@ -81,7 +82,7 @@ class Flagsmith constructor(
         }
 
     fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) {
-        Fuel.request(FlagsmithApi.SetTrait(trait = trait, identity = identity))
+        client.request(TraitsEndpoint(trait = trait, identity = identity))
             .responseObject(TraitWithIdentityDeserializer()) { _, _, res ->
                 result(res.convertToResult())
             }
@@ -105,7 +106,7 @@ class Flagsmith constructor(
     private fun getIdentityFlagsAndTraits(
         identity: String,
         result: (Result<IdentityFlagsAndTraits>) -> Unit
-    ) = Fuel.request(FlagsmithApi.GetIdentityFlagsAndTraits(identity = identity))
+    ) = client.request(IdentityFlagsAndTraitsEndpoint(identity = identity))
         .responseObject(IdentityFlagsAndTraitsDeserializer()) { _, _, res ->
             result(res.convertToResult())
         }

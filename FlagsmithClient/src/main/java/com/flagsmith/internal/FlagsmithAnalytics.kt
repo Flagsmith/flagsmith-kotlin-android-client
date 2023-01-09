@@ -5,12 +5,13 @@ import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.github.kittinunf.fuel.Fuel
+import com.flagsmith.endpoints.AnalyticsEndpoint
 import org.json.JSONException
 import org.json.JSONObject
 
 class FlagsmithAnalytics constructor(
     private val context: Context,
+    private val client: FlagsmithClient,
     private val flushPeriod: Int
 ) {
     private val applicationContext: Context = context.applicationContext
@@ -20,7 +21,7 @@ class FlagsmithAnalytics constructor(
     private val timerRunnable = object : Runnable {
         override fun run() {
             if (currentEvents.isNotEmpty()) {
-                Fuel.request(FlagsmithApi.PostAnalytics(eventMap = currentEvents))
+                client.request(AnalyticsEndpoint(eventMap = currentEvents))
                     .response { _, _, res ->
                         res.fold(
                             success = { resetMap() },
