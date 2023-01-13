@@ -1,27 +1,11 @@
-name: Verify
+name: Report test results
 
 on:
-  push:
-    branches:
-      - "main"
   pull_request:
     branches:
       - "main"
 
 jobs:
-  test:
-    name: Run Unit Tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/prepare-gradle
-
-      - name: Run unit tests
-        run: ./gradlew check -x koverVerify
-      - name: Verify code coverage level
-        run: ./gradlew koverVerify
-
   report:
     name: Report Code Coverage
     runs-on: ubuntu-latest
@@ -35,7 +19,7 @@ jobs:
 
       - name: Generate coverage report
         run: ./gradlew koverXmlReport
-      - name: Report unit test code coverage
+      - name: Report test code coverage
         id: kover
         uses: mi-kas/kover-report@v1
         with:
