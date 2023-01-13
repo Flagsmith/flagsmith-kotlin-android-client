@@ -1,0 +1,31 @@
+name: Report test results
+
+on:
+  pull_request:
+    branches:
+      - "main"
+
+jobs:
+  report:
+    name: Report Code Coverage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/prepare-gradle
+
+      - name: Generate coverage report
+        run: ./gradlew koverXmlReport
+      - name: Report test code coverage
+        id: kover
+        uses: mi-kas/kover-report@v1
+        with:
+          path: ${{ github.workspace }}/FlagsmithClient/build/reports/kover/xml/report.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: Code Coverage
+          update-comment: true
+          min-coverage-overall: 60
+          min-coverage-changed-files: 80

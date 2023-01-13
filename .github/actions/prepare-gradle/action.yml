@@ -1,0 +1,23 @@
+name: "Configure gradle"
+description: ""
+
+inputs:
+  java-version:
+    description: "Java Version"
+    default: "11"
+  distribution:
+    description: "Java Distribution"
+    default: "temurin"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: ${{ inputs.distribution }}
+        cache: gradle
+    - name: Grant execute permission for gradlew
+      shell: bash
+      run: chmod +x gradlew
