@@ -8,6 +8,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -129,5 +130,17 @@ class FeatureFlagTests {
             assertTrue(result.isSuccess)
             assertTrue(result.getOrThrow())
         }
+    }
+
+    @Test
+    fun testThrowsExceptionWhenCreatingAnalyticsWithoutAContext() {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            flagsmith = Flagsmith(
+                environmentKey = "",
+                baseUrl = "http://localhost:${mockServer.localPort}",
+                enableAnalytics = true
+            )
+        }
+        assertEquals("Flagsmith requires a context to use the analytics feature", exception.message)
     }
 }

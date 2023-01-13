@@ -1,4 +1,7 @@
 import groovy.time.TimeCategory
+import kotlinx.kover.api.CounterType
+import kotlinx.kover.api.VerificationTarget
+import kotlinx.kover.api.VerificationValueType
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import java.util.Date
@@ -6,6 +9,7 @@ import java.util.Date
 plugins {
     id("com.android.library")
     kotlin("android")
+    id("org.jetbrains.kotlinx.kover")
     id("maven-publish")
 }
 
@@ -51,8 +55,25 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
     testImplementation("org.mock-server:mockserver-netty-no-dependencies:5.14.0")
-    androidTestImplementation("androidx.test.ext:junit:1.1.4")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
+}
+
+kover {
+    filters {
+        classes {
+            excludes += listOf("${android.namespace}.BuildConfig")
+        }
+    }
+    verify {
+        rule {
+            target = VerificationTarget.ALL
+            bound {
+                minValue = 60
+                maxValue = 100
+                counter = CounterType.LINE
+                valueType = VerificationValueType.COVERED_PERCENTAGE
+            }
+        }
+    }
 }
 
 tasks.withType(Test::class) {
