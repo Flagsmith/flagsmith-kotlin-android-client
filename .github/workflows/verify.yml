@@ -15,7 +15,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/prepare-gradle
+      - name: Preconfigure gradle
+        uses: ./.github/actions/prepare-gradle
 
       - name: Run unit tests
         run: ./gradlew check -x koverVerify
