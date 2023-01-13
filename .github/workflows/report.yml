@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/prepare-gradle
+      - uses: ./.github/actions/prepare-gradle
 
       - name: Generate coverage report
         run: ./gradlew koverXmlReport
