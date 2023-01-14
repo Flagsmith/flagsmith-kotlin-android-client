@@ -12,7 +12,7 @@ class FlagsmithClient(
     private val baseUrl: String,
     environmentKey: String
 ) {
-    val defaultHeaders = mutableMapOf<String, HeaderValues>(
+    val defaultHeaders = mapOf<String, HeaderValues>(
         "X-Environment-Key" to listOf(environmentKey),
     )
 
