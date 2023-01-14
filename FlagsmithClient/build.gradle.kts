@@ -13,6 +13,8 @@ plugins {
     id("maven-publish")
 }
 
+val versionNumber = project.properties["flagsmithLibVersion"].toString()
+
 android {
     compileSdk = 33
 
@@ -21,7 +23,7 @@ android {
         targetSdk = 33
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
-        version = "1.0.0"
+        version = versionNumber
         namespace = "com.flagsmith.kotlin"
         aarMetadata {
             minCompileSdk = 31
@@ -159,7 +161,7 @@ publishing {
         register<MavenPublication>("release") {
             groupId = "com.flagsmith"
             artifactId = "flagsmith-kotlin-android-client"
-            version = "1.0.0"
+            version = versionNumber
 
             afterEvaluate {
                 from(components["release"])

@@ -16,6 +16,5 @@ data class TraitsEndpoint(private val trait: Trait, private val identity: String
                 identity = Identity(identity)
             )
         ),
-        params = listOf("identifier" to identity),
         deserializer = TraitWithIdentityDeserializer()
     )
