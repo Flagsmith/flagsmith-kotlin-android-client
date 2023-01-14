@@ -30,14 +30,11 @@ class Flagsmith constructor(
     private val enableAnalytics: Boolean = DEFAULT_ENABLE_ANALYTICS,
     private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS
 ) {
-    private val analytics: FlagsmithAnalytics?
     private val client: FlagsmithClient = FlagsmithClient(baseUrl, environmentKey)
-
-    init {
-        analytics = if (!enableAnalytics) null
+    private val analytics: FlagsmithAnalytics? =
+        if (!enableAnalytics) null
         else if (context != null) FlagsmithAnalytics(context, client, analyticsFlushPeriod)
         else throw IllegalArgumentException("Flagsmith requires a context to use the analytics feature")
-    }
 
     companion object {
         const val DEFAULT_ENABLE_ANALYTICS = true
