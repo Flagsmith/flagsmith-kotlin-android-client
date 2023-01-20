@@ -68,9 +68,9 @@ sealed class FlagsmithApi : FuelRouting {
 
     override val path: String
         get() = when (this) {
-            is GetIdentityFlagsAndTraits -> "/identities"
-            is GetFlags -> "/flags"
-            is SetTrait -> "/traits"
-            is PostAnalytics -> "/analytics/flags"
+            is GetIdentityFlagsAndTraits -> "/identities/"
+            is GetFlags -> "/flags/"
+            is SetTrait -> "/traits/"
+            is PostAnalytics -> "/analytics/flags/"
         }
 }
