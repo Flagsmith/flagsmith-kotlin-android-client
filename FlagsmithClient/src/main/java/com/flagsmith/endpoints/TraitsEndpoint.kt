@@ -8,7 +8,7 @@ import com.google.gson.Gson
 
 data class TraitsEndpoint(private val trait: Trait, private val identity: String) :
     PostEndpoint<TraitWithIdentity>(
-        path = "/traits",
+        path = "/traits/",
         body = Gson().toJson(
             TraitWithIdentity(
                 key = trait.key,

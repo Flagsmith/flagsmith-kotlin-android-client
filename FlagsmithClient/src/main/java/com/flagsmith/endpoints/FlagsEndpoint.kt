@@ -4,6 +4,6 @@ import com.flagsmith.entities.Flag
 import com.flagsmith.entities.FlagListDeserializer
 
 object FlagsEndpoint : GetEndpoint<List<Flag>>(
-    path = "/flags",
+    path = "/flags/",
     deserializer = FlagListDeserializer()
 )
