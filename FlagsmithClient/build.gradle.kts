@@ -4,6 +4,7 @@ import kotlinx.kover.api.VerificationTarget
 import kotlinx.kover.api.VerificationValueType
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import java.io.ByteArrayOutputStream
 import java.util.Date
 
 plugins {
@@ -13,7 +14,17 @@ plugins {
     id("maven-publish")
 }
 
-val versionNumber = project.properties["flagsmithLibVersion"].toString()
+val versionNumber: String by lazy {
+    val stdout = ByteArrayOutputStream()
+    rootProject.exec {
+        isIgnoreExitValue = true
+        commandLine("git", "describe", "--tags", "--abbrev=0")
+        standardOutput = stdout
+        errorOutput = ByteArrayOutputStream()
+    }
+    val version = stdout.toString().trim().replace("v", "")
+    return@lazy version.ifEmpty { "0.1.0" }
+}
 
 android {
     compileSdk = 33
