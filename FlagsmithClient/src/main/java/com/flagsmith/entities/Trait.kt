@@ -1,14 +1,13 @@
 package com.flagsmith.entities
 
-import com.github.kittinunf.fuel.core.ResponseDeserializable
-import com.google.gson.Gson
+import com.flagsmith.internal.Deserializer
+import com.flagsmith.internal.fromJson
 import com.google.gson.annotations.SerializedName
 import java.io.Reader
 
-class TraitWithIdentityDeserializer: ResponseDeserializable<TraitWithIdentity> {
-    override fun deserialize(reader: Reader): TraitWithIdentity? {
-        return Gson().fromJson(reader, TraitWithIdentity::class.java)
-    }
+class TraitWithIdentityDeserializer: Deserializer<TraitWithIdentity> {
+    override fun deserialize(reader: Reader): TraitWithIdentity? =
+        reader.fromJson(TraitWithIdentity::class.java)
 }
 
 data class Trait(

@@ -1,14 +1,18 @@
 package com.flagsmith.mockResponses
 
+import com.flagsmith.endpoints.FlagsEndpoint
+import com.flagsmith.endpoints.IdentityFlagsAndTraitsEndpoint
+import com.flagsmith.endpoints.TraitsEndpoint
+import com.flagsmith.entities.Trait
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
 import org.mockserver.model.MediaType
 
 enum class MockEndpoint(val path: String, val body: String) {
-    GET_IDENTITIES("/identities", MockResponses.getIdentities),
-    GET_FLAGS("/flags", MockResponses.getFlags),
-    SET_TRAIT("/traits", MockResponses.setTrait)
+    GET_IDENTITIES(IdentityFlagsAndTraitsEndpoint("").path, MockResponses.getIdentities),
+    GET_FLAGS(FlagsEndpoint.path, MockResponses.getFlags),
+    SET_TRAIT(TraitsEndpoint(Trait(key = "", value = ""), "").path, MockResponses.setTrait)
 }
 
 fun ClientAndServer.mockResponseFor(endpoint: MockEndpoint) {
