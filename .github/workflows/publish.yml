@@ -1,0 +1,18 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  package:
+    name: Publish Gradle Dependency
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Preconfigure gradle
+        uses: ./.github/actions/prepare-gradle
+      - name: Publish new version
+        run: ./gradlew publish

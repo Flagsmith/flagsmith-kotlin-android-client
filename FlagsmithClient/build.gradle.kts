@@ -4,6 +4,7 @@ import kotlinx.kover.api.VerificationTarget
 import kotlinx.kover.api.VerificationValueType
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import java.io.ByteArrayOutputStream
 import java.util.Date
 
 plugins {
@@ -11,6 +12,18 @@ plugins {
     kotlin("android")
     id("org.jetbrains.kotlinx.kover")
     id("maven-publish")
+}
+
+val versionNumber: String by lazy {
+    val stdout = ByteArrayOutputStream()
+    rootProject.exec {
+        isIgnoreExitValue = true
+        commandLine("git", "describe", "--tags", "--abbrev=0")
+        standardOutput = stdout
+        errorOutput = ByteArrayOutputStream()
+    }
+    val version = stdout.toString().trim().replace("v", "")
+    return@lazy version.ifEmpty { "0.1.0" }
 }
 
 android {
@@ -21,13 +34,19 @@ android {
         targetSdk = 33
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
-        version = "1.0.0"
+        version = versionNumber
         namespace = "com.flagsmith.kotlin"
+        aarMetadata {
+            minCompileSdk = 31
+        }
+        testFixtures {
+            enable = true
+        }
     }
 
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -39,7 +58,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
     testOptions {
@@ -119,7 +138,8 @@ tasks.withType(Test::class) {
             val suiteDescription = "${this.project.name}:${this.name}"
             val duration = "in ${TimeCategory.minus(Date(result.endTime), Date(result.startTime))}"
             val separator = tableLine(lineLength, "│", "│")
-            println("""
+            println(
+                """
                 ${tableLine(lineLength, "┌", "┐")}
                 ${suiteDescription.contentLine(lineLength)}
                 $separator
@@ -127,7 +147,7 @@ tasks.withType(Test::class) {
                 $separator
                 ${duration.contentLine(lineLength)}
                 ${tableLine(lineLength, "└", "┘")}
-                Report file: ./${this.reports.html.entryPoint.relativeTo(rootProject.rootDir)}
+                Report: file:///${this.reports.html.entryPoint}
             """.trimIndent()
             )
         }
@@ -150,9 +170,9 @@ fun tableLine(length: Int, leading: String, trailing: String) =
 publishing {
     publications {
         register<MavenPublication>("release") {
-            groupId = "com.github.Flagsmith"
+            groupId = "com.flagsmith"
             artifactId = "flagsmith-kotlin-android-client"
-            version = "1.0.0"
+            version = versionNumber
 
             afterEvaluate {
                 from(components["release"])
