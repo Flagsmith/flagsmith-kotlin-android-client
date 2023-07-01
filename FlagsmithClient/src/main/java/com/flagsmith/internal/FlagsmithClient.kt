@@ -5,7 +5,10 @@ import com.flagsmith.endpoints.GetEndpoint
 import com.flagsmith.endpoints.PostEndpoint
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.*
+import com.github.kittinunf.fuel.gson.responseObject
 import com.github.kittinunf.fuel.util.FuelRouting
+import com.github.kittinunf.fuse.core.Fuse
+import com.github.kittinunf.fuse.core.fetch.Fetcher
 import com.github.kittinunf.result.Result as FuelResult
 
 class FlagsmithClient(
@@ -21,6 +24,14 @@ class FlagsmithClient(
             .responseObject(endpoint.deserializer) { _, _, res ->
                 handler(convertToKotlinResult(res))
             }
+
+    fun <Response: Any> fetcher(endpoint: Endpoint<Response>,
+                                convertible: Fuse.DataConvertible<Response>): Fetcher<Response> =
+        EndpointFetcher(
+            convertible = convertible,
+            endpoint = endpoint,
+            routing = createRequest(endpoint)
+        )
 
     private fun <Response : Any> createRequest(endpoint: Endpoint<Response>): FuelRouting {
         return object : FuelRouting {
@@ -42,4 +53,16 @@ class FlagsmithClient(
             success = { value -> Result.success(value) },
             failure = { err -> Result.failure(err) }
         )
+
+    private class EndpointFetcher<Response: Any>(
+        private val convertible: Fuse.DataConvertible<Response>,
+        private val endpoint: Endpoint<Response>,
+        private val routing: FuelRouting
+    ) : Fetcher<Response>, Fuse.DataConvertible<Response> by convertible {
+
+        override val key: String = endpoint.path + endpoint.params
+        override fun fetch(): com.github.kittinunf.result.Result<Response, Exception> {
+            return Fuel.request(routing).responseObject(endpoint.deserializer).third
+        }
+    }
 }

@@ -1,15 +1,19 @@
 package com.flagsmith
 
 import android.content.Context
+import android.util.Log
 import com.flagsmith.endpoints.FlagsEndpoint
 import com.flagsmith.endpoints.IdentityFlagsAndTraitsEndpoint
 import com.flagsmith.endpoints.TraitsEndpoint
-import com.flagsmith.entities.Flag
-import com.flagsmith.entities.IdentityFlagsAndTraits
-import com.flagsmith.entities.Trait
-import com.flagsmith.entities.TraitWithIdentity
+import com.flagsmith.entities.*
 import com.flagsmith.internal.FlagsmithAnalytics
 import com.flagsmith.internal.FlagsmithClient
+import com.github.kittinunf.fuse.android.config
+import com.github.kittinunf.fuse.android.defaultAndroidMemoryCache
+import com.github.kittinunf.fuse.core.*
+import com.github.kittinunf.fuse.core.cache.Persistence
+import com.github.kittinunf.result.isSuccess
+import com.google.gson.Gson
 
 /**
  * Flagsmith
@@ -28,7 +32,9 @@ class Flagsmith constructor(
     private val baseUrl: String = "https://edge.api.flagsmith.com/api/v1",
     private val context: Context? = null,
     private val enableAnalytics: Boolean = DEFAULT_ENABLE_ANALYTICS,
-    private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS
+    private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS,
+    private val defaultFlags: List<Flag> = emptyList(),
+    private val cache: Cache<IdentityFlagsAndTraits>? = null
 ) {
     private val client: FlagsmithClient = FlagsmithClient(baseUrl, environmentKey)
     private val analytics: FlagsmithAnalytics? =
@@ -39,6 +45,15 @@ class Flagsmith constructor(
     companion object {
         const val DEFAULT_ENABLE_ANALYTICS = true
         const val DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS = 10
+        const val DEFAULT_CACHE_KEY = "flagsmith"
+    }
+
+    // Default in-memory cache to be used when API requests fail
+    // Pass to the cache parameter of the constructor to override
+    fun getDefaultMemoryCache(): Cache<IdentityFlagsAndTraits> {
+        return CacheBuilder.config(context!!, convertible = IdentityFlagsAndTraitsDataConvertible()) {
+            memCache = defaultAndroidMemoryCache()
+        }.build()
     }
 
     fun getFeatureFlags(identity: String? = null, result: (Result<List<Flag>>) -> Unit) {
@@ -95,8 +110,56 @@ class Flagsmith constructor(
         })
     }
 
+//    private fun getIdentityFlagsAndTraits(
+//        identity: String,
+//        result: (Result<IdentityFlagsAndTraits>) -> Unit
+//    ) {
+//        client.request(IdentityFlagsAndTraitsEndpoint(identity = identity)) { res -> res.fold(
+//            onSuccess = { value ->
+//                            result(Result.success(value))
+//                        },
+//            onFailure = { err ->
+//                result(Result.failure(err))
+//            }
+//        ) }
+//    }
+
     private fun getIdentityFlagsAndTraits(
         identity: String,
         result: (Result<IdentityFlagsAndTraits>) -> Unit
-    ) = client.request(IdentityFlagsAndTraitsEndpoint(identity = identity), result)
+    ) {
+        val fetcher = client.fetcher(IdentityFlagsAndTraitsEndpoint(identity = identity), IdentityFlagsAndTraitsDataConvertible())
+
+        client.request(IdentityFlagsAndTraitsEndpoint(identity = identity)) { res ->
+            if (res.isSuccess) {
+                val value = res.getOrNull()
+                if (value != null) {
+                    cache?.put(key = DEFAULT_CACHE_KEY, putValue = value).also { cacheResult ->
+                        if (cacheResult != null) {
+                            if (!cacheResult.isSuccess()) {
+                                Log.e("Flagsmith", "Failed to cache flags and traits")
+                            }
+                        }
+                    }
+                    result(Result.success(value))
+                } else {
+                    result(Result.failure(NullPointerException("Response body was null")))
+                }
+            } else {
+                if (cache != null) {
+                    cache.get(key = DEFAULT_CACHE_KEY).fold(
+                        success = { value ->
+                            result(Result.success(value))
+                        },
+                        failure = { err ->
+                            result(Result.failure(err))
+                        }
+                    )
+                } else {
+                    result(Result.failure(res.exceptionOrNull()!!))
+                }
+            }
+        }
+    }
+
 }
