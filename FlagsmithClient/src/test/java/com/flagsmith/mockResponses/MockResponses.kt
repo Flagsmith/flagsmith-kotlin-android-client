@@ -5,9 +5,12 @@ import com.flagsmith.endpoints.IdentityFlagsAndTraitsEndpoint
 import com.flagsmith.endpoints.TraitsEndpoint
 import com.flagsmith.entities.Trait
 import org.mockserver.integration.ClientAndServer
+import org.mockserver.model.HttpError
 import org.mockserver.model.HttpRequest.request
+import org.mockserver.model.HttpResponse.notFoundResponse
 import org.mockserver.model.HttpResponse.response
 import org.mockserver.model.MediaType
+import java.util.concurrent.TimeUnit
 
 enum class MockEndpoint(val path: String, val body: String) {
     GET_IDENTITIES(IdentityFlagsAndTraitsEndpoint("").path, MockResponses.getIdentities),
@@ -21,6 +24,33 @@ fun ClientAndServer.mockResponseFor(endpoint: MockEndpoint) {
             response()
                 .withContentType(MediaType.APPLICATION_JSON)
                 .withBody(endpoint.body)
+        )
+}
+
+fun ClientAndServer.mockDelayFor(endpoint: MockEndpoint) {
+    `when`(request().withPath(endpoint.path))
+        .respond(
+            response()
+                .withContentType(MediaType.APPLICATION_JSON)
+                .withBody(endpoint.body)
+                .withDelay(TimeUnit.SECONDS, 20)
+        )
+}
+
+fun ClientAndServer.mockFailureFor(endpoint: MockEndpoint) {
+    `when`(request().withPath(endpoint.path))
+        .respond(
+            response()
+                .withStatusCode(500)
+                .withBody("Internal Server Error")
+        )
+}
+
+fun ClientAndServer.mockDropConnection(endpoint: MockEndpoint) {
+    `when`(request().withPath(endpoint.path))
+        .error(
+            HttpError.error()
+                .withDropConnection(true)
         )
 }
 

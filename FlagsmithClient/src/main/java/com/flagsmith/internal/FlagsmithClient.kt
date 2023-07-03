@@ -21,6 +21,8 @@ class FlagsmithClient(
 
     fun <Response : Any> request(endpoint: Endpoint<Response>, handler: (Result<Response>) -> Unit) =
         Fuel.request(createRequest(endpoint))
+//            .timeout(5000) // 5 seconds
+//            .timeoutRead(5000)
             .responseObject(endpoint.deserializer) { _, _, res ->
                 handler(convertToKotlinResult(res))
             }

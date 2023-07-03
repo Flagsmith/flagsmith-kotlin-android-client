@@ -32,9 +32,9 @@ class Flagsmith constructor(
     private val baseUrl: String = "https://edge.api.flagsmith.com/api/v1",
     private val context: Context? = null,
     private val enableAnalytics: Boolean = DEFAULT_ENABLE_ANALYTICS,
+    private val enableCache: Boolean = DEFAULT_ENABLE_CACHE,
     private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS,
-    private val defaultFlags: List<Flag> = emptyList(),
-    private val cache: Cache<IdentityFlagsAndTraits>? = null
+    private val defaultFlags: List<Flag> = emptyList()
 ) {
     private val client: FlagsmithClient = FlagsmithClient(baseUrl, environmentKey)
     private val analytics: FlagsmithAnalytics? =
@@ -42,8 +42,15 @@ class Flagsmith constructor(
         else if (context != null) FlagsmithAnalytics(context, client, analyticsFlushPeriod)
         else throw IllegalArgumentException("Flagsmith requires a context to use the analytics feature")
 
+    // The cache can be overridden if necessary for e.g. a file-based cache
+    var cache: Cache<IdentityFlagsAndTraits>? =
+        if (!enableCache) null
+        else if (context != null) getDefaultMemoryCache()
+        else null
+
     companion object {
         const val DEFAULT_ENABLE_ANALYTICS = true
+        const val DEFAULT_ENABLE_CACHE = true
         const val DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS = 10
         const val DEFAULT_CACHE_KEY = "flagsmith"
     }
@@ -130,35 +137,42 @@ class Flagsmith constructor(
     ) {
         val fetcher = client.fetcher(IdentityFlagsAndTraitsEndpoint(identity = identity), IdentityFlagsAndTraitsDataConvertible())
 
-        client.request(IdentityFlagsAndTraitsEndpoint(identity = identity)) { res ->
-            if (res.isSuccess) {
-                val value = res.getOrNull()
-                if (value != null) {
-                    cache?.put(key = DEFAULT_CACHE_KEY, putValue = value).also { cacheResult ->
-                        if (cacheResult != null) {
-                            if (!cacheResult.isSuccess()) {
-                                Log.e("Flagsmith", "Failed to cache flags and traits")
+        try {
+            client.request(IdentityFlagsAndTraitsEndpoint(identity = identity)) { res ->
+                if (res.isSuccess) {
+                    val value = res.getOrNull()
+                    if (value != null) {
+                        cache?.put(key = DEFAULT_CACHE_KEY, putValue = value).also { cacheResult ->
+                            if (cacheResult != null) {
+                                if (!cacheResult.isSuccess()) {
+                                    Log.e("Flagsmith", "Failed to cache flags and traits")
+                                }
                             }
                         }
+                        result(Result.success(value))
+                    } else {
+                        result(Result.failure(NullPointerException("Response body was null")))
                     }
-                    result(Result.success(value))
                 } else {
-                    result(Result.failure(NullPointerException("Response body was null")))
-                }
-            } else {
-                if (cache != null) {
-                    cache.get(key = DEFAULT_CACHE_KEY).fold(
-                        success = { value ->
-                            result(Result.success(value))
-                        },
-                        failure = { err ->
-                            result(Result.failure(err))
-                        }
-                    )
-                } else {
-                    result(Result.failure(res.exceptionOrNull()!!))
+                    if (cache != null) {
+                        cache?.get(key = DEFAULT_CACHE_KEY)?.fold(
+                            success = { value ->
+                                Log.i("Flagsmith", "Using cached flags and traits")
+                                result(Result.success(value))
+                            },
+                            failure = { err ->
+                                Log.e("Flagsmith", "Failed to get cached flags and traits")
+                                result(Result.failure(err))
+                            }
+                        )
+                    } else {
+                        result(Result.failure(res.exceptionOrNull()!!))
+                    }
                 }
             }
+        } catch (e: Exception) {
+            Log.e("Flagsmith", "Failed to get flags and traits", e)
+            result(Result.failure(e))
         }
     }
 

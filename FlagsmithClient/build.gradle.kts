@@ -75,6 +75,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
     testImplementation("org.mock-server:mockserver-netty-no-dependencies:5.14.0")
+    testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
 }
 
 kover {
