@@ -8,6 +8,7 @@ import com.flagsmith.endpoints.TraitsEndpoint
 import com.flagsmith.entities.*
 import com.flagsmith.internal.FlagsmithAnalytics
 import com.flagsmith.internal.FlagsmithClient
+import com.github.kittinunf.fuel.core.requests.CancellableRequest
 import com.github.kittinunf.fuse.android.config
 import com.github.kittinunf.fuse.android.defaultAndroidMemoryCache
 import com.github.kittinunf.fuse.core.*
@@ -63,8 +64,8 @@ class Flagsmith constructor(
         }.build()
     }
 
-    fun getFeatureFlags(identity: String? = null, result: (Result<List<Flag>>) -> Unit) {
-        if (identity != null) {
+    fun getFeatureFlags(identity: String? = null, result: (Result<List<Flag>>) -> Unit): CancellableRequest {
+        return if (identity != null) {
             getIdentityFlagsAndTraits(identity) { res ->
                 result(res.map { it.flags })
             }
@@ -134,45 +135,40 @@ class Flagsmith constructor(
     private fun getIdentityFlagsAndTraits(
         identity: String,
         result: (Result<IdentityFlagsAndTraits>) -> Unit
-    ) {
+    ) : CancellableRequest {
         val fetcher = client.fetcher(IdentityFlagsAndTraitsEndpoint(identity = identity), IdentityFlagsAndTraitsDataConvertible())
 
-        try {
-            client.request(IdentityFlagsAndTraitsEndpoint(identity = identity)) { res ->
-                if (res.isSuccess) {
-                    val value = res.getOrNull()
-                    if (value != null) {
-                        cache?.put(key = DEFAULT_CACHE_KEY, putValue = value).also { cacheResult ->
-                            if (cacheResult != null) {
-                                if (!cacheResult.isSuccess()) {
-                                    Log.e("Flagsmith", "Failed to cache flags and traits")
-                                }
+        return client.request(IdentityFlagsAndTraitsEndpoint(identity = identity)) { res ->
+            if (res.isSuccess) {
+                val value = res.getOrNull()
+                if (value != null) {
+                    cache?.put(key = DEFAULT_CACHE_KEY, putValue = value).also { cacheResult ->
+                        if (cacheResult != null) {
+                            if (!cacheResult.isSuccess()) {
+                                Log.e("Flagsmith", "Failed to cache flags and traits")
                             }
                         }
-                        result(Result.success(value))
-                    } else {
-                        result(Result.failure(NullPointerException("Response body was null")))
                     }
+                    result(Result.success(value))
                 } else {
-                    if (cache != null) {
-                        cache?.get(key = DEFAULT_CACHE_KEY)?.fold(
-                            success = { value ->
-                                Log.i("Flagsmith", "Using cached flags and traits")
-                                result(Result.success(value))
-                            },
-                            failure = { err ->
-                                Log.e("Flagsmith", "Failed to get cached flags and traits")
-                                result(Result.failure(err))
-                            }
-                        )
-                    } else {
-                        result(Result.failure(res.exceptionOrNull()!!))
-                    }
+                    result(Result.failure(NullPointerException("Response body was null")))
+                }
+            } else {
+                if (cache != null) {
+                    cache?.get(key = DEFAULT_CACHE_KEY)?.fold(
+                        success = { value ->
+                            Log.i("Flagsmith", "Using cached flags and traits")
+                            result(Result.success(value))
+                        },
+                        failure = { err ->
+                            Log.e("Flagsmith", "Failed to get cached flags and traits")
+                            result(Result.failure(err))
+                        }
+                    )
+                } else {
+                    result(Result.failure(res.exceptionOrNull()!!))
                 }
             }
-        } catch (e: Exception) {
-            Log.e("Flagsmith", "Failed to get flags and traits", e)
-            result(Result.failure(e))
         }
     }
 

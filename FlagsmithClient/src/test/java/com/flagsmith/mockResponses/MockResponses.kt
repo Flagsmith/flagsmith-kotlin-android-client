@@ -42,7 +42,8 @@ fun ClientAndServer.mockFailureFor(endpoint: MockEndpoint) {
         .respond(
             response()
                 .withStatusCode(500)
-                .withBody("Internal Server Error")
+                .withContentType(MediaType.APPLICATION_JSON)
+                .withBody("{error: \"Internal Server Error\"}")
         )
 }
 

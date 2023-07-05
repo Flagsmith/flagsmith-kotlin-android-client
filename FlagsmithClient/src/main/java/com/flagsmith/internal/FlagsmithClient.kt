@@ -1,5 +1,6 @@
 package com.flagsmith.internal
 
+import android.util.Log
 import com.flagsmith.endpoints.Endpoint
 import com.flagsmith.endpoints.GetEndpoint
 import com.flagsmith.endpoints.PostEndpoint
@@ -24,8 +25,25 @@ class FlagsmithClient(
 //            .timeout(5000) // 5 seconds
 //            .timeoutRead(5000)
             .responseObject(endpoint.deserializer) { _, _, res ->
+                res.fold(
+                    success = { value -> Log.i("FlagsmithClient", "MF success: $value") },
+                    failure = { err -> Log.i("FlagsmithClient", "MF failure: $err") }
+                )
                 handler(convertToKotlinResult(res))
             }
+//            .response() { _, _, res ->
+//                Log.i("FlagsmithClient", "response: $res")
+//            }
+//            .responseString { _, _, res ->
+//                Log.i("FlagsmithClient", "MF response: $res")
+//                res.fold(success = { value ->
+//                    Log.i("FlagsmithClient", "MF success: $value")
+//                    handler(Result.success())
+//                }, failure = { err ->
+//                    Log.i("FlagsmithClient", "MF failure: $err")
+//                })
+//            }
+            .also { Log.i("FlagsmithClient", "MF also: $it") }
 
     fun <Response: Any> fetcher(endpoint: Endpoint<Response>,
                                 convertible: Fuse.DataConvertible<Response>): Fetcher<Response> =

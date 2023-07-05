@@ -24,6 +24,7 @@ class FeatureFlagCachingTests {
     @Before
     fun setup() {
         mockServer = ClientAndServer.startClientAndServer()
+        System.setProperty("mockserver.logLevel", "INFO")
         Awaitility.setDefaultTimeout(Duration.ofSeconds(30));
 
         flagsmithWithCache = Flagsmith(
@@ -48,11 +49,12 @@ class FeatureFlagCachingTests {
 
     @Test
     fun testGetFeatureFlagsTimeoutAwaitability() {
+        Fuel.trace = true
         mockServer.mockFailureFor(MockEndpoint.GET_IDENTITIES)
         var found: Flag? = null
 
         try {
-            flagsmithWithCache.getFeatureFlags(identity = "person") { result ->
+            val running = flagsmithWithCache.getFeatureFlags(identity = "person") { result ->
                 Assert.assertTrue(result.isSuccess)
 
                 found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
@@ -60,9 +62,11 @@ class FeatureFlagCachingTests {
                 Assert.assertEquals(756.0, found?.featureStateValue)
             }
 
+            running.join()
             await untilNotNull { found }
         } catch (e: Exception) {
             Log.e("testGetFeatureFlagsTimeoutAwaitability", "error: $e")
+            Assert.fail()
         }
         Log.i("testGetFeatureFlagsTimeoutAwaitability", "found: $found")
     }
