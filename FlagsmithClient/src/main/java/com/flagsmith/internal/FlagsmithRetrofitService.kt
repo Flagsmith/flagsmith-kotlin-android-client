@@ -18,6 +18,8 @@ interface FlagsmithRetrofitService {
     fun getIdentitiesAndTraits(@Query("identity") identity: String) : Call<IdentityFlagsAndTraits>
 
     companion object {
+        private const val REQUEST_TIMEOUT_SECONDS = 10L
+
         fun create(baseUrl: String, environmentKey: String): FlagsmithRetrofitService {
             fun interceptor(environmentKey: String) : Interceptor {
                 return Interceptor { chain ->
@@ -30,6 +32,7 @@ interface FlagsmithRetrofitService {
 
             val client = OkHttpClient.Builder()
                 .addInterceptor(interceptor(environmentKey))
+                .callTimeout(REQUEST_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)
                 .build()
 
 

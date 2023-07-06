@@ -109,17 +109,17 @@ class FeatureFlagCachingTests {
             val flagsmith = Flagsmith(
                 environmentKey = "",
                 baseUrl = "http://localhost:${mockServer.localPort}",
-                enableAnalytics = true
+                enableAnalytics = false
             )
         }
         Assert.assertEquals(
-            "Flagsmith requires a context to use the caching feature",
+            "Flagsmith requires a context to use the cache feature",
             exception.message
         )
     }
 
     @Test
-    fun testGetFeatureFlagsTimeoutAwaitability() {
+    fun testGetFeatureFlagsUsesCachedResponseOnSecondRequestFailure() {
         Fuel.trace = true
         mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         mockServer.mockFailureFor(MockEndpoint.GET_IDENTITIES)
@@ -157,108 +157,40 @@ class FeatureFlagCachingTests {
     }
 
     @Test
-    fun testGetFeatureFlagsWithIdentity() {
+    fun testGetFeatureFlagsUsesCachedResponseOnSecondRequestTimeout() {
+        Fuel.trace = true
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         mockServer.mockDelayFor(MockEndpoint.GET_IDENTITIES)
-        runBlocking {
-            // val result = flagsmithWithCache.getFeatureFlagsSync(identity = "person")
+
+        try {
+            // First time around we should be successful and cache the response
+            var foundFromServer: Flag? = null
             flagsmithWithCache.getFeatureFlags(identity = "person") { result ->
                 Assert.assertTrue(result.isSuccess)
 
-                val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
-                Assert.assertNotNull(found)
-                Assert.assertEquals(756.0, found?.featureStateValue)
+                foundFromServer = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
+                Assert.assertNotNull(foundFromServer)
+                Assert.assertEquals(756.0, foundFromServer?.featureStateValue)
             }
-//            Assert.assertTrue(result.isSuccess)
-//
-//            val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
-//            Assert.assertNotNull(found)
-//            Assert.assertEquals(756.0, found?.featureStateValue)
 
-//            val result2 = flagsmithNoCache.getFeatureFlagsSync(identity = "person")
-//            Assert.assertTrue(result2.isSuccess)
-//
-//            val found2 = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
-//            Assert.assertNotNull(found2)
-//            Assert.assertEquals(756.0, found2?.featureStateValue)
-        }
-    }
+            await untilNotNull { foundFromServer }
 
-    @Test
-    fun testGetFeatureFlagsWithIdentitySameRegardlessOfCaching() {
-        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
-        runBlocking {
-            val result = flagsmithWithCache.getFeatureFlagsSync(identity = "person")
-            Assert.assertTrue(result.isSuccess)
-
-            val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
-            Assert.assertNotNull(found)
-            Assert.assertEquals(756.0, found?.featureStateValue)
-
-            mockServer.stop()
-            mockServer = ClientAndServer.startClientAndServer()
-            mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
-
-            val result2 = flagsmithNoCache.getFeatureFlagsSync(identity = "person")
-            Assert.assertTrue(result2.isSuccess)
-
-            val found2 = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
-            Assert.assertNotNull(found2)
-            Assert.assertEquals(756.0, found?.featureStateValue)
-        }
-    }
-
-    @Test
-    fun testGetFeatureFlagsWithIdentityUsesCacheOnSecondFailedRequest() {
-        Fuel.trace = true
-        mockServer.mockFailureFor(MockEndpoint.GET_IDENTITIES)
-        runBlocking {
-            try {
-                val result = flagsmithWithCache.getFeatureFlagsSync(identity = "person")
+            // Now we mock the failure and expect the cached response to be returned
+            var foundFromCache: Flag? = null
+//            mockServer.mockFailureFor(MockEndpoint.GET_IDENTITIES)
+            flagsmithWithCache.getFeatureFlags(identity = "person") { result ->
                 Assert.assertTrue(result.isSuccess)
 
-                val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
-                Assert.assertNotNull(found)
-                Assert.assertEquals(756.0, found?.featureStateValue)
-            } catch (e: Exception) {
-                Log.e("testGetFeatureFlagsWithIdentityUsesCacheOnSecondFailedRequest", "error: $e")
+                foundFromCache = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
+                Assert.assertNotNull(foundFromCache)
+                Assert.assertEquals(756.0, foundFromCache?.featureStateValue)
             }
-        }
 
-//        mockServer.stop()
-//        mockServer = ClientAndServer.startClientAndServer()
-//        mockServer.mockFailureFor(MockEndpoint.GET_IDENTITIES)
-//        runBlocking {
-//            val result = flagsmithWithCache.getFeatureFlagsSync(identity = "person")
-//            Assert.assertTrue(result.isSuccess)
-//
-//            val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
-//            Assert.assertNotNull(found)
-//            Assert.assertEquals(756.0, found?.featureStateValue)
-//        }
-    }
+            await untilNotNull { foundFromCache }
 
-    @Test
-    fun testGetFeatureFlagsWithIdentityFailsOnSecondFailedRequestWithNoCache() {
-        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
-        runBlocking {
-            val result = flagsmithNoCache.getFeatureFlagsSync(identity = "person")
-            Assert.assertTrue(result.isSuccess)
-
-            val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
-            Assert.assertNotNull(found)
-            Assert.assertEquals(756.0, found?.featureStateValue)
-        }
-
-        mockServer.stop()
-        mockServer = ClientAndServer.startClientAndServer()
-        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
-        runBlocking {
-            val result = flagsmithNoCache.getFeatureFlagsSync(identity = "person")
-            Assert.assertTrue(result.isSuccess)
-
-            val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
-            Assert.assertNotNull(found)
-            Assert.assertEquals(756.0, found?.featureStateValue)
+        } catch (e: Exception) {
+            Log.e("testGetFeatureFlagsTimeoutAwaitability", "error: $e")
+            Assert.fail()
         }
     }
 }

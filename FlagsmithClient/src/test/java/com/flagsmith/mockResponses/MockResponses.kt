@@ -34,7 +34,7 @@ fun ClientAndServer.mockDelayFor(endpoint: MockEndpoint) {
             response()
                 .withContentType(MediaType.APPLICATION_JSON)
                 .withBody(endpoint.body)
-                .withDelay(TimeUnit.SECONDS, 20)
+                .withDelay(TimeUnit.SECONDS, 20) // REQUEST_TIMEOUT_SECONDS is 10 in the client, so needs to be more
         )
 }
 
