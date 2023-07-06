@@ -57,20 +57,4 @@ interface FlagsmithRetrofitService {
         }
     }
 
-    fun <T> Call<T>.enqueueWithResult(result: (Result<T>) -> Unit) {
-        this.enqueue(object : Callback<T> {
-            override fun onResponse(call: Call<T>, response: Response<T>) {
-                if (response.isSuccessful && response.body() != null) {
-                    result(Result.success(response.body()!!))
-                } else {
-                    result(Result.failure(HttpException(response)))
-                }
-            }
-
-            override fun onFailure(call: Call<T>, t: Throwable) {
-                result(Result.failure(t))
-            }
-        })
-    }
-
 }

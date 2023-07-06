@@ -72,20 +72,7 @@ class Flagsmith constructor(
                 result(res.map { it.flags })
             }
         } else {
-            val call = retrofit.getFlags()
-            call.enqueue(object : Callback<List<Flag>> {
-                override fun onResponse(call: Call<List<Flag>>, response: Response<List<Flag>>) {
-                    if (response.isSuccessful) {
-                        result(Result.success(response.body() ?: emptyList()))
-                    } else {
-                        result(Result.failure(HttpException(response)))
-                    }
-                }
-
-                override fun onFailure(call: Call<List<Flag>>, t: Throwable) {
-                    result(Result.failure(t))
-                }
-            })
+            retrofit.getFlags().enqueueWithResult(result)
         }
     }
 
@@ -199,4 +186,20 @@ class Flagsmith constructor(
         })
     }
 
+    // Convert a Retrofit Call to a Result by extending the Call class
+    private fun <T> Call<T>.enqueueWithResult(result: (Result<T>) -> Unit) {
+        this.enqueue(object : Callback<T> {
+            override fun onResponse(call: Call<T>, response: Response<T>) {
+                if (response.isSuccessful && response.body() != null) {
+                    result(Result.success(response.body()!!))
+                } else {
+                    result(Result.failure(HttpException(response)))
+                }
+            }
+
+            override fun onFailure(call: Call<T>, t: Throwable) {
+                result(Result.failure(t))
+            }
+        })
+    }
 }
