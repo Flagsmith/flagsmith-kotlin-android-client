@@ -25,7 +25,8 @@ class FeatureFlagTests {
         flagsmith = Flagsmith(
             environmentKey = "",
             baseUrl = "http://localhost:${mockServer.localPort}",
-            enableAnalytics = false
+            enableAnalytics = false,
+            enableCache = false
         )
     }
 

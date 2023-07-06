@@ -16,6 +16,7 @@ import com.github.kittinunf.fuse.core.*
 import com.github.kittinunf.result.isSuccess
 import retrofit2.Call
 import retrofit2.Callback
+import retrofit2.HttpException
 import retrofit2.Response
 
 /**
@@ -135,46 +136,6 @@ class Flagsmith constructor(
 //        ) }
 //    }
 
-    private fun getIdentityFlagsAndTraitsFuel(
-        identity: String,
-        result: (Result<IdentityFlagsAndTraits>) -> Unit
-    ) : CancellableRequest {
-        val fetcher = client.fetcher(IdentityFlagsAndTraitsEndpoint(identity = identity), IdentityFlagsAndTraitsDataConvertible())
-
-        return client.request(IdentityFlagsAndTraitsEndpoint(identity = identity)) { res ->
-            if (res.isSuccess) {
-                val value = res.getOrNull()
-                if (value != null) {
-                    cache?.put(key = DEFAULT_CACHE_KEY, putValue = value).also { cacheResult ->
-                        if (cacheResult != null) {
-                            if (!cacheResult.isSuccess()) {
-                                Log.e("Flagsmith", "Failed to cache flags and traits")
-                            }
-                        }
-                    }
-                    result(Result.success(value))
-                } else {
-                    result(Result.failure(NullPointerException("Response body was null")))
-                }
-            } else {
-                if (cache != null) {
-                    cache?.get(key = DEFAULT_CACHE_KEY)?.fold(
-                        success = { value ->
-                            Log.i("Flagsmith", "Using cached flags and traits")
-                            result(Result.success(value))
-                        },
-                        failure = { err ->
-                            Log.e("Flagsmith", "Failed to get cached flags and traits")
-                            result(Result.failure(err))
-                        }
-                    )
-                } else {
-                    result(Result.failure(res.exceptionOrNull()!!))
-                }
-            }
-        }
-    }
-
     private fun getIdentityFlagsAndTraits(
         identity: String,
         result: (Result<IdentityFlagsAndTraits>) -> Unit
@@ -200,20 +161,8 @@ class Flagsmith constructor(
                         result(Result.failure(NullPointerException("Response body was null")))
                     }
                 } else {
-                    if (cache != null) {
-                        cache?.get(key = DEFAULT_CACHE_KEY)?.fold(
-                            success = { value ->
-                                Log.i("Flagsmith", "Using cached flags and traits")
-                                result(Result.success(value))
-                            },
-                            failure = { err ->
-                                Log.e("Flagsmith", "Failed to get cached flags and traits")
-                                result(Result.failure(err))
-                            }
-                        )
-                    } else {
-                        result(Result.failure(Exception("Failed to get flags and traits from server or cache")))
-                    }
+                    // Reuse the onFailure callback to handle non-200 responses and avoid code duplication
+                    onFailure(call, HttpException(response))
                 }
             }
 
