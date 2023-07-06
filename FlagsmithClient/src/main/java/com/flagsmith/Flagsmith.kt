@@ -72,7 +72,20 @@ class Flagsmith constructor(
                 result(res.map { it.flags })
             }
         } else {
-            client.request(FlagsEndpoint, result)
+            val call = retrofit.getFlags()
+            call.enqueue(object : Callback<List<Flag>> {
+                override fun onResponse(call: Call<List<Flag>>, response: Response<List<Flag>>) {
+                    if (response.isSuccessful) {
+                        result(Result.success(response.body() ?: emptyList()))
+                    } else {
+                        result(Result.failure(HttpException(response)))
+                    }
+                }
+
+                override fun onFailure(call: Call<List<Flag>>, t: Throwable) {
+                    result(Result.failure(t))
+                }
+            })
         }
     }
 
@@ -109,7 +122,7 @@ class Flagsmith constructor(
                 call: Call<TraitWithIdentity>,
                 response: Response<TraitWithIdentity>
             ) {
-                if (response.isSuccessful) {
+                if (response.isSuccessful && response.body() != null) {
                     result(Result.success(response.body()!!))
                 } else {
                     result(Result.failure(HttpException(response)))

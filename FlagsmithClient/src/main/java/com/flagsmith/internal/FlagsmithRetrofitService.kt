@@ -1,13 +1,12 @@
 package com.flagsmith.internal;
 
+import com.flagsmith.entities.Flag
 import com.flagsmith.entities.IdentityFlagsAndTraits;
 import com.flagsmith.entities.TraitWithIdentity
-import com.skydoves.retrofit.adapters.result.ResultCallAdapterFactory
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import retrofit2.*
 
-import retrofit2.Call;
-import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.GET;
@@ -18,6 +17,9 @@ interface FlagsmithRetrofitService {
 
     @GET("identities/")
     fun getIdentityFlagsAndTraits(@Query("identity") identity: String) : Call<IdentityFlagsAndTraits>
+
+    @GET("flags/")
+    fun getFlags() : Call<List<Flag>>
 
     @POST("traits/")
     fun postTraits(@Body trait: TraitWithIdentity) : Call<TraitWithIdentity>
@@ -54,4 +56,21 @@ interface FlagsmithRetrofitService {
             return retrofit.create(FlagsmithRetrofitService::class.java)
         }
     }
+
+    fun <T> Call<T>.enqueueWithResult(result: (Result<T>) -> Unit) {
+        this.enqueue(object : Callback<T> {
+            override fun onResponse(call: Call<T>, response: Response<T>) {
+                if (response.isSuccessful && response.body() != null) {
+                    result(Result.success(response.body()!!))
+                } else {
+                    result(Result.failure(HttpException(response)))
+                }
+            }
+
+            override fun onFailure(call: Call<T>, t: Throwable) {
+                result(Result.failure(t))
+            }
+        })
+    }
+
 }
