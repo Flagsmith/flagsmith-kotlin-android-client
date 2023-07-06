@@ -96,12 +96,12 @@ class Flagsmith constructor(
     }
 
     fun getTrait(id: String, identity: String, result: (Result<Trait?>) -> Unit) =
-        getIdentityFlagsAndTraits(identity) { res ->
+        retrofit.getIdentityFlagsAndTraits(identity).cachedEnqueueWithResult(identityFlagsAndTraitsCache) { res ->
             result(res.map { value -> value.traits.find { it.key == id } })
         }
 
     fun getTraits(identity: String, result: (Result<List<Trait>>) -> Unit) =
-        getIdentityFlagsAndTraits(identity) { res ->
+        retrofit.getIdentityFlagsAndTraits(identity).cachedEnqueueWithResult(identityFlagsAndTraitsCache) { res ->
             result(res.map { it.traits })
         }
 
@@ -126,7 +126,7 @@ class Flagsmith constructor(
     }
 
     fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
-        getIdentityFlagsAndTraits(identity, result)
+        retrofit.getIdentityFlagsAndTraits(identity).cachedEnqueueWithResult(identityFlagsAndTraitsCache, result)
 
     private fun getFeatureFlag(
         featureId: String,
@@ -137,55 +137,6 @@ class Flagsmith constructor(
             val foundFlag = flags.find { flag -> flag.feature.name == featureId && flag.enabled }
             analytics?.trackEvent(featureId)
             foundFlag
-        })
-    }
-
-    private fun getIdentityFlagsAndTraits(
-        identity: String,
-        result: (Result<IdentityFlagsAndTraits>) -> Unit
-    ) {
-        val call = retrofit.getIdentityFlagsAndTraits(identity)
-        call.enqueue(object : Callback<IdentityFlagsAndTraits> {
-            override fun onResponse(
-                call: Call<IdentityFlagsAndTraits>,
-                response: Response<IdentityFlagsAndTraits>
-            ) {
-                if (response.isSuccessful) {
-                    val value = response.body()
-                    if (value != null) {
-                        identityFlagsAndTraitsCache?.put(key = DEFAULT_CACHE_KEY, putValue = value).also { cacheResult ->
-                            if (cacheResult != null) {
-                                if (!cacheResult.isSuccess()) {
-                                    Log.e("Flagsmith", "Failed to cache flags and traits")
-                                }
-                            }
-                        }
-                        result(Result.success(value))
-                    } else {
-                        result(Result.failure(NullPointerException("Response body was null")))
-                    }
-                } else {
-                    // Reuse the onFailure callback to handle non-200 responses and avoid code duplication
-                    onFailure(call, HttpException(response))
-                }
-            }
-
-            override fun onFailure(call: Call<IdentityFlagsAndTraits>, t: Throwable) {
-                if (identityFlagsAndTraitsCache != null) {
-                    identityFlagsAndTraitsCache?.get(key = DEFAULT_CACHE_KEY)?.fold(
-                        success = { value ->
-                            Log.i("Flagsmith", "Using cached flags and traits")
-                            result(Result.success(value))
-                        },
-                        failure = { err ->
-                            Log.e("Flagsmith", "Failed to get cached flags and traits")
-                            result(Result.failure(err))
-                        }
-                    )
-                } else {
-                    result(Result.failure(t))
-                }
-            }
         })
     }
 
