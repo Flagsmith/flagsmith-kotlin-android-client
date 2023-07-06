@@ -3,13 +3,11 @@ package com.flagsmith
 import android.content.Context
 import android.util.Log
 import com.flagsmith.endpoints.FlagsEndpoint
-import com.flagsmith.endpoints.IdentityFlagsAndTraitsEndpoint
 import com.flagsmith.endpoints.TraitsEndpoint
 import com.flagsmith.entities.*
 import com.flagsmith.internal.FlagsmithAnalytics
 import com.flagsmith.internal.FlagsmithClient
 import com.flagsmith.internal.FlagsmithRetrofitService
-import com.github.kittinunf.fuel.core.requests.CancellableRequest
 import com.github.kittinunf.fuse.android.config
 import com.github.kittinunf.fuse.android.defaultAndroidMemoryCache
 import com.github.kittinunf.fuse.core.*
@@ -104,8 +102,25 @@ class Flagsmith constructor(
             result(res.map { it.traits })
         }
 
-    fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) =
-        client.request(TraitsEndpoint(trait = trait, identity = identity), result)
+    fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) {
+        val call = retrofit.postTraits(TraitWithIdentity(trait.key, trait.value, Identity(identity)))
+        call.enqueue(object : Callback<TraitWithIdentity> {
+            override fun onResponse(
+                call: Call<TraitWithIdentity>,
+                response: Response<TraitWithIdentity>
+            ) {
+                if (response.isSuccessful) {
+                    result(Result.success(response.body()!!))
+                } else {
+                    result(Result.failure(HttpException(response)))
+                }
+            }
+
+            override fun onFailure(call: Call<TraitWithIdentity>, t: Throwable) {
+                result(Result.failure(t))
+            }
+        })
+    }
 
     fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
         getIdentityFlagsAndTraits(identity, result)
@@ -122,25 +137,11 @@ class Flagsmith constructor(
         })
     }
 
-//    private fun getIdentityFlagsAndTraits(
-//        identity: String,
-//        result: (Result<IdentityFlagsAndTraits>) -> Unit
-//    ) {
-//        client.request(IdentityFlagsAndTraitsEndpoint(identity = identity)) { res -> res.fold(
-//            onSuccess = { value ->
-//                            result(Result.success(value))
-//                        },
-//            onFailure = { err ->
-//                result(Result.failure(err))
-//            }
-//        ) }
-//    }
-
     private fun getIdentityFlagsAndTraits(
         identity: String,
         result: (Result<IdentityFlagsAndTraits>) -> Unit
     ) {
-        val call = retrofit.getIdentitiesAndTraits(identity)
+        val call = retrofit.getIdentityFlagsAndTraits(identity)
         call.enqueue(object : Callback<IdentityFlagsAndTraits> {
             override fun onResponse(
                 call: Call<IdentityFlagsAndTraits>,
