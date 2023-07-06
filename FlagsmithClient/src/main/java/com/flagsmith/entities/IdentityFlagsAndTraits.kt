@@ -4,6 +4,7 @@ import com.flagsmith.internal.Deserializer
 import com.flagsmith.internal.fromJson
 import com.github.kittinunf.fuse.core.Fuse
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.io.Reader
 
 class IdentityFlagsAndTraitsDeserializer: Deserializer<IdentityFlagsAndTraits> {
@@ -18,7 +19,6 @@ class IdentityFlagsAndTraitsDataConvertible: Fuse.DataConvertible<IdentityFlagsA
     override fun convertToData(value: IdentityFlagsAndTraits): ByteArray =
         Gson().toJson(value).toByteArray()
 }
-
 
 data class IdentityFlagsAndTraits(
     val flags: ArrayList<Flag>,

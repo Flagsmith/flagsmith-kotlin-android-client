@@ -2,6 +2,8 @@ package com.flagsmith.entities
 
 import com.flagsmith.internal.Deserializer
 import com.flagsmith.internal.fromJson
+import com.github.kittinunf.fuse.core.Fuse
+import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import java.io.Reader
@@ -28,3 +30,13 @@ data class Feature(
     @SerializedName(value = "default_enabled") val defaultEnabled: Boolean,
     val type: String
 )
+
+class FlagsConvertible: Fuse.DataConvertible<List<Flag>> {
+    override fun convertFromData(bytes: ByteArray): List<Flag> {
+        val collectionType: TypeToken<List<Flag>> = object : TypeToken<List<Flag>>() {}
+        return Gson().fromJson(String(bytes), collectionType)
+    }
+
+    override fun convertToData(value: List<Flag>): ByteArray =
+        Gson().toJson(value).toByteArray()
+}

@@ -2,8 +2,6 @@ package com.flagsmith
 
 import android.content.Context
 import android.util.Log
-import com.flagsmith.endpoints.FlagsEndpoint
-import com.flagsmith.endpoints.TraitsEndpoint
 import com.flagsmith.entities.*
 import com.flagsmith.internal.FlagsmithAnalytics
 import com.flagsmith.internal.FlagsmithClient
@@ -46,10 +44,15 @@ class Flagsmith constructor(
         else throw IllegalArgumentException("Flagsmith requires a context to use the analytics feature")
 
     // The cache can be overridden if necessary for e.g. a file-based cache
-    var cache: Cache<IdentityFlagsAndTraits>? =
+    var identityFlagsAndTraitsCache: Cache<IdentityFlagsAndTraits>? =
         if (!enableCache) null
         else if (context == null) throw IllegalArgumentException("Flagsmith requires a context to use the cache feature")
-        else getDefaultCache()
+        else getDefaultCache(IdentityFlagsAndTraitsDataConvertible())
+
+    var flagsCache: Cache<List<Flag>>? =
+        if (!enableCache) null
+        else if (context == null) throw IllegalArgumentException("Flagsmith requires a context to use the cache feature")
+        else getDefaultCache(FlagsConvertible())
 
     companion object {
         const val DEFAULT_ENABLE_ANALYTICS = true
@@ -60,19 +63,19 @@ class Flagsmith constructor(
 
     // Default in-memory cache to be used when API requests fail
     // Pass to the cache parameter of the constructor to override
-    private fun getDefaultCache(): Cache<IdentityFlagsAndTraits> {
-        return CacheBuilder.config(context!!, convertible = IdentityFlagsAndTraitsDataConvertible()) {
+    private fun <T : Any> getDefaultCache(convertible: Fuse.DataConvertible<T>): Cache<T> {
+        return CacheBuilder.config(context!!, convertible = convertible) {
             memCache = defaultAndroidMemoryCache()
         }.build()
     }
 
     fun getFeatureFlags(identity: String? = null, result: (Result<List<Flag>>) -> Unit) {
         if (identity != null) {
-            getIdentityFlagsAndTraits(identity) { res ->
+            retrofit.getIdentityFlagsAndTraits(identity).cachedEnqueueWithResult(identityFlagsAndTraitsCache) { res ->
                 result(res.map { it.flags })
             }
         } else {
-            retrofit.getFlags().enqueueWithResult(result)
+            retrofit.getFlags().cachedEnqueueWithResult(flagsCache, result)
         }
     }
 
@@ -150,7 +153,7 @@ class Flagsmith constructor(
                 if (response.isSuccessful) {
                     val value = response.body()
                     if (value != null) {
-                        cache?.put(key = DEFAULT_CACHE_KEY, putValue = value).also { cacheResult ->
+                        identityFlagsAndTraitsCache?.put(key = DEFAULT_CACHE_KEY, putValue = value).also { cacheResult ->
                             if (cacheResult != null) {
                                 if (!cacheResult.isSuccess()) {
                                     Log.e("Flagsmith", "Failed to cache flags and traits")
@@ -168,8 +171,8 @@ class Flagsmith constructor(
             }
 
             override fun onFailure(call: Call<IdentityFlagsAndTraits>, t: Throwable) {
-                if (cache != null) {
-                    cache?.get(key = DEFAULT_CACHE_KEY)?.fold(
+                if (identityFlagsAndTraitsCache != null) {
+                    identityFlagsAndTraitsCache?.get(key = DEFAULT_CACHE_KEY)?.fold(
                         success = { value ->
                             Log.i("Flagsmith", "Using cached flags and traits")
                             result(Result.success(value))
@@ -199,6 +202,45 @@ class Flagsmith constructor(
 
             override fun onFailure(call: Call<T>, t: Throwable) {
                 result(Result.failure(t))
+            }
+        })
+    }
+
+    private fun <T : Any> Call<T>.cachedEnqueueWithResult(cache: Cache<T>?, result: (Result<T>) -> Unit) {
+        val cacheKey = this.request().url().toString()
+        this.enqueue(object : Callback<T> {
+            override fun onResponse(call: Call<T>, response: Response<T>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val body = response.body()!!
+                    cache?.put(key = cacheKey, putValue = body).also { cacheResult ->
+                        if (cacheResult != null) {
+                            if (!cacheResult.isSuccess()) {
+                                Log.e("Flagsmith", "Failed to cache flags and traits")
+                            }
+                        }
+                    }
+                    result(Result.success(response.body()!!))
+                } else {
+                    // Reuse the onFailure callback to handle non-200 responses and avoid code duplication
+                    onFailure(call, HttpException(response))
+                }
+            }
+
+            override fun onFailure(call: Call<T>, t: Throwable) {
+                if (cache != null) {
+                    cache?.get(key = DEFAULT_CACHE_KEY)?.fold(
+                        success = { value ->
+                            Log.i("Flagsmith", "Using cached result")
+                            result(Result.success(value))
+                        },
+                        failure = { err ->
+                            Log.e("Flagsmith", "Failed to get cached result")
+                            result(Result.failure(err))
+                        }
+                    )
+                } else {
+                    result(Result.failure(t))
+                }
             }
         })
     }
