@@ -1,16 +1,13 @@
 package com.flagsmith
 
 import android.content.Context
-import android.util.Log
 import com.flagsmith.entities.*
 import com.flagsmith.internal.FlagsmithAnalytics
-import com.flagsmith.internal.FlagsmithClient
 import com.flagsmith.internal.FlagsmithRetrofitService
 import com.flagsmith.internal.cachedEnqueueWithResult
 import com.github.kittinunf.fuse.android.config
 import com.github.kittinunf.fuse.android.defaultAndroidMemoryCache
 import com.github.kittinunf.fuse.core.*
-import com.github.kittinunf.result.isSuccess
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.HttpException

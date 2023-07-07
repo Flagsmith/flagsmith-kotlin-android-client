@@ -5,7 +5,6 @@ import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.flagsmith.endpoints.AnalyticsEndpoint
 import org.json.JSONException
 import org.json.JSONObject
 

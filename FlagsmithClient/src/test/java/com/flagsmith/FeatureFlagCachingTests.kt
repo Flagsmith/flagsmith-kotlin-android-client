@@ -7,8 +7,6 @@ import android.graphics.Color
 import android.util.Log
 import com.flagsmith.entities.Flag
 import com.flagsmith.mockResponses.*
-import com.github.kittinunf.fuel.Fuel
-import kotlinx.coroutines.runBlocking
 import org.awaitility.Awaitility
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilNotNull
@@ -120,7 +118,6 @@ class FeatureFlagCachingTests {
 
     @Test
     fun testGetFeatureFlagsWithIdentityUsesCachedResponseOnSecondRequestFailure() {
-        Fuel.trace = true
         mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         mockServer.mockFailureFor(MockEndpoint.GET_IDENTITIES)
 
@@ -158,7 +155,6 @@ class FeatureFlagCachingTests {
 
     @Test
     fun testGetFeatureFlagsWithIdentityUsesCachedResponseOnSecondRequestTimeout() {
-        Fuel.trace = true
         mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         mockServer.mockDelayFor(MockEndpoint.GET_IDENTITIES)
 
@@ -196,7 +192,6 @@ class FeatureFlagCachingTests {
 
     @Test
     fun testGetFeatureFlagsNoIdentityUsesCachedResponseOnSecondRequestFailure() {
-        Fuel.trace = true
         mockServer.mockResponseFor(MockEndpoint.GET_FLAGS)
         mockServer.mockFailureFor(MockEndpoint.GET_FLAGS)
 

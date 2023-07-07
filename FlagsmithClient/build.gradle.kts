@@ -73,8 +73,8 @@ dependencies {
 
     implementation("com.github.kittinunf.result:result:5.4.0")
 
-    implementation("com.github.kittinunf.fuel:fuel:2.3.1")
-    implementation("com.github.kittinunf.fuel:fuel-gson:2.3.1")
+//    implementation("com.github.kittinunf.fuel:fuel:2.3.1")
+//    implementation("com.github.kittinunf.fuel:fuel-gson:2.3.1")
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")

@@ -1,14 +1,13 @@
 package com.flagsmith.mockResponses
 
-import com.flagsmith.endpoints.FlagsEndpoint
-import com.flagsmith.endpoints.IdentityFlagsAndTraitsEndpoint
-import com.flagsmith.endpoints.TraitsEndpoint
+import com.flagsmith.mockResponses.endpoints.FlagsEndpoint
+import com.flagsmith.mockResponses.endpoints.IdentityFlagsAndTraitsEndpoint
+import com.flagsmith.mockResponses.endpoints.TraitsEndpoint
 import com.flagsmith.entities.Trait
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.matchers.Times
 import org.mockserver.model.HttpError
 import org.mockserver.model.HttpRequest.request
-import org.mockserver.model.HttpResponse.notFoundResponse
 import org.mockserver.model.HttpResponse.response
 import org.mockserver.model.MediaType
 import java.util.concurrent.TimeUnit
