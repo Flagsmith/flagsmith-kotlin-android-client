@@ -87,25 +87,8 @@ class Flagsmith constructor(
             result(res.map { it.traits })
         }
 
-    fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) {
-        val call = retrofit.postTraits(TraitWithIdentity(trait.key, trait.value, Identity(identity)))
-        call.enqueue(object : Callback<TraitWithIdentity> {
-            override fun onResponse(
-                call: Call<TraitWithIdentity>,
-                response: Response<TraitWithIdentity>
-            ) {
-                if (response.isSuccessful && response.body() != null) {
-                    result(Result.success(response.body()!!))
-                } else {
-                    result(Result.failure(HttpException(response)))
-                }
-            }
-
-            override fun onFailure(call: Call<TraitWithIdentity>, t: Throwable) {
-                result(Result.failure(t))
-            }
-        })
-    }
+    fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) =
+        retrofit.postTraits(TraitWithIdentity(trait.key, trait.value, Identity(identity))).enqueueWithResult(result = result)
 
     fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
         retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult(defaults = null, result = result)
