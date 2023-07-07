@@ -29,7 +29,7 @@ interface FlagsmithRetrofitService {
     fun postAnalytics(@Body eventMap: Map<String, Int?>) : Call<TraitWithIdentity>
 
     companion object {
-        //TODO: Consider these might be fine for server side, but a bit short for mobile
+        //TODO: Consider these might be fine for server side, but might be a bit short for mobile
         private const val REQUEST_TIMEOUT_SECONDS = 2L
         private const val READ_WRITE_TIMEOUT_SECONDS = 5L
         private const val cacheSize = 10L * 1024L * 1024L // 10 MB
@@ -82,18 +82,23 @@ interface FlagsmithRetrofitService {
 }
 
 // Convert a Retrofit Call to a Result by extending the Call class
-fun <T> Call<T>.enqueueWithResult(result: (Result<T>) -> Unit) {
+fun <T> Call<T>.enqueueWithResult(defaults: T? = null, result: (Result<T>) -> Unit) {
     this.enqueue(object : Callback<T> {
         override fun onResponse(call: Call<T>, response: Response<T>) {
             if (response.isSuccessful && response.body() != null) {
                 result(Result.success(response.body()!!))
             } else {
-                result(Result.failure(HttpException(response)))
+                onFailure(call, HttpException(response))
             }
         }
 
         override fun onFailure(call: Call<T>, t: Throwable) {
-            result(Result.failure(t))
+            // If we've got defaults to return, return them
+            if (defaults != null) {
+                result(Result.success(defaults))
+            } else {
+                result(Result.failure(t))
+            }
         }
     })
 }

@@ -53,11 +53,11 @@ class Flagsmith constructor(
 
     fun getFeatureFlags(identity: String? = null, result: (Result<List<Flag>>) -> Unit) {
         if (identity != null) {
-            retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult() { res ->
+            retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult { res ->
                 result(res.map { it.flags })
             }
         } else {
-            retrofit.getFlags().enqueueWithResult(result)
+            retrofit.getFlags().enqueueWithResult(defaults = defaultFlags, result = result)
         }
     }
 
@@ -108,7 +108,7 @@ class Flagsmith constructor(
     }
 
     fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
-        retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult(result)
+        retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult(defaults = null, result = result)
 
     private fun getFeatureFlag(
         featureId: String,
@@ -121,6 +121,5 @@ class Flagsmith constructor(
             foundFlag
         })
     }
-
 
 }
