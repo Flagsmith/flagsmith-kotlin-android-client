@@ -6,6 +6,7 @@ import com.flagsmith.entities.*
 import com.flagsmith.internal.FlagsmithAnalytics
 import com.flagsmith.internal.FlagsmithClient
 import com.flagsmith.internal.FlagsmithRetrofitService
+import com.flagsmith.internal.cachedEnqueueWithResult
 import com.github.kittinunf.fuse.android.config
 import com.github.kittinunf.fuse.android.defaultAndroidMemoryCache
 import com.github.kittinunf.fuse.core.*
@@ -40,7 +41,7 @@ class Flagsmith constructor(
     private val retrofit: FlagsmithRetrofitService = FlagsmithRetrofitService.create(baseUrl, environmentKey)
     private val analytics: FlagsmithAnalytics? =
         if (!enableAnalytics) null
-        else if (context != null) FlagsmithAnalytics(context, client, analyticsFlushPeriod)
+        else if (context != null) FlagsmithAnalytics(context, retrofit, analyticsFlushPeriod)
         else throw IllegalArgumentException("Flagsmith requires a context to use the analytics feature")
 
     // The cache can be overridden if necessary for e.g. a file-based cache
@@ -140,59 +141,5 @@ class Flagsmith constructor(
         })
     }
 
-    // Convert a Retrofit Call to a Result by extending the Call class
-    private fun <T> Call<T>.enqueueWithResult(result: (Result<T>) -> Unit) {
-        this.enqueue(object : Callback<T> {
-            override fun onResponse(call: Call<T>, response: Response<T>) {
-                if (response.isSuccessful && response.body() != null) {
-                    result(Result.success(response.body()!!))
-                } else {
-                    result(Result.failure(HttpException(response)))
-                }
-            }
 
-            override fun onFailure(call: Call<T>, t: Throwable) {
-                result(Result.failure(t))
-            }
-        })
-    }
-
-    private fun <T : Any> Call<T>.cachedEnqueueWithResult(cache: Cache<T>?, result: (Result<T>) -> Unit) {
-        val cacheKey = this.request().url().toString()
-        this.enqueue(object : Callback<T> {
-            override fun onResponse(call: Call<T>, response: Response<T>) {
-                if (response.isSuccessful && response.body() != null) {
-                    val body = response.body()!!
-                    cache?.put(key = cacheKey, putValue = body).also { cacheResult ->
-                        if (cacheResult != null) {
-                            if (!cacheResult.isSuccess()) {
-                                Log.e("Flagsmith", "Failed to cache flags and traits")
-                            }
-                        }
-                    }
-                    result(Result.success(response.body()!!))
-                } else {
-                    // Reuse the onFailure callback to handle non-200 responses and avoid code duplication
-                    onFailure(call, HttpException(response))
-                }
-            }
-
-            override fun onFailure(call: Call<T>, t: Throwable) {
-                if (cache != null) {
-                    cache?.get(key = DEFAULT_CACHE_KEY)?.fold(
-                        success = { value ->
-                            Log.i("Flagsmith", "Using cached result")
-                            result(Result.success(value))
-                        },
-                        failure = { err ->
-                            Log.e("Flagsmith", "Failed to get cached result")
-                            result(Result.failure(err))
-                        }
-                    )
-                } else {
-                    result(Result.failure(t))
-                }
-            }
-        })
-    }
 }

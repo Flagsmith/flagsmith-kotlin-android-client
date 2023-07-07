@@ -11,7 +11,7 @@ import org.json.JSONObject
 
 class FlagsmithAnalytics constructor(
     private val context: Context,
-    private val client: FlagsmithClient,
+    private val retrofitService: FlagsmithRetrofitService,
     private val flushPeriod: Int
 ) {
     private val applicationContext: Context = context.applicationContext
@@ -21,9 +21,8 @@ class FlagsmithAnalytics constructor(
     private val timerRunnable = object : Runnable {
         override fun run() {
             if (currentEvents.isNotEmpty()) {
-                client.request(AnalyticsEndpoint(eventMap = currentEvents)) {
-                    it
-                        .onSuccess { resetMap() }
+                retrofitService.postAnalytics(currentEvents).enqueueWithResult { result ->
+                    result.onSuccess { resetMap() }
                         .onFailure { err ->
                             Log.e(
                                 "FLAGSMITH",
