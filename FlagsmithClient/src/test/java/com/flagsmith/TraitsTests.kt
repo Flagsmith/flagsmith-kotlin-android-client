@@ -78,7 +78,6 @@ class TraitsTests {
         }
     }
 
-    //TODO: Add back in when we're fully over to Retrofit as no idea why this isn't running
     @Test
     fun testSetTrait() {
         mockServer.mockResponseFor(MockEndpoint.SET_TRAIT)
