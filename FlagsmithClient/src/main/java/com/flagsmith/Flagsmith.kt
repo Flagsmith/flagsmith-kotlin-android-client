@@ -5,9 +5,6 @@ import com.flagsmith.entities.*
 import com.flagsmith.internal.FlagsmithAnalytics
 import com.flagsmith.internal.FlagsmithRetrofitService
 import com.flagsmith.internal.enqueueWithResult
-import com.github.kittinunf.fuse.android.config
-import com.github.kittinunf.fuse.android.defaultAndroidMemoryCache
-import com.github.kittinunf.fuse.core.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.HttpException
@@ -41,30 +38,17 @@ class Flagsmith constructor(
         else if (context != null) FlagsmithAnalytics(context, retrofit, analyticsFlushPeriod)
         else throw IllegalArgumentException("Flagsmith requires a context to use the analytics feature")
 
-    // The cache can be overridden if necessary for e.g. a file-based cache
-    var identityFlagsAndTraitsCache: Cache<IdentityFlagsAndTraits>? =
-        if (!enableCache) null
-        else if (context == null) throw IllegalArgumentException("Flagsmith requires a context to use the cache feature")
-        else getDefaultCache(IdentityFlagsAndTraitsDataConvertible())
-
-    var flagsCache: Cache<List<Flag>>? =
-        if (!enableCache) null
-        else if (context == null) throw IllegalArgumentException("Flagsmith requires a context to use the cache feature")
-        else getDefaultCache(FlagsConvertible())
+    init {
+        if (enableCache && context == null) {
+            throw IllegalArgumentException("Flagsmith requires a context to use the cache feature")
+        }
+    }
 
     companion object {
         const val DEFAULT_ENABLE_ANALYTICS = true
         const val DEFAULT_ENABLE_CACHE = true
         const val DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS = 10
         const val DEFAULT_CACHE_TTL_SECONDS = 604800L // Default to 'infinite' cache
-    }
-
-    // Default in-memory cache to be used when API requests fail
-    // Pass to the cache parameter of the constructor to override
-    private fun <T : Any> getDefaultCache(convertible: Fuse.DataConvertible<T>): Cache<T> {
-        return CacheBuilder.config(context!!, convertible = convertible) {
-            memCache = defaultAndroidMemoryCache()
-        }.build()
     }
 
     fun getFeatureFlags(identity: String? = null, result: (Result<List<Flag>>) -> Unit) {
