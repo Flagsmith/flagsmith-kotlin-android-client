@@ -108,7 +108,7 @@ fun <T : Any> Call<T>.cachedEnqueueWithResult(cache: Cache<T>?, result: (Result<
 
         override fun onFailure(call: Call<T>, t: Throwable) {
             if (cache != null) {
-                cache.get(key = Flagsmith.DEFAULT_CACHE_KEY).fold(
+                cache.get(key = cacheKey).fold(
                     success = { value ->
                         Log.i("Flagsmith", "Using cached result")
                         result(Result.success(value))

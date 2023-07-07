@@ -119,7 +119,7 @@ class FeatureFlagCachingTests {
     }
 
     @Test
-    fun testGetFeatureFlagsUsesCachedResponseOnSecondRequestFailure() {
+    fun testGetFeatureFlagsWithIdentityUsesCachedResponseOnSecondRequestFailure() {
         Fuel.trace = true
         mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         mockServer.mockFailureFor(MockEndpoint.GET_IDENTITIES)
@@ -157,7 +157,7 @@ class FeatureFlagCachingTests {
     }
 
     @Test
-    fun testGetFeatureFlagsUsesCachedResponseOnSecondRequestTimeout() {
+    fun testGetFeatureFlagsWithIdentityUsesCachedResponseOnSecondRequestTimeout() {
         Fuel.trace = true
         mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         mockServer.mockDelayFor(MockEndpoint.GET_IDENTITIES)
@@ -190,6 +190,43 @@ class FeatureFlagCachingTests {
 
         } catch (e: Exception) {
             Log.e("testGetFeatureFlagsTimeoutAwaitability", "error: $e")
+            Assert.fail()
+        }
+    }
+
+    @Test
+    fun testGetFeatureFlagsNoIdentityUsesCachedResponseOnSecondRequestFailure() {
+        Fuel.trace = true
+        mockServer.mockResponseFor(MockEndpoint.GET_FLAGS)
+        mockServer.mockFailureFor(MockEndpoint.GET_FLAGS)
+
+        try {
+            // First time around we should be successful and cache the response
+            var foundFromServer: Flag? = null
+            flagsmithWithCache.getFeatureFlags() { result ->
+                Assert.assertTrue(result.isSuccess)
+
+                foundFromServer = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
+                Assert.assertNotNull(foundFromServer)
+                Assert.assertEquals(7.0, foundFromServer?.featureStateValue)
+            }
+
+            await untilNotNull { foundFromServer }
+
+            // Now we mock the failure and expect the cached response to be returned
+            var foundFromCache: Flag? = null
+            flagsmithWithCache.getFeatureFlags() { result ->
+                Assert.assertTrue(result.isSuccess)
+
+                foundFromCache = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
+                Assert.assertNotNull(foundFromCache)
+                Assert.assertEquals(7.0, foundFromCache?.featureStateValue)
+            }
+
+            await untilNotNull { foundFromCache }
+
+        } catch (e: Exception) {
+            Log.e("testGetFeatureFlagsNoIdentityUsesCachedResponseOnSecondRequestFailure", "error: $e")
             Assert.fail()
         }
     }

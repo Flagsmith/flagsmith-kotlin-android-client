@@ -37,7 +37,6 @@ class Flagsmith constructor(
     private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS,
     private val defaultFlags: List<Flag> = emptyList()
 ) {
-    private val client: FlagsmithClient = FlagsmithClient(baseUrl, environmentKey)
     private val retrofit: FlagsmithRetrofitService = FlagsmithRetrofitService.create(baseUrl, environmentKey)
     private val analytics: FlagsmithAnalytics? =
         if (!enableAnalytics) null
@@ -59,7 +58,6 @@ class Flagsmith constructor(
         const val DEFAULT_ENABLE_ANALYTICS = true
         const val DEFAULT_ENABLE_CACHE = true
         const val DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS = 10
-        const val DEFAULT_CACHE_KEY = "flagsmith"
     }
 
     // Default in-memory cache to be used when API requests fail

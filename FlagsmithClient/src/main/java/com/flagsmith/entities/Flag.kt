@@ -34,6 +34,7 @@ data class Feature(
 class FlagsConvertible: Fuse.DataConvertible<List<Flag>> {
     override fun convertFromData(bytes: ByteArray): List<Flag> {
         val collectionType: TypeToken<List<Flag>> = object : TypeToken<List<Flag>>() {}
+        val type = object : TypeToken<ArrayList<Flag>>() {}.type
         return Gson().fromJson(String(bytes), collectionType)
     }
 
