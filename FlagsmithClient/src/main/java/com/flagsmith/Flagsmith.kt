@@ -4,7 +4,7 @@ import android.content.Context
 import com.flagsmith.entities.*
 import com.flagsmith.internal.FlagsmithAnalytics
 import com.flagsmith.internal.FlagsmithRetrofitService
-import com.flagsmith.internal.cachedEnqueueWithResult
+import com.flagsmith.internal.enqueueWithResult
 import com.github.kittinunf.fuse.android.config
 import com.github.kittinunf.fuse.android.defaultAndroidMemoryCache
 import com.github.kittinunf.fuse.core.*
@@ -31,10 +31,11 @@ class Flagsmith constructor(
     private val context: Context? = null,
     private val enableAnalytics: Boolean = DEFAULT_ENABLE_ANALYTICS,
     private val enableCache: Boolean = DEFAULT_ENABLE_CACHE,
+    private val cacheTTLSeconds: Long = DEFAULT_CACHE_TTL_SECONDS,
     private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS,
     private val defaultFlags: List<Flag> = emptyList()
 ) {
-    private val retrofit: FlagsmithRetrofitService = FlagsmithRetrofitService.create(baseUrl, environmentKey)
+    private val retrofit: FlagsmithRetrofitService = FlagsmithRetrofitService.create(baseUrl, environmentKey, cacheTTLSeconds, context, enableCache)
     private val analytics: FlagsmithAnalytics? =
         if (!enableAnalytics) null
         else if (context != null) FlagsmithAnalytics(context, retrofit, analyticsFlushPeriod)
@@ -55,6 +56,7 @@ class Flagsmith constructor(
         const val DEFAULT_ENABLE_ANALYTICS = true
         const val DEFAULT_ENABLE_CACHE = true
         const val DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS = 10
+        const val DEFAULT_CACHE_TTL_SECONDS = 604800L // Default to 'infinite' cache
     }
 
     // Default in-memory cache to be used when API requests fail
@@ -67,11 +69,11 @@ class Flagsmith constructor(
 
     fun getFeatureFlags(identity: String? = null, result: (Result<List<Flag>>) -> Unit) {
         if (identity != null) {
-            retrofit.getIdentityFlagsAndTraits(identity).cachedEnqueueWithResult(identityFlagsAndTraitsCache) { res ->
+            retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult() { res ->
                 result(res.map { it.flags })
             }
         } else {
-            retrofit.getFlags().cachedEnqueueWithResult(flagsCache, result)
+            retrofit.getFlags().enqueueWithResult(result)
         }
     }
 
@@ -92,12 +94,12 @@ class Flagsmith constructor(
     }
 
     fun getTrait(id: String, identity: String, result: (Result<Trait?>) -> Unit) =
-        retrofit.getIdentityFlagsAndTraits(identity).cachedEnqueueWithResult(identityFlagsAndTraitsCache) { res ->
+        retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult { res ->
             result(res.map { value -> value.traits.find { it.key == id } })
         }
 
     fun getTraits(identity: String, result: (Result<List<Trait>>) -> Unit) =
-        retrofit.getIdentityFlagsAndTraits(identity).cachedEnqueueWithResult(identityFlagsAndTraitsCache) { res ->
+        retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult { res ->
             result(res.map { it.traits })
         }
 
@@ -122,7 +124,7 @@ class Flagsmith constructor(
     }
 
     fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
-        retrofit.getIdentityFlagsAndTraits(identity).cachedEnqueueWithResult(identityFlagsAndTraitsCache, result)
+        retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult(result)
 
     private fun getFeatureFlag(
         featureId: String,
