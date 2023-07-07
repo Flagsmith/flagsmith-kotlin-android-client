@@ -5,10 +5,6 @@ import android.util.Log
 import com.flagsmith.entities.Flag
 import com.flagsmith.entities.IdentityFlagsAndTraits
 import com.flagsmith.entities.TraitWithIdentity
-import com.github.kittinunf.fuse.core.Cache
-import com.github.kittinunf.fuse.core.get
-import com.github.kittinunf.fuse.core.put
-import com.github.kittinunf.result.isSuccess
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.*
@@ -102,64 +98,3 @@ fun <T> Call<T>.enqueueWithResult(result: (Result<T>) -> Unit) {
     })
 }
 
-// Convert a Retrofit Call to a Result by extending the Call class, also caching the result
-fun <T : Any> Call<T>.cachedEnqueueWithResult(cache: Cache<T>?, result: (Result<T>) -> Unit) {
-    val cacheKey = this.request().url().toString()
-
-    // To be used if there's no cache available
-    fun <T : Any> Call<T>.enqueueWithResultWhenNoCachedValue(cache: Cache<T>?, result: (Result<T>) -> Unit) {
-        this.enqueue(object : Callback<T> {
-            override fun onResponse(call: Call<T>, response: Response<T>) {
-                if (response.isSuccessful && response.body() != null) {
-                    val body = response.body()!!
-                    cache?.put(key = cacheKey, putValue = body).also { cacheResult ->
-                        if (cacheResult != null) {
-                            if (!cacheResult.isSuccess()) {
-                                Log.e("Flagsmith", "Failed to cache flags and traits")
-                            }
-                        }
-                    }
-                    result(Result.success(response.body()!!))
-                } else {
-                    // Reuse the onFailure callback to handle non-200 responses and avoid code duplication
-                    onFailure(call, HttpException(response))
-                }
-            }
-
-            override fun onFailure(call: Call<T>, t: Throwable) {
-                if (cache != null) {
-                    cache.get(key = cacheKey).fold(
-                        success = { value ->
-                            Log.i("Flagsmith", "Using cached result")
-                            result(Result.success(value))
-                        },
-                        failure = { err ->
-                            Log.e("Flagsmith", "Failed to get cached result")
-                            result(Result.failure(err))
-                        }
-                    )
-                } else {
-                    result(Result.failure(t))
-                }
-            }
-        })
-    }
-
-    // Try getting the data from the cache first
-    if (cache != null) {
-        cache.get(key = cacheKey).fold(
-            success = { value ->
-                Log.i("Flagsmith", "Using cached result")
-                result(Result.success(value))
-            },
-            failure = { err ->
-                Log.i("Flagsmith", "Failed to get cached result")
-                result(Result.failure(err))
-            }
-        )
-    } else {
-        this.enqueueWithResultWhenNoCachedValue(null, result)
-        return
-    }
-
-}
