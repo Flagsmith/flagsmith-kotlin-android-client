@@ -55,7 +55,7 @@ class FeatureFlagCachingTests {
                     type = "CONFIG",
                     defaultEnabled = true,
                     initialValue = "true"
-                ), enabled = true, featureStateValue = "value1"
+                ), enabled = true, featureStateValue = "Vanilla Ice"
             ),
             Flag(
                 feature = Feature(
@@ -66,7 +66,7 @@ class FeatureFlagCachingTests {
                     type = "CONFIG",
                     defaultEnabled = true,
                     initialValue = "true"
-                ), enabled = true, featureStateValue = "value1"
+                ), enabled = true, featureStateValue = "value2"
             ),
         )
 
@@ -164,7 +164,7 @@ class FeatureFlagCachingTests {
             await untilNotNull { foundFromCache }
 
         } catch (e: Exception) {
-            Log.e("testGetFeatureFlagsTimeoutAwaitability", "error: $e")
+            Log.e("testGetFeatureFlagsWithIdentityUsesCachedResponseOnSecondRequestFailure", "error: $e")
             Assert.fail()
         }
     }
@@ -190,7 +190,6 @@ class FeatureFlagCachingTests {
 
             // Now we mock the failure and expect the cached response to be returned
             var foundFromCache: Flag? = null
-//            mockServer.mockFailureFor(MockEndpoint.GET_IDENTITIES)
             flagsmithWithCache.getFeatureFlags(identity = "person") { result ->
                 Assert.assertTrue(result.isSuccess)
 
@@ -203,7 +202,7 @@ class FeatureFlagCachingTests {
             await untilNotNull { foundFromCache }
 
         } catch (e: Exception) {
-            Log.e("testGetFeatureFlagsTimeoutAwaitability", "error: $e")
+            Log.e("testGetFeatureFlagsWithIdentityUsesCachedResponseOnSecondRequestTimeout", "error: $e")
             Assert.fail()
         }
     }
@@ -282,7 +281,7 @@ class FeatureFlagCachingTests {
 
         } catch (e: Exception) {
             Log.e(
-                "testGetFeatureFlagsNoIdentityUsesCachedResponseOnSecondRequestFailure",
+                "testGetFlagsWithFailingRequestShouldGetDefaults",
                 "error: $e"
             )
             Assert.fail()
@@ -291,6 +290,33 @@ class FeatureFlagCachingTests {
 
     @Test
     fun testGetFlagsWithTimeoutRequestShouldGetDefaults() {
+        mockServer.mockDelayFor(MockEndpoint.GET_FLAGS)
+        mockServer.mockResponseFor(MockEndpoint.GET_FLAGS)
 
+        // First time around we should get the default flag values
+        var foundFromCache: Flag? = null
+        flagsmithWithCache.getFeatureFlags() { result ->
+            Assert.assertTrue(result.isSuccess)
+
+            foundFromCache =
+                result.getOrThrow().find { flag -> flag.feature.name == "Flag 1" }
+            Assert.assertNotNull(foundFromCache)
+            Assert.assertEquals("Vanilla Ice", foundFromCache?.featureStateValue)
+        }
+
+        await untilNotNull { foundFromCache }
+
+        // Now we mock the successful request and expect the server values
+        var foundFromServer: Flag? = null
+        flagsmithWithCache.getFeatureFlags() { result ->
+            Assert.assertTrue(result.isSuccess)
+
+            foundFromServer =
+                result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
+            Assert.assertNotNull(foundFromServer)
+            Assert.assertEquals(756.0, foundFromServer?.featureStateValue)
+        }
+
+        await untilNotNull { foundFromServer }
     }
 }

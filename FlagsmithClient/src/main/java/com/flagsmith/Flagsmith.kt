@@ -5,10 +5,6 @@ import com.flagsmith.entities.*
 import com.flagsmith.internal.FlagsmithAnalytics
 import com.flagsmith.internal.FlagsmithRetrofitService
 import com.flagsmith.internal.enqueueWithResult
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.HttpException
-import retrofit2.Response
 
 /**
  * Flagsmith
