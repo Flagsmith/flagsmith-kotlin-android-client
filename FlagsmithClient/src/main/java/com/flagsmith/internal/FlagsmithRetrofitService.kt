@@ -75,7 +75,9 @@ interface FlagsmithRetrofitService {
     }
 }
 
-// Convert a Retrofit Call to a Result by extending the Call class
+// Convert a Retrofit Call to a standard Kotlin Result by extending the Call class
+// This avoids having to use the suspend keyword in the FlagsmithClient to break the API
+// And also avoids a lot of code duplication
 fun <T> Call<T>.enqueueWithResult(defaults: T? = null, result: (Result<T>) -> Unit) {
     this.enqueue(object : Callback<T> {
         override fun onResponse(call: Call<T>, response: Response<T>) {
