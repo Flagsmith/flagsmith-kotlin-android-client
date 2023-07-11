@@ -2,6 +2,7 @@ package com.flagsmith.internal;
 
 import android.content.Context
 import android.util.Log
+import com.flagsmith.FlagsmithCacheConfig
 import com.flagsmith.entities.Flag
 import com.flagsmith.entities.IdentityFlagsAndTraits
 import com.flagsmith.entities.TraitWithIdentity
@@ -30,23 +31,20 @@ interface FlagsmithRetrofitService {
 
     companion object {
         //TODO: Consider these might be fine for server side, but might be a bit short for mobile
-        private const val REQUEST_TIMEOUT_SECONDS = 2L
-        private const val READ_WRITE_TIMEOUT_SECONDS = 5L
+
         private const val cacheSize = 10L * 1024L * 1024L // 10 MB
 
         fun create(
             baseUrl: String,
             environmentKey: String,
-            ttlSeconds: Long,
             context: Context?,
-            enableCache: Boolean
+            cacheConfig: FlagsmithCacheConfig = FlagsmithCacheConfig()
         ): FlagsmithRetrofitService {
             fun cacheControlInterceptor(ttlSeconds: Long?): Interceptor {
                 return Interceptor { chain ->
                     val response = chain.proceed(chain.request())
-                    val maxAge = ttlSeconds
                     response.newBuilder()
-                        .header("Cache-Control", "public, max-age=$maxAge")
+                        .header("Cache-Control", "public, max-age=${cacheConfig.cacheTTLSeconds}")
                         .removeHeader("Pragma")
                         .build()
                 }
@@ -63,11 +61,11 @@ interface FlagsmithRetrofitService {
 
             val client = OkHttpClient.Builder()
                 .addInterceptor(envKeyInterceptor(environmentKey))
-                .addNetworkInterceptor(cacheControlInterceptor(ttlSeconds))
-                .callTimeout(REQUEST_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)
-                .readTimeout(READ_WRITE_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)
-                .writeTimeout(READ_WRITE_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)
-                .cache(if (context != null && enableCache) okhttp3.Cache(context.cacheDir, cacheSize) else null)
+                .addNetworkInterceptor(cacheControlInterceptor(cacheConfig.cacheTTLSeconds))
+                .callTimeout(cacheConfig.requestTimeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(cacheConfig.readAndWriteTimeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(cacheConfig.readAndWriteTimeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
+                .cache(if (context != null && cacheConfig.enableCache) okhttp3.Cache(context.cacheDir, cacheSize) else null)
                 .build()
 
             val retrofit = Retrofit.Builder()

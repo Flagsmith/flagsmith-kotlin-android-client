@@ -27,28 +27,25 @@ class Flagsmith constructor(
     private val baseUrl: String = "https://edge.api.flagsmith.com/api/v1",
     private val context: Context? = null,
     private val enableAnalytics: Boolean = DEFAULT_ENABLE_ANALYTICS,
-    private val enableCache: Boolean = DEFAULT_ENABLE_CACHE,
-    private val cacheTTLSeconds: Long = DEFAULT_CACHE_TTL_SECONDS,
     private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS,
+    private val cacheConfig: FlagsmithCacheConfig = FlagsmithCacheConfig(),
     private val defaultFlags: List<Flag> = emptyList()
 ) {
-    private val retrofit: FlagsmithRetrofitService = FlagsmithRetrofitService.create(baseUrl, environmentKey, cacheTTLSeconds, context, enableCache)
+    private val retrofit: FlagsmithRetrofitService = FlagsmithRetrofitService.create(baseUrl, environmentKey, context, cacheConfig)
     private val analytics: FlagsmithAnalytics? =
         if (!enableAnalytics) null
         else if (context != null) FlagsmithAnalytics(context, retrofit, analyticsFlushPeriod)
         else throw IllegalArgumentException("Flagsmith requires a context to use the analytics feature")
 
     init {
-        if (enableCache && context == null) {
+        if (cacheConfig.enableCache && context == null) {
             throw IllegalArgumentException("Flagsmith requires a context to use the cache feature")
         }
     }
 
     companion object {
         const val DEFAULT_ENABLE_ANALYTICS = true
-        const val DEFAULT_ENABLE_CACHE = true
         const val DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS = 10
-        const val DEFAULT_CACHE_TTL_SECONDS = 604800L // Default to 'infinite' cache
     }
 
     fun getFeatureFlags(identity: String? = null, result: (Result<List<Flag>>) -> Unit) {
