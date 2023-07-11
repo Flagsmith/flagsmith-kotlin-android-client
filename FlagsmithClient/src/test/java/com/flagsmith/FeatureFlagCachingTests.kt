@@ -74,16 +74,16 @@ class FeatureFlagCachingTests {
             environmentKey = "",
             baseUrl = "http://localhost:${mockServer.localPort}",
             enableAnalytics = false,
-            enableCache = true,
             context = mockApplicationContext,
-            defaultFlags = defaultFlags
+            defaultFlags = defaultFlags,
+            cacheConfig = FlagsmithCacheConfig()
         )
 
         flagsmithNoCache = Flagsmith(
             environmentKey = "",
             baseUrl = "http://localhost:${mockServer.localPort}",
             enableAnalytics = false,
-            enableCache = false,
+            cacheConfig = FlagsmithCacheConfig(enableCache = false),
             defaultFlags = defaultFlags
         )
     }

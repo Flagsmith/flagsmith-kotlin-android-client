@@ -27,20 +27,16 @@ interface FlagsmithRetrofitService {
     fun postTraits(@Body trait: TraitWithIdentity) : Call<TraitWithIdentity>
 
     @POST("analytics/flags/")
-    fun postAnalytics(@Body eventMap: Map<String, Int?>) : Call<TraitWithIdentity>
+    fun postAnalytics(@Body eventMap: Map<String, Int?>) : Call<Unit>
 
     companion object {
-        //TODO: Consider these might be fine for server side, but might be a bit short for mobile
-
-        private const val cacheSize = 10L * 1024L * 1024L // 10 MB
-
         fun create(
             baseUrl: String,
             environmentKey: String,
             context: Context?,
             cacheConfig: FlagsmithCacheConfig = FlagsmithCacheConfig()
         ): FlagsmithRetrofitService {
-            fun cacheControlInterceptor(ttlSeconds: Long?): Interceptor {
+            fun cacheControlInterceptor(): Interceptor {
                 return Interceptor { chain ->
                     val response = chain.proceed(chain.request())
                     response.newBuilder()
@@ -61,11 +57,11 @@ interface FlagsmithRetrofitService {
 
             val client = OkHttpClient.Builder()
                 .addInterceptor(envKeyInterceptor(environmentKey))
-                .addNetworkInterceptor(cacheControlInterceptor(cacheConfig.cacheTTLSeconds))
+                .let { if (cacheConfig.enableCache) it.addNetworkInterceptor(cacheControlInterceptor()) else it }
                 .callTimeout(cacheConfig.requestTimeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
                 .readTimeout(cacheConfig.readAndWriteTimeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
                 .writeTimeout(cacheConfig.readAndWriteTimeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
-                .cache(if (context != null && cacheConfig.enableCache) okhttp3.Cache(context.cacheDir, cacheSize) else null)
+                .cache(if (context != null && cacheConfig.enableCache) okhttp3.Cache(context.cacheDir, cacheConfig.cacheSize) else null)
                 .build()
 
             val retrofit = Retrofit.Builder()
