@@ -76,7 +76,7 @@ class FeatureFlagCachingTests {
             enableAnalytics = false,
             context = mockApplicationContext,
             defaultFlags = defaultFlags,
-            cacheConfig = FlagsmithCacheConfig()
+            cacheConfig = FlagsmithCacheConfig(enableCache = true)
         )
 
         flagsmithNoCache = Flagsmith(
@@ -121,7 +121,8 @@ class FeatureFlagCachingTests {
             val flagsmith = Flagsmith(
                 environmentKey = "",
                 baseUrl = "http://localhost:${mockServer.localPort}",
-                enableAnalytics = false
+                enableAnalytics = false,
+                cacheConfig = FlagsmithCacheConfig(enableCache = true),
             )
         }
         Assert.assertEquals(
