@@ -36,7 +36,8 @@ interface FlagsmithRetrofitService {
             context: Context?,
             cacheConfig: FlagsmithCacheConfig,
             requestTimeoutSeconds: Long,
-            readAndWriteTimeoutSeconds: Long
+            readTimeoutSeconds: Long,
+            writeTimeoutSeconds: Long,
         ): FlagsmithRetrofitService {
             fun cacheControlInterceptor(): Interceptor {
                 return Interceptor { chain ->
@@ -61,8 +62,8 @@ interface FlagsmithRetrofitService {
                 .addInterceptor(envKeyInterceptor(environmentKey))
                 .let { if (cacheConfig.enableCache) it.addNetworkInterceptor(cacheControlInterceptor()) else it }
                 .callTimeout(requestTimeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
-                .readTimeout(readAndWriteTimeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
-                .writeTimeout(readAndWriteTimeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(readTimeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(writeTimeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
                 .cache(if (context != null && cacheConfig.enableCache) okhttp3.Cache(context.cacheDir, cacheConfig.cacheSize) else null)
                 .build()
 

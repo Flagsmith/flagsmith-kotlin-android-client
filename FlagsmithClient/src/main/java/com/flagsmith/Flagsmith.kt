@@ -27,11 +27,12 @@ class Flagsmith constructor(
     private val cacheConfig: FlagsmithCacheConfig = FlagsmithCacheConfig(),
     private val defaultFlags: List<Flag> = emptyList(),
     private val requestTimeoutSeconds: Long = 4L,
-    private val readAndWriteTimeoutSeconds: Long = 6L,
+    private val readTimeoutSeconds: Long = 6L,
+    private val writeTimeoutSeconds: Long = 6L
 ) {
     private val retrofit: FlagsmithRetrofitService = FlagsmithRetrofitService.create(
         baseUrl = baseUrl, environmentKey = environmentKey, context = context, cacheConfig = cacheConfig,
-        requestTimeoutSeconds = requestTimeoutSeconds, readAndWriteTimeoutSeconds = readAndWriteTimeoutSeconds)
+        requestTimeoutSeconds = requestTimeoutSeconds, readTimeoutSeconds = readTimeoutSeconds, writeTimeoutSeconds = writeTimeoutSeconds)
     private val analytics: FlagsmithAnalytics? =
         if (!enableAnalytics) null
         else if (context != null) FlagsmithAnalytics(context, retrofit, analyticsFlushPeriod)
