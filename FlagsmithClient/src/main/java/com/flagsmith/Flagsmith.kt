@@ -25,9 +25,13 @@ class Flagsmith constructor(
     private val enableAnalytics: Boolean = DEFAULT_ENABLE_ANALYTICS,
     private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS,
     private val cacheConfig: FlagsmithCacheConfig = FlagsmithCacheConfig(),
-    private val defaultFlags: List<Flag> = emptyList()
+    private val defaultFlags: List<Flag> = emptyList(),
+    private val requestTimeoutSeconds: Long = 4L,
+    private val readAndWriteTimeoutSeconds: Long = 6L,
 ) {
-    private val retrofit: FlagsmithRetrofitService = FlagsmithRetrofitService.create(baseUrl, environmentKey, context, cacheConfig)
+    private val retrofit: FlagsmithRetrofitService = FlagsmithRetrofitService.create(
+        baseUrl = baseUrl, environmentKey = environmentKey, context = context, cacheConfig = cacheConfig,
+        requestTimeoutSeconds = requestTimeoutSeconds, readAndWriteTimeoutSeconds = readAndWriteTimeoutSeconds)
     private val analytics: FlagsmithAnalytics? =
         if (!enableAnalytics) null
         else if (context != null) FlagsmithAnalytics(context, retrofit, analyticsFlushPeriod)
