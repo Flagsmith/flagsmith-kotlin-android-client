@@ -1,15 +1,10 @@
 package com.flagsmith
 
 import android.content.Context
-import com.flagsmith.endpoints.FlagsEndpoint
-import com.flagsmith.endpoints.IdentityFlagsAndTraitsEndpoint
-import com.flagsmith.endpoints.TraitsEndpoint
-import com.flagsmith.entities.Flag
-import com.flagsmith.entities.IdentityFlagsAndTraits
-import com.flagsmith.entities.Trait
-import com.flagsmith.entities.TraitWithIdentity
+import com.flagsmith.entities.*
 import com.flagsmith.internal.FlagsmithAnalytics
-import com.flagsmith.internal.FlagsmithClient
+import com.flagsmith.internal.FlagsmithRetrofitService
+import com.flagsmith.internal.enqueueWithResult
 
 /**
  * Flagsmith
@@ -28,13 +23,26 @@ class Flagsmith constructor(
     private val baseUrl: String = "https://edge.api.flagsmith.com/api/v1",
     private val context: Context? = null,
     private val enableAnalytics: Boolean = DEFAULT_ENABLE_ANALYTICS,
-    private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS
+    private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS,
+    private val cacheConfig: FlagsmithCacheConfig = FlagsmithCacheConfig(),
+    private val defaultFlags: List<Flag> = emptyList(),
+    private val requestTimeoutSeconds: Long = 4L,
+    private val readTimeoutSeconds: Long = 6L,
+    private val writeTimeoutSeconds: Long = 6L
 ) {
-    private val client: FlagsmithClient = FlagsmithClient(baseUrl, environmentKey)
+    private val retrofit: FlagsmithRetrofitService = FlagsmithRetrofitService.create(
+        baseUrl = baseUrl, environmentKey = environmentKey, context = context, cacheConfig = cacheConfig,
+        requestTimeoutSeconds = requestTimeoutSeconds, readTimeoutSeconds = readTimeoutSeconds, writeTimeoutSeconds = writeTimeoutSeconds)
     private val analytics: FlagsmithAnalytics? =
         if (!enableAnalytics) null
-        else if (context != null) FlagsmithAnalytics(context, client, analyticsFlushPeriod)
+        else if (context != null) FlagsmithAnalytics(context, retrofit, analyticsFlushPeriod)
         else throw IllegalArgumentException("Flagsmith requires a context to use the analytics feature")
+
+    init {
+        if (cacheConfig.enableCache && context == null) {
+            throw IllegalArgumentException("Flagsmith requires a context to use the cache feature")
+        }
+    }
 
     companion object {
         const val DEFAULT_ENABLE_ANALYTICS = true
@@ -43,11 +51,11 @@ class Flagsmith constructor(
 
     fun getFeatureFlags(identity: String? = null, result: (Result<List<Flag>>) -> Unit) {
         if (identity != null) {
-            getIdentityFlagsAndTraits(identity) { res ->
+            retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult { res ->
                 result(res.map { it.flags })
             }
         } else {
-            client.request(FlagsEndpoint, result)
+            retrofit.getFlags().enqueueWithResult(defaults = defaultFlags, result = result)
         }
     }
 
@@ -68,20 +76,20 @@ class Flagsmith constructor(
     }
 
     fun getTrait(id: String, identity: String, result: (Result<Trait?>) -> Unit) =
-        getIdentityFlagsAndTraits(identity) { res ->
+        retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult { res ->
             result(res.map { value -> value.traits.find { it.key == id } })
         }
 
     fun getTraits(identity: String, result: (Result<List<Trait>>) -> Unit) =
-        getIdentityFlagsAndTraits(identity) { res ->
+        retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult { res ->
             result(res.map { it.traits })
         }
 
     fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) =
-        client.request(TraitsEndpoint(trait = trait, identity = identity), result)
+        retrofit.postTraits(TraitWithIdentity(trait.key, trait.value, Identity(identity))).enqueueWithResult(result = result)
 
     fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
-        getIdentityFlagsAndTraits(identity, result)
+        retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult(defaults = null, result = result)
 
     private fun getFeatureFlag(
         featureId: String,
@@ -95,8 +103,4 @@ class Flagsmith constructor(
         })
     }
 
-    private fun getIdentityFlagsAndTraits(
-        identity: String,
-        result: (Result<IdentityFlagsAndTraits>) -> Unit
-    ) = client.request(IdentityFlagsAndTraitsEndpoint(identity = identity), result)
 }

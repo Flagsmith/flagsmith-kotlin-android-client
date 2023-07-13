@@ -1,9 +1,8 @@
-package com.flagsmith.endpoints
+package com.flagsmith.mockResponses.endpoints
 
 import com.flagsmith.entities.Identity
 import com.flagsmith.entities.Trait
 import com.flagsmith.entities.TraitWithIdentity
-import com.flagsmith.entities.TraitWithIdentityDeserializer
 import com.google.gson.Gson
 
 data class TraitsEndpoint(private val trait: Trait, private val identity: String) :
@@ -16,5 +15,4 @@ data class TraitsEndpoint(private val trait: Trait, private val identity: String
                 identity = Identity(identity)
             )
         ),
-        deserializer = TraitWithIdentityDeserializer()
     )

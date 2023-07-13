@@ -1,13 +1,16 @@
 package com.flagsmith.mockResponses
 
-import com.flagsmith.endpoints.FlagsEndpoint
-import com.flagsmith.endpoints.IdentityFlagsAndTraitsEndpoint
-import com.flagsmith.endpoints.TraitsEndpoint
+import com.flagsmith.mockResponses.endpoints.FlagsEndpoint
+import com.flagsmith.mockResponses.endpoints.IdentityFlagsAndTraitsEndpoint
+import com.flagsmith.mockResponses.endpoints.TraitsEndpoint
 import com.flagsmith.entities.Trait
 import org.mockserver.integration.ClientAndServer
+import org.mockserver.matchers.Times
+import org.mockserver.model.HttpError
 import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
 import org.mockserver.model.MediaType
+import java.util.concurrent.TimeUnit
 
 enum class MockEndpoint(val path: String, val body: String) {
     GET_IDENTITIES(IdentityFlagsAndTraitsEndpoint("").path, MockResponses.getIdentities),
@@ -16,12 +19,42 @@ enum class MockEndpoint(val path: String, val body: String) {
 }
 
 fun ClientAndServer.mockResponseFor(endpoint: MockEndpoint) {
-    `when`(request().withPath(endpoint.path))
+    `when`(request().withPath(endpoint.path), Times.once())
         .respond(
             response()
                 .withContentType(MediaType.APPLICATION_JSON)
                 .withBody(endpoint.body)
         )
+}
+
+fun ClientAndServer.mockDelayFor(endpoint: MockEndpoint) {
+    `when`(request().withPath(endpoint.path), Times.once())
+        .respond(
+            response()
+                .withContentType(MediaType.APPLICATION_JSON)
+                .withBody(endpoint.body)
+                .withDelay(TimeUnit.SECONDS, 8) // REQUEST_TIMEOUT_SECONDS is 4 in the client, so needs to be more
+        )
+}
+
+fun ClientAndServer.mockFailureFor(endpoint: MockEndpoint) {
+    `when`(request().withPath(endpoint.path), Times.once())
+        .respond(
+            response()
+                .withStatusCode(500)
+                .withContentType(MediaType.APPLICATION_JSON)
+                .withBody("{error: \"Internal Server Error\"}")
+        )
+    Times.once()
+}
+
+fun ClientAndServer.mockDropConnection(endpoint: MockEndpoint) {
+    `when`(request().withPath(endpoint.path), Times.once())
+        .error(
+            HttpError.error()
+                .withDropConnection(true)
+        )
+
 }
 
 object MockResponses {

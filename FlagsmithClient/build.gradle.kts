@@ -68,12 +68,17 @@ android {
 
 dependencies {
     implementation("com.google.code.gson:gson:2.10")
-    implementation("com.github.kittinunf.fuel:fuel:2.3.1")
-    implementation("com.github.kittinunf.fuel:fuel-gson:2.3.1")
+
+    // HTTP Client
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
     testImplementation("org.mock-server:mockserver-netty-no-dependencies:5.14.0")
+
+    testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.0.0")
 }
 
 kover {

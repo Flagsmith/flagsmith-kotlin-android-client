@@ -23,7 +23,8 @@ class TraitsTests {
         flagsmith = Flagsmith(
             environmentKey = "",
             baseUrl = "http://localhost:${mockServer.localPort}",
-            enableAnalytics = false
+            enableAnalytics = false,
+            cacheConfig = FlagsmithCacheConfig(enableCache = false)
         )
     }
 
