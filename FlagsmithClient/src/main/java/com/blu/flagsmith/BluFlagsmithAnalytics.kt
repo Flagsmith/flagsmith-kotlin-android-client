@@ -1,10 +1,10 @@
 package com.blu.flagsmith
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONException
@@ -18,8 +18,7 @@ class BluFlagsmithAnalytics constructor(
     private val applicationContext: Context = context.applicationContext
     private val currentEvents = getMap()
 
-    @SuppressLint("SuspiciousIndentation")
-    private val job = GlobalScope.launch {
+    private val job = CoroutineScope(Dispatchers.IO).launch {
         if (currentEvents.isNotEmpty())
             retrofitService.postAnalytics(currentEvents)
 
