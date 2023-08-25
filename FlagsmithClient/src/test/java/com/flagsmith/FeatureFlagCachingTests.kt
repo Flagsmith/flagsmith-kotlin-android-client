@@ -4,10 +4,12 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Color
-import android.util.Log
 import com.flagsmith.entities.Feature
 import com.flagsmith.entities.Flag
-import com.flagsmith.mockResponses.*
+import com.flagsmith.mockResponses.MockEndpoint
+import com.flagsmith.mockResponses.mockDelayFor
+import com.flagsmith.mockResponses.mockFailureFor
+import com.flagsmith.mockResponses.mockResponseFor
 import org.awaitility.Awaitility
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilNotNull
