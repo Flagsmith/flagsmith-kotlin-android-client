@@ -20,7 +20,7 @@ import com.flagsmith.internal.enqueueWithResult
  */
 class Flagsmith constructor(
     private val environmentKey: String,
-    private val baseUrl: String = "https://edge.api.flagsmith.com/api/v1",
+    private val baseUrl: String = "https://edge.api.flagsmith.com/api/v1/",
     private val context: Context? = null,
     private val enableAnalytics: Boolean = DEFAULT_ENABLE_ANALYTICS,
     private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS,
