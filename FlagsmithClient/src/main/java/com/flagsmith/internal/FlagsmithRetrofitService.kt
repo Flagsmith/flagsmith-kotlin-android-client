@@ -23,7 +23,7 @@ import retrofit2.http.Query
 internal interface FlagsmithRetrofitService {
 
     @GET("identities/")
-    fun getIdentityFlagsAndTraits(@Query("identity") identity: String) : Call<IdentityFlagsAndTraits>
+    fun getIdentityFlagsAndTraits(@Query("identifier") identity: String) : Call<IdentityFlagsAndTraits>
 
     @GET("flags/")
     fun getFlags() : Call<List<Flag>>
