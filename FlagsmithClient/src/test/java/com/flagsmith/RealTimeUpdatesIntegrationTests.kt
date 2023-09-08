@@ -32,9 +32,14 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
 
     // You'll need a valid account to test this
     private val environmentKey = System.getenv("INTEGRATION_TESTS_ENVIRONMENT_KEY")
-    private val authToken = "Token " + System.getenv("INTEGRATION_TESTS_API_TOKEN")
-    private val featureId = System.getenv("INTEGRATION_TESTS_FEATURE_ID") ?: "integration-test-feature"
-    private val featureStateId = System.getenv("INTEGRATION_TESTS_FEATURE_STATE_ID") ?: "313512"
+        ?: throw Exception("INTEGRATION_TESTS_ENVIRONMENT_KEY not set")
+    private val apiToken = System.getenv("INTEGRATION_TESTS_API_TOKEN")
+        ?: throw Exception("INTEGRATION_TESTS_API_TOKEN not set")
+    private val authToken = "Token $apiToken"
+    private val featureId = System.getenv("INTEGRATION_TESTS_FEATURE_NAME")
+        ?: throw Exception("INTEGRATION_TESTS_FEATURE_NAME not set")
+    private val featureStateId = System.getenv("INTEGRATION_TESTS_FEATURE_STATE_ID")
+        ?: throw Exception("INTEGRATION_TESTS_FEATURE_STATE_ID not set")
 
     @Mock
     private lateinit var mockApplicationContext: Context
@@ -141,6 +146,7 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         // Get the current value
         val currentFlagValueDouble =
             flagsmith.getValueForFeatureSync(featureId).getOrThrow() as Double?
+        println("Type of currentFlagValueDouble: ${currentFlagValueDouble?.javaClass?.name}")
         Assert.assertNotNull(currentFlagValueDouble)
         val currentFlagValue: Int = currentFlagValueDouble!!.toInt()
 
