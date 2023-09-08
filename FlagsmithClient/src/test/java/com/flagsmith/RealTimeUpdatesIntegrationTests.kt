@@ -31,10 +31,10 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
     private lateinit var retrofitService: FlagsmithRetrofitService
 
     // You'll need a valid account to test this
-    private val environmentKey = System.getenv("ENV_KEY")
-    private val authToken = "Token " + System.getenv("API_TOKEN")
-    private val featureId = System.getenv("FEATURE_ID") ?: "integration-test-feature"
-    private val featureStateId = System.getenv("FEATURE_STATE_ID") ?: "313512"
+    private val environmentKey = System.getenv("INTEGRATION_TESTS_ENVIRONMENT_KEY")
+    private val authToken = "Token " + System.getenv("INTEGRATION_TESTS_API_TOKEN")
+    private val featureId = System.getenv("INTEGRATION_TESTS_FEATURE_ID") ?: "integration-test-feature"
+    private val featureStateId = System.getenv("INTEGRATION_TESTS_FEATURE_STATE_ID") ?: "313512"
 
     @Mock
     private lateinit var mockApplicationContext: Context
