@@ -153,7 +153,7 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         // After 40 seconds try to update the value using the retrofit service
         CoroutineScope(Dispatchers.IO).launch {
             // Wait 65 seconds before updating the value
-            // By this time the realtime service will have timed out (30 sec) and reconnected
+            // By this time the realtime service will have timed out (30 seconds) and reconnected
             delay(65000)
 
             val response = retrofitService
