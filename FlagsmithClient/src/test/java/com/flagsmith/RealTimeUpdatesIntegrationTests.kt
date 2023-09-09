@@ -113,6 +113,14 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
             .thenReturn(intArrayOf(1, 2, 3))
     }
 
+    @Test
+    fun testEnvironmentVariablesArentEmpty() {
+        Assert.assertTrue(environmentKey.isNotEmpty())
+        Assert.assertTrue(apiToken.isNotEmpty())
+        Assert.assertTrue(featureId.isNotEmpty())
+        Assert.assertTrue(featureStateId.isNotEmpty())
+    }
+
     /// Update after 5 secs, should be done in 10 seconds or fail
     @Test(timeout = 10000)
     fun testGettingFlagsWithRealtimeUpdatesAfterPuttingNewValue() = runBlocking {
