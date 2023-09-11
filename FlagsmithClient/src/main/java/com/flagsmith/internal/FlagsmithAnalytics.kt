@@ -8,7 +8,7 @@ import android.util.Log
 import org.json.JSONException
 import org.json.JSONObject
 
-class FlagsmithAnalytics constructor(
+internal class FlagsmithAnalytics constructor(
     private val context: Context,
     private val retrofitService: FlagsmithRetrofitService,
     private val flushPeriod: Int

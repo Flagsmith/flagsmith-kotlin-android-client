@@ -2,7 +2,6 @@ package com.flagsmith.entities
 
 
 import com.google.gson.annotations.SerializedName
-import java.io.Reader
 
 data class Trait(
     val identifier: String? = null,
