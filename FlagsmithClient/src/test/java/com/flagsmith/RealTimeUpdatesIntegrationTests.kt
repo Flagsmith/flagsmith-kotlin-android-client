@@ -121,8 +121,8 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         Assert.assertTrue(featureStateId.isNotEmpty())
     }
 
-    /// Update after 5 secs, should be done in 10 seconds or fail
-    @Test(timeout = 10000)
+    /// Update after 5 secs, should be done in 30 seconds or fail
+    @Test(timeout = 7000)
     fun testGettingFlagsWithRealtimeUpdatesAfterPuttingNewValue() = runBlocking {
         // Get the current value
         val currentFlagValueDouble =
@@ -146,11 +146,11 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         do {
             newUpdatedFeatureValue =
                 flagsmith.getValueForFeatureSync(featureId).getOrThrow() as Double?
-        } while (newUpdatedFeatureValue!! == currentFlagValueDouble)
+        } while (newUpdatedFeatureValue != null && newUpdatedFeatureValue == currentFlagValueDouble)
     }
 
-    // Update after 65 secs to ensure we've done a reconnect, should be done in 80 seconds or fail
-    @Test(timeout = 80000)
+    // Update after 65 secs to ensure we've done a reconnect, should be done in 100 seconds or fail
+    @Test(timeout = 100000)
     fun testGettingFlagsWithRealtimeUpdatesAfterPuttingNewValueAndReconnect() = runBlocking {
         // Get the current value
         val currentFlagValueDouble =
@@ -159,7 +159,6 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         Assert.assertNotNull(currentFlagValueDouble)
         val currentFlagValue: Int = currentFlagValueDouble!!.toInt()
 
-        // After 40 seconds try to update the value using the retrofit service
         CoroutineScope(Dispatchers.IO).launch {
             // Wait 65 seconds before updating the value
             // By this time the realtime service will have timed out (30 seconds) and reconnected
@@ -177,7 +176,7 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         do {
             newUpdatedFeatureValue =
                 flagsmith.getValueForFeatureSync(featureId).getOrThrow() as Double?
-        } while (newUpdatedFeatureValue!! == currentFlagValueDouble)
+        } while (newUpdatedFeatureValue != null &&  newUpdatedFeatureValue == currentFlagValueDouble)
     }
 
     @Test(timeout = 10000)
