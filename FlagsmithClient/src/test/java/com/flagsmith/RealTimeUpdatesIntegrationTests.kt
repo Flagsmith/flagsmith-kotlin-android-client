@@ -122,7 +122,7 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
     }
 
     /// Update after 5 secs, should be done in 30 seconds or fail
-    @Test(timeout = 7000)
+    @Test(timeout = 30000)
     fun testGettingFlagsWithRealtimeUpdatesAfterPuttingNewValue() = runBlocking {
         // Get the current value
         val currentFlagValueDouble =
@@ -146,11 +146,6 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         do {
             newUpdatedFeatureValue =
                 flagsmith.getValueForFeatureSync(featureId).getOrThrow() as Double?
-        } while (newUpdatedFeatureValue!! == currentFlagValueDouble)
-    }
-
-    // Update after 65 secs to ensure we've done a reconnect, should be done in 80 seconds or fail
-    @Test(timeout = 80000)
         } while (newUpdatedFeatureValue != null && newUpdatedFeatureValue == currentFlagValueDouble)
     }
 
@@ -185,7 +180,7 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         } while (newUpdatedFeatureValue != null &&  newUpdatedFeatureValue == currentFlagValueDouble)
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = 30000)
     fun testGettingFlagsWithRealtimeUpdatesViaFlagUpdateFlow() = runBlocking {
         // Get the current value
         val currentFlagValueDouble =
