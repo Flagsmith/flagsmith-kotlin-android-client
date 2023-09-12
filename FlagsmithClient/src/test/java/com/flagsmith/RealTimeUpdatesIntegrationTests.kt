@@ -52,7 +52,6 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
 
     // FlagsmithEventTimeTracker
     override var lastSeenAt: Double = 0.0
-    private var listOfFlagsFromUpdateFlow: List<Flag> = emptyList()
 
     @Before
     fun setup() {
@@ -75,10 +74,6 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         retrofitService = FlagsmithRetrofitService.create(
             baseUrl = "https://api.flagsmith.com/api/v1/", environmentKey = environmentKey, context = mockApplicationContext, cacheConfig = FlagsmithCacheConfig(enableCache = false),
             timeTracker = this, requestTimeoutSeconds = requestTimeoutSeconds, readTimeoutSeconds = readTimeoutSeconds, writeTimeoutSeconds = writeTimeoutSeconds).first
-
-        flagsmith.flagUpdateFlow.onEach {
-            listOfFlagsFromUpdateFlow = it
-        }
     }
 
     @After
@@ -144,9 +139,11 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
 
         var newUpdatedFeatureValue: Double?
         do {
-            newUpdatedFeatureValue =
-                flagsmith.getValueForFeatureSync(featureId).getOrThrow() as Double?
-        } while (newUpdatedFeatureValue != null && newUpdatedFeatureValue == currentFlagValueDouble)
+            newUpdatedFeatureValue = flagsmith.flagUpdateFlow.value.find { flag -> flag.feature.name == featureId }?.featureStateValue as Double? ?: 0.0
+            //     flagsmith.getValueForFeatureSync(featureId).getOrThrow() as Double?
+        } while (newUpdatedFeatureValue == 0.0 || newUpdatedFeatureValue == currentFlagValueDouble)
+
+        Assert.assertEquals(currentFlagValueDouble + 1.0, newUpdatedFeatureValue!!, 0.01)
     }
 
     // Update after 65 secs to ensure we've done a reconnect, should be done in 100 seconds or fail
@@ -175,9 +172,11 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
 
         var newUpdatedFeatureValue: Double?
         do {
-            newUpdatedFeatureValue =
-                flagsmith.getValueForFeatureSync(featureId).getOrThrow() as Double?
-        } while (newUpdatedFeatureValue != null &&  newUpdatedFeatureValue == currentFlagValueDouble)
+            newUpdatedFeatureValue = flagsmith.flagUpdateFlow.value
+                .find { flag -> flag.feature.name == featureId }?.featureStateValue as Double? ?: 0.0
+        } while (newUpdatedFeatureValue == 0.0 || newUpdatedFeatureValue == currentFlagValueDouble)
+
+        Assert.assertEquals(currentFlagValueDouble + 1.0, newUpdatedFeatureValue!!, 0.01)
     }
 
     @Test(timeout = 30000)
@@ -204,7 +203,11 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         var newUpdatedFeatureValue: Double?
         do {
             // Check the value via the flag update flow, which should be current as the realtime updates come in
-            newUpdatedFeatureValue = listOfFlagsFromUpdateFlow.find { flag -> flag.feature.name == featureId }?.featureStateValue as Double? ?: 0.0
-        } while (newUpdatedFeatureValue!! == currentFlagValueDouble)
+            newUpdatedFeatureValue = flagsmith.flagUpdateFlow.value
+                .find { flag -> flag.feature.name == featureId }?.featureStateValue as Double? ?: 0.0
+        } while (newUpdatedFeatureValue!! == currentFlagValueDouble && newUpdatedFeatureValue != 0.0)
+
+        println("newUpdatedFeatureValue: $newUpdatedFeatureValue")
+        Assert.assertEquals(currentFlagValueDouble + 1.0, newUpdatedFeatureValue, 0.01)
     }
 }

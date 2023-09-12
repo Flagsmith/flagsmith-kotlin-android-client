@@ -64,7 +64,7 @@ class Flagsmith constructor(
                     cache?.evictAll()
                     lastSeenAt = lastEventUpdate
 
-                    // Now we can get the new values
+                    // Now we can get the new values, which will automatically be emitted to the flagUpdateFlow
                     getFeatureFlags(lastUsedIdentity) { res ->
                         if (res.isFailure) {
                             Log.e(
@@ -73,9 +73,6 @@ class Flagsmith constructor(
                             )
                         } else {
                             Log.i("Flagsmith", "Got flags due to SSE event: $event")
-
-                            // If the customer wants to subscribe to updates, emit the new flags
-                            flagUpdateFlow.tryEmit(res.getOrNull() ?: emptyList())
                         }
                     }
                 }
@@ -118,7 +115,10 @@ class Flagsmith constructor(
                 result(res.map { it.flags })
             }
         } else {
-            retrofit.getFlags().enqueueWithResult(defaults = defaultFlags, result = result)
+            retrofit.getFlags().enqueueWithResult(defaults = defaultFlags) { res ->
+                flagUpdateFlow.tryEmit(res.getOrNull() ?: emptyList())
+                result(res)
+            }
         }
     }
 
