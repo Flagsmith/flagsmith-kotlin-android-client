@@ -146,6 +146,11 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         do {
             newUpdatedFeatureValue =
                 flagsmith.getValueForFeatureSync(featureId).getOrThrow() as Double?
+        } while (newUpdatedFeatureValue!! == currentFlagValueDouble)
+    }
+
+    // Update after 65 secs to ensure we've done a reconnect, should be done in 80 seconds or fail
+    @Test(timeout = 80000)
         } while (newUpdatedFeatureValue != null && newUpdatedFeatureValue == currentFlagValueDouble)
     }
 
@@ -159,6 +164,7 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         Assert.assertNotNull(currentFlagValueDouble)
         val currentFlagValue: Int = currentFlagValueDouble!!.toInt()
 
+        // After 40 seconds try to update the value using the retrofit service
         CoroutineScope(Dispatchers.IO).launch {
             // Wait 65 seconds before updating the value
             // By this time the realtime service will have timed out (30 seconds) and reconnected
