@@ -1,0 +1,27 @@
+name: Verify pull request to main
+
+on:
+  pull_request:
+    branches:
+      - "main"
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    env:
+      INTEGRATION_TESTS_ENVIRONMENT_KEY: NTtWcerSBE5yj7a5optMSk
+      INTEGRATION_TESTS_FEATURE_NAME: integration-test-feature
+      INTEGRATION_TESTS_FEATURE_STATE_ID: 321715
+      INTEGRATION_TESTS_API_TOKEN: ${{ secrets.INTEGRATION_TESTS_API_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Preconfigure gradle
+        uses: ./.github/actions/prepare-gradle
+
+      - name: Run unit tests
+        run: ./gradlew check -x koverVerify -P excludeIntegrationTests
+      - name: Verify code coverage level
+        run: ./gradlew koverVerify
