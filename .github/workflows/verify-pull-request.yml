@@ -8,7 +8,7 @@ on:
 jobs:
   test:
     name: Run Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: General-Purpose-4c-Runner
 
     env:
       INTEGRATION_TESTS_ENVIRONMENT_KEY: NTtWcerSBE5yj7a5optMSk
