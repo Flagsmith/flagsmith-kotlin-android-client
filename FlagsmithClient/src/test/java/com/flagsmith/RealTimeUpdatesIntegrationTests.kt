@@ -133,7 +133,8 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
             val response = retrofitService
                 .setFeatureStates(authToken, featureStateId, environmentKey!!, FeatureStatePutBody(true, currentFlagValue.inc()))
                 .execute()
-            if (!response.isSuccessful) println("Response: $response")
+            if (!response.isSuccessful) println("ERROR response: $response")
+            println("Response: $response")
             Assert.assertTrue(response.isSuccessful)
         }
 
@@ -165,7 +166,7 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
             val response = retrofitService
                 .setFeatureStates(authToken, featureStateId, environmentKey!!, FeatureStatePutBody(true, currentFlagValue.inc()))
                 .execute()
-            if (!response.isSuccessful) println("Response: $response")
+            if (!response.isSuccessful) println("ERROR response: $response")
             println("Response: $response")
             Assert.assertTrue(response.isSuccessful)
         }
