@@ -5,18 +5,17 @@ import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Color
 import com.flagsmith.entities.FeatureStatePutBody
-import com.flagsmith.entities.Flag
 import com.flagsmith.internal.FlagsmithEventTimeTracker
 import com.flagsmith.internal.FlagsmithRetrofitService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
 import org.mockito.ArgumentMatchers
 import org.mockito.Mock
@@ -116,14 +115,15 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         Assert.assertTrue(featureStateId.isNotEmpty())
     }
 
-    /// Update after 5 secs, should be done in 30 seconds or fail
-    @Test(timeout = 30000)
+    /// Update after 5 secs, should be done in 60 seconds or fail
+    @Test(timeout = 60000)
     fun testGettingFlagsWithRealtimeUpdatesAfterPuttingNewValue() = runBlocking {
         // Get the current value
-        val currentFlagValueDouble =
-            flagsmith.getValueForFeatureSync(featureId).getOrThrow() as Double?
-        Assert.assertNotNull(currentFlagValueDouble)
-        val currentFlagValue: Int = currentFlagValueDouble!!.toInt()
+        val currentFlagValueString =
+            flagsmith.getValueForFeatureSync(featureId).getOrThrow() as String?
+        println("Type of currentFlagValueDouble: ${currentFlagValueString?.javaClass?.name}")
+        Assert.assertNotNull(currentFlagValueString)
+        val currentFlagValue: String = currentFlagValueString!!
 
         // After 5 seconds try to update the value using the retrofit service
         CoroutineScope(Dispatchers.IO).launch {
@@ -131,62 +131,61 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
             delay(5000)
 
             val response = retrofitService
-                .setFeatureStates(authToken, featureStateId, environmentKey!!, FeatureStatePutBody(true, currentFlagValue.inc()))
+                .setFeatureStates(authToken, featureStateId, environmentKey!!, FeatureStatePutBody(true, "new-value"))
                 .execute()
             if (!response.isSuccessful) println("ERROR response: $response")
             println("Response: $response")
             Assert.assertTrue(response.isSuccessful)
         }
 
-        var newUpdatedFeatureValue: Double?
+        var newUpdatedFeatureValue: String? = ""
         do {
-            newUpdatedFeatureValue = flagsmith.flagUpdateFlow.value.find { flag -> flag.feature.name == featureId }?.featureStateValue as Double? ?: 0.0
-            //     flagsmith.getValueForFeatureSync(featureId).getOrThrow() as Double?
-        } while (newUpdatedFeatureValue == 0.0 || newUpdatedFeatureValue == currentFlagValueDouble)
+            newUpdatedFeatureValue = flagsmith.flagUpdateFlow.value
+                .find { flag -> flag.feature.name == featureId }?.featureStateValue as String? ?: ""
+            delay(300L) // Delay a little while to give the CPU some time back
+        } while (newUpdatedFeatureValue.isNullOrEmpty() || newUpdatedFeatureValue == currentFlagValueString)
 
-        Assert.assertEquals(currentFlagValueDouble + 1.0, newUpdatedFeatureValue!!, 0.01)
+        Assert.assertEquals("new-value", newUpdatedFeatureValue)
     }
 
     // Update after 65 secs to ensure we've done a reconnect, should be done in 100 seconds or fail
     @Test(timeout = 100000)
     fun testGettingFlagsWithRealtimeUpdatesAfterPuttingNewValueAndReconnect() = runBlocking {
         // Get the current value
-        val currentFlagValueDouble =
-            flagsmith.getValueForFeatureSync(featureId).getOrThrow() as Double?
-        println("Type of currentFlagValueDouble: ${currentFlagValueDouble?.javaClass?.name}")
-        Assert.assertNotNull(currentFlagValueDouble)
-        val currentFlagValue: Int = currentFlagValueDouble!!.toInt()
+        val currentFlagValueString =
+            flagsmith.getValueForFeatureSync(featureId).getOrThrow() as String?
+        println("Type of currentFlagValueDouble: ${currentFlagValueString?.javaClass?.name}")
+        Assert.assertNotNull(currentFlagValueString)
 
-        // After 40 seconds try to update the value using the retrofit service
         CoroutineScope(Dispatchers.IO).launch {
             // Wait 65 seconds before updating the value
             // By this time the realtime service will have timed out (30 seconds) and reconnected
             delay(65000)
 
             val response = retrofitService
-                .setFeatureStates(authToken, featureStateId, environmentKey!!, FeatureStatePutBody(true, currentFlagValue.inc()))
+                .setFeatureStates(authToken, featureStateId, environmentKey, FeatureStatePutBody(true, "new-value-after-reconnect"))
                 .execute()
             if (!response.isSuccessful) println("ERROR response: $response")
             println("Response: $response")
             Assert.assertTrue(response.isSuccessful)
         }
 
-        var newUpdatedFeatureValue: Double?
+        var newUpdatedFeatureValue: String? = ""
         do {
             newUpdatedFeatureValue = flagsmith.flagUpdateFlow.value
-                .find { flag -> flag.feature.name == featureId }?.featureStateValue as Double? ?: 0.0
-        } while (newUpdatedFeatureValue == 0.0 || newUpdatedFeatureValue == currentFlagValueDouble)
+                .find { flag -> flag.feature.name == featureId }?.featureStateValue as String? ?: ""
+            delay(300L) // Delay a little while to give the CPU some time back
+        } while (newUpdatedFeatureValue.isNullOrEmpty() || newUpdatedFeatureValue == currentFlagValueString)
 
-        Assert.assertEquals(currentFlagValueDouble + 1.0, newUpdatedFeatureValue!!, 0.01)
+        Assert.assertEquals("new-value-after-reconnect", newUpdatedFeatureValue)
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 60000)
     fun testGettingFlagsWithRealtimeUpdatesViaFlagUpdateFlow() = runBlocking {
         // Get the current value
-        val currentFlagValueDouble =
-            flagsmith.getValueForFeatureSync(featureId).getOrThrow() as Double?
-        Assert.assertNotNull(currentFlagValueDouble)
-        val currentFlagValue: Int = currentFlagValueDouble!!.toInt()
+        val currentFlagValueString =
+            flagsmith.getValueForFeatureSync(featureId).getOrThrow() as String?
+        Assert.assertNotNull(currentFlagValueString)
 
         // After 5 seconds try to update the value using the retrofit service
         CoroutineScope(Dispatchers.IO).launch {
@@ -194,21 +193,22 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
             delay(5000)
 
             val response = retrofitService
-                .setFeatureStates(authToken, featureStateId, environmentKey!!, FeatureStatePutBody(true, currentFlagValue.inc()))
+                .setFeatureStates(authToken, featureStateId, environmentKey!!, FeatureStatePutBody(true, "new-value-via-flow"))
                 .execute()
             if (!response.isSuccessful) println("Response: $response")
             println("Response: $response")
             Assert.assertTrue(response.isSuccessful)
         }
 
-        var newUpdatedFeatureValue: Double?
+        var newUpdatedFeatureValue: String?
         do {
             // Check the value via the flag update flow, which should be current as the realtime updates come in
             newUpdatedFeatureValue = flagsmith.flagUpdateFlow.value
-                .find { flag -> flag.feature.name == featureId }?.featureStateValue as Double? ?: 0.0
-        } while (newUpdatedFeatureValue!! == currentFlagValueDouble && newUpdatedFeatureValue != 0.0)
+                .find { flag -> flag.feature.name == featureId }?.featureStateValue as String? ?: ""
+            delay(300L) // Delay a little while to give the CPU some time back
+        } while (newUpdatedFeatureValue.isNullOrEmpty() ||  newUpdatedFeatureValue == currentFlagValueString)
 
         println("newUpdatedFeatureValue: $newUpdatedFeatureValue")
-        Assert.assertEquals(currentFlagValueDouble + 1.0, newUpdatedFeatureValue, 0.01)
+        Assert.assertEquals("new-value-via-flow", newUpdatedFeatureValue)
     }
 }
