@@ -50,7 +50,7 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
     private lateinit var mockSharedPreferences: SharedPreferences
 
     // FlagsmithEventTimeTracker
-    override var lastSeenAt: Double = 0.0
+    override var lastFlagFetchTime: Double = 0.0
 
     @Before
     fun setup() {

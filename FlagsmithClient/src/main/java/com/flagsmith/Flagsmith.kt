@@ -42,7 +42,7 @@ class Flagsmith constructor(
     private val requestTimeoutSeconds: Long = 4L,
     private val readTimeoutSeconds: Long = 6L,
     private val writeTimeoutSeconds: Long = 6L,
-    override var lastSeenAt: Double = 0.0 // from FlagsmithEventTimeTracker
+    override var lastFlagFetchTime: Double = 0.0 // from FlagsmithEventTimeTracker
 ) : FlagsmithEventTimeTracker {
     private lateinit var retrofit: FlagsmithRetrofitService
     private var cache: Cache? = null
@@ -59,10 +59,10 @@ class Flagsmith constructor(
                 lastEventUpdate = event.getOrNull()?.updatedAt ?: lastEventUpdate
 
                 // Check whether this event is anything new
-                if (lastEventUpdate > lastSeenAt) {
+                if (lastEventUpdate > lastFlagFetchTime) {
                     // First evict the cache otherwise we'll be stuck with the old values
                     cache?.evictAll()
-                    lastSeenAt = lastEventUpdate
+                    lastFlagFetchTime = lastEventUpdate
 
                     // Now we can get the new values, which will automatically be emitted to the flagUpdateFlow
                     getFeatureFlags(lastUsedIdentity) { res ->
@@ -82,7 +82,7 @@ class Flagsmith constructor(
     // The last time we got an event from the SSE stream or via the API
     private var lastEventUpdate: Double = 0.0
 
-    /// Stream of flag updates from the SSE stream if enabled
+    /** Stream of flag updates from the SSE stream if enabled */
     val flagUpdateFlow = MutableStateFlow<List<Flag>>(listOf())
 
     init {
@@ -90,7 +90,7 @@ class Flagsmith constructor(
             throw IllegalArgumentException("Flagsmith requires a context to use the cache feature")
         }
         if (enableRealtimeUpdates) {
-            getFlagUpdates()
+            startRealTimeListener()
         }
         val pair = FlagsmithRetrofitService.create(
             baseUrl = baseUrl, environmentKey = environmentKey, context = context, cacheConfig = cacheConfig,
@@ -167,7 +167,7 @@ class Flagsmith constructor(
         })
     }.also { lastUsedIdentity = identity }
 
-    private fun getFlagUpdates() {
+    private fun startRealTimeListener() {
         if (eventService == null) return
         eventService.sseEventsFlow.onEach {
             getFeatureFlags { res ->

@@ -60,7 +60,6 @@ internal class FlagsmithEventService constructor(
 
         override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
             super.onFailure(eventSource, t, response)
-            t?.printStackTrace()
             Log.d(TAG, "onFailure: ${t?.message}")
             if (t != null)
                 updates(Result.failure(t))

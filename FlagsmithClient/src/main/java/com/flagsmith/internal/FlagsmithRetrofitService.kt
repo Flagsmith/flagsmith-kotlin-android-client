@@ -89,7 +89,7 @@ internal interface FlagsmithRetrofitService {
                     Log.i("Flagsmith", "updatedAt: $updatedAtString")
 
                     // Update in the tracker (Flagsmith class) if we got a new value
-                    tracker.lastSeenAt = updatedAtString?.toDoubleOrNull() ?: tracker.lastSeenAt
+                    tracker.lastFlagFetchTime = updatedAtString?.toDoubleOrNull() ?: tracker.lastFlagFetchTime
                     return@Interceptor response
                 }
             }
