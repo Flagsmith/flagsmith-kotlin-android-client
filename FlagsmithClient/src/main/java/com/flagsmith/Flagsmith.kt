@@ -92,10 +92,10 @@ class Flagsmith constructor(
         if (enableRealtimeUpdates) {
             startRealTimeListener()
         }
-        val pair = FlagsmithRetrofitService.create(
+        val pair = FlagsmithRetrofitService.create<FlagsmithRetrofitService>(
             baseUrl = baseUrl, environmentKey = environmentKey, context = context, cacheConfig = cacheConfig,
             requestTimeoutSeconds = requestTimeoutSeconds, readTimeoutSeconds = readTimeoutSeconds,
-            writeTimeoutSeconds = writeTimeoutSeconds, timeTracker = this)
+            writeTimeoutSeconds = writeTimeoutSeconds, timeTracker = this, klass = FlagsmithRetrofitService::class.java)
         retrofit = pair.first
         cache = pair.second
     }

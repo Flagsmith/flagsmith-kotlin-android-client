@@ -3,7 +3,6 @@ package com.flagsmith.internal;
 import android.content.Context
 import android.util.Log
 import com.flagsmith.FlagsmithCacheConfig
-import com.flagsmith.entities.FeatureStatePutBody
 import com.flagsmith.entities.Flag
 import com.flagsmith.entities.IdentityFlagsAndTraits
 import com.flagsmith.entities.TraitWithIdentity
@@ -14,31 +13,16 @@ import retrofit2.*
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Path
 import retrofit2.http.Query
 
-internal interface FlagsmithRetrofitService {
+interface FlagsmithRetrofitService {
 
     @GET("identities/")
     fun getIdentityFlagsAndTraits(@Query("identifier") identity: String) : Call<IdentityFlagsAndTraits>
 
     @GET("flags/")
     fun getFlags() : Call<List<Flag>>
-
-    @GET("environments/{environmentKey}/featurestates/{featureStateId}/")
-    fun getFeatureStates(@Header("authorization") authToken:String,
-                         @Path("featureStateId") featureStateId: String,
-                         @Path("environmentKey") environmentKey: String,
-                         @Query("feature_name") featureName: String) : Call<String>
-
-    @PUT("environments/{environmentKey}/featurestates/{featureStateId}/")
-    fun setFeatureStates(@Header("authorization") authToken:String,
-                         @Path("featureStateId") featureStateId: String,
-                         @Path("environmentKey") environmentKey: String,
-                         @Body body: FeatureStatePutBody) : Call<Unit>
 
     @POST("traits/")
     fun postTraits(@Body trait: TraitWithIdentity) : Call<TraitWithIdentity>
@@ -47,7 +31,7 @@ internal interface FlagsmithRetrofitService {
     fun postAnalytics(@Body eventMap: Map<String, Int?>) : Call<Unit>
 
     companion object {
-        fun create(
+        fun <T : FlagsmithRetrofitService> create(
             baseUrl: String,
             environmentKey: String,
             context: Context?,
@@ -56,6 +40,7 @@ internal interface FlagsmithRetrofitService {
             readTimeoutSeconds: Long,
             writeTimeoutSeconds: Long,
             timeTracker: FlagsmithEventTimeTracker,
+            klass: Class<T>
         ): Pair<FlagsmithRetrofitService, Cache?> {
             fun cacheControlInterceptor(): Interceptor {
                 return Interceptor { chain ->
@@ -116,7 +101,7 @@ internal interface FlagsmithRetrofitService {
                 .client(client)
                 .build()
 
-            return Pair(retrofit.create(FlagsmithRetrofitService::class.java), cache)
+            return Pair(retrofit.create(klass), cache)
         }
 
         fun envKeyInterceptor(environmentKey: String): Interceptor {

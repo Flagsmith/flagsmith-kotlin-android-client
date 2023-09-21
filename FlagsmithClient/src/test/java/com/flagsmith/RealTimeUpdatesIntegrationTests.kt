@@ -7,6 +7,7 @@ import android.graphics.Color
 import com.flagsmith.entities.FeatureStatePutBody
 import com.flagsmith.internal.FlagsmithEventTimeTracker
 import com.flagsmith.internal.FlagsmithRetrofitService
+import com.flagsmith.internal.FlagsmithRetrofitServiceTest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -15,7 +16,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Test
 import org.mockito.ArgumentMatchers
 import org.mockito.Mock
@@ -27,7 +27,7 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
 
     private lateinit var flagsmith: Flagsmith
 
-    private lateinit var retrofitService: FlagsmithRetrofitService
+    private lateinit var retrofitService: FlagsmithRetrofitServiceTest
 
     // You'll need a valid account to test this
     private val environmentKey = System.getenv("INTEGRATION_TESTS_ENVIRONMENT_KEY")
@@ -70,9 +70,11 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         val readTimeoutSeconds: Long = 6L
         val writeTimeoutSeconds: Long = 6L
 
-        retrofitService = FlagsmithRetrofitService.create(
-            baseUrl = "https://api.flagsmith.com/api/v1/", environmentKey = environmentKey, context = mockApplicationContext, cacheConfig = FlagsmithCacheConfig(enableCache = false),
-            timeTracker = this, requestTimeoutSeconds = requestTimeoutSeconds, readTimeoutSeconds = readTimeoutSeconds, writeTimeoutSeconds = writeTimeoutSeconds).first
+        retrofitService = FlagsmithRetrofitServiceTest.create(
+            baseUrl = "https://api.flagsmith.com/api/v1/", environmentKey = environmentKey, context = mockApplicationContext,
+            cacheConfig = FlagsmithCacheConfig(enableCache = false),
+            timeTracker = this, requestTimeoutSeconds = requestTimeoutSeconds, readTimeoutSeconds = readTimeoutSeconds,
+            writeTimeoutSeconds = writeTimeoutSeconds,  klass = FlagsmithRetrofitServiceTest::class.java).first
     }
 
     @After
