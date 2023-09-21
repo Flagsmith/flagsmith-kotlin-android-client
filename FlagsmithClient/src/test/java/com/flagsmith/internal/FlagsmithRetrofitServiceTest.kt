@@ -27,6 +27,7 @@ interface FlagsmithRetrofitServiceTest: FlagsmithRetrofitService {
                          @Body body: FeatureStatePutBody
     ) : Call<Unit>
 
+    @Suppress("UNCHECKED_CAST")
     companion object {
         fun <T : FlagsmithRetrofitServiceTest> create(
             baseUrl: String,
