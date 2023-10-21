@@ -83,15 +83,6 @@ interface FlagsmithRetrofitService {
                 }
             }
 
-            fun envKeyInterceptor(environmentKey: String): Interceptor {
-                return Interceptor { chain ->
-                    val request = chain.request().newBuilder()
-                        .addHeader("X-environment-key", environmentKey)
-                        .build()
-                    chain.proceed(request)
-                }
-            }
-
             val cache = if (context != null && cacheConfig.enableCache) Cache(context.cacheDir, cacheConfig.cacheSize) else null
 
             val client = OkHttpClient.Builder()
@@ -115,6 +106,16 @@ interface FlagsmithRetrofitService {
                 .build()
 
             return Pair(retrofit.create(klass), cache)
+        }
+
+        // This is used by both the FlagsmithRetrofitService and the FlagsmithEventService
+        fun envKeyInterceptor(environmentKey: String): Interceptor {
+            return Interceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .addHeader("X-environment-key", environmentKey)
+                    .build()
+                chain.proceed(request)
+            }
         }
     }
 }
