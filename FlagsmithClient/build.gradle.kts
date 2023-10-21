@@ -89,7 +89,8 @@ dependencies {
 kover {
     filters {
         classes {
-            excludes += listOf("${android.namespace}.BuildConfig")
+            excludes += listOf("${android.namespace}.BuildConfig", "com.flagsmith.test.*")
+
         }
     }
     verify {

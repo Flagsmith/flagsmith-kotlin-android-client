@@ -89,9 +89,6 @@ class Flagsmith constructor(
         if (cacheConfig.enableCache && context == null) {
             throw IllegalArgumentException("Flagsmith requires a context to use the cache feature")
         }
-        if (enableRealtimeUpdates) {
-            startRealTimeListener()
-        }
         val pair = FlagsmithRetrofitService.create<FlagsmithRetrofitService>(
             baseUrl = baseUrl, environmentKey = environmentKey, context = context, cacheConfig = cacheConfig,
             requestTimeoutSeconds = requestTimeoutSeconds, readTimeoutSeconds = readTimeoutSeconds,
@@ -166,19 +163,4 @@ class Flagsmith constructor(
             foundFlag
         })
     }.also { lastUsedIdentity = identity }
-
-    private fun startRealTimeListener() {
-        if (eventService == null) return
-        eventService.sseEventsFlow.onEach {
-            getFeatureFlags { res ->
-                if (res.isFailure) {
-                    Log.e("Flagsmith", "Error getting flags in SSE stream: ${res.exceptionOrNull()}")
-                    return@getFeatureFlags
-                }
-            }
-        }.catch {
-            Log.e("Flagsmith", "Error in SSE stream: $it")
-        }
-    }
-
 }
