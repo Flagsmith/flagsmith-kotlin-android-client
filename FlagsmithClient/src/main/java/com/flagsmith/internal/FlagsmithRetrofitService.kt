@@ -31,6 +31,10 @@ interface FlagsmithRetrofitService {
     fun postAnalytics(@Body eventMap: Map<String, Int?>) : Call<Unit>
 
     companion object {
+        private const val UPDATED_AT_HEADER = "x-flagsmith-document-updated-at"
+        private const val ACCEPT_HEADER_VALUE = "application/json"
+        private const val CONTENT_TYPE_HEADER_VALUE = "application/json; charset=utf-8"
+
         fun <T : FlagsmithRetrofitService> create(
             baseUrl: String,
             environmentKey: String,
@@ -57,8 +61,8 @@ interface FlagsmithRetrofitService {
                     val request = chain.request()
                     if (chain.request().method == "POST" || chain.request().method == "PUT" || chain.request().method == "PATCH") {
                         val newRequest = request.newBuilder()
-                            .header("Content-Type", "application/json; charset=utf-8")
-                            .header("Accept", "application/json")
+                            .header("Content-Type", CONTENT_TYPE_HEADER_VALUE)
+                            .header("Accept", ACCEPT_HEADER_VALUE)
                             .build()
                         chain.proceed(newRequest)
                     } else {
@@ -70,12 +74,21 @@ interface FlagsmithRetrofitService {
             fun updatedAtInterceptor(tracker: FlagsmithEventTimeTracker): Interceptor {
                 return Interceptor { chain ->
                     val response = chain.proceed(chain.request())
-                    val updatedAtString = response.header("x-flagsmith-document-updated-at")
+                    val updatedAtString = response.header(UPDATED_AT_HEADER)
                     Log.i("Flagsmith", "updatedAt: $updatedAtString")
 
                     // Update in the tracker (Flagsmith class) if we got a new value
                     tracker.lastFlagFetchTime = updatedAtString?.toDoubleOrNull() ?: tracker.lastFlagFetchTime
                     return@Interceptor response
+                }
+            }
+
+            fun envKeyInterceptor(environmentKey: String): Interceptor {
+                return Interceptor { chain ->
+                    val request = chain.request().newBuilder()
+                        .addHeader("X-environment-key", environmentKey)
+                        .build()
+                    chain.proceed(request)
                 }
             }
 
@@ -102,15 +115,6 @@ interface FlagsmithRetrofitService {
                 .build()
 
             return Pair(retrofit.create(klass), cache)
-        }
-
-        fun envKeyInterceptor(environmentKey: String): Interceptor {
-            return Interceptor { chain ->
-                val request = chain.request().newBuilder()
-                    .addHeader("X-environment-key", environmentKey)
-                    .build()
-                chain.proceed(request)
-            }
         }
     }
 }
