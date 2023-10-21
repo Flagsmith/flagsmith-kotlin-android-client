@@ -13,12 +13,10 @@ import okhttp3.sse.EventSources
 import java.util.concurrent.TimeUnit
 
 internal class FlagsmithEventService constructor(
-    private val eventSourceUrl: String?,
+    private val eventSourceBaseUrl: String?,
     private val environmentKey: String,
     private val updates: (Result<FlagEvent>) -> Unit
 ) {
-    private val defaultEventSourceHost = "https://realtime.flagsmith.com/"
-
     private val sseClient = OkHttpClient.Builder()
         .addInterceptor(FlagsmithRetrofitService.envKeyInterceptor(environmentKey))
         .connectTimeout(6, TimeUnit.SECONDS)
@@ -26,10 +24,10 @@ internal class FlagsmithEventService constructor(
         .writeTimeout(10, TimeUnit.MINUTES)
         .build()
 
-    private val defaultEventSourceUrl: String = defaultEventSourceHost + "sse/environments/" +  environmentKey + "/stream"
+    private val completeEventSourceUrl: String = eventSourceBaseUrl + "sse/environments/" +  environmentKey + "/stream"
 
     private val sseRequest = Request.Builder()
-        .url(eventSourceUrl ?: defaultEventSourceUrl)
+        .url(completeEventSourceUrl)
         .header("Accept", "application/json")
         .addHeader("Accept", "text/event-stream")
         .build()

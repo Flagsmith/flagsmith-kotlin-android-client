@@ -13,8 +13,6 @@ import com.flagsmith.internal.FlagsmithEventTimeTracker
 import com.flagsmith.internal.FlagsmithRetrofitService
 import com.flagsmith.internal.enqueueWithResult
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.onEach
 import okhttp3.Cache
 
 /**
@@ -32,7 +30,7 @@ import okhttp3.Cache
 class Flagsmith constructor(
     private val environmentKey: String,
     private val baseUrl: String = "https://edge.api.flagsmith.com/api/v1/",
-    private val eventSourceUrl: String? = null,
+    private val eventSourceBaseUrl: String = "https://realtime.flagsmith.com/",
     private val context: Context? = null,
     private val enableAnalytics: Boolean = DEFAULT_ENABLE_ANALYTICS,
     private val enableRealtimeUpdates: Boolean = false,
@@ -54,7 +52,7 @@ class Flagsmith constructor(
 
     private val eventService: FlagsmithEventService? =
         if (!enableRealtimeUpdates) null
-        else FlagsmithEventService(eventSourceUrl = eventSourceUrl, environmentKey = environmentKey) { event ->
+        else FlagsmithEventService(eventSourceBaseUrl = eventSourceBaseUrl, environmentKey = environmentKey) { event ->
             if (event.isSuccess) {
                 lastEventUpdate = event.getOrNull()?.updatedAt ?: lastEventUpdate
 
