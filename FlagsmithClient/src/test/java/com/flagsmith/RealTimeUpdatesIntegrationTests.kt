@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Color
 import com.flagsmith.entities.FeatureStatePutBody
+import com.flagsmith.entities.Flag
 import com.flagsmith.internal.FlagsmithEventTimeTracker
 import com.flagsmith.internal.FlagsmithRetrofitService
 import com.flagsmith.internal.FlagsmithRetrofitServiceTest
@@ -120,38 +121,50 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
     /// Update after 5 secs, should be done in 60 seconds or fail
     @Test(timeout = 60000)
     fun testGettingFlagsWithRealtimeUpdatesAfterPuttingNewValue() = runBlocking {
-        // Get the current value
-        val currentFlagValueString =
-            flagsmith.getValueForFeatureSync(featureId).getOrThrow() as String?
-        println("Type of currentFlagValueDouble: ${currentFlagValueString?.javaClass?.name}")
-        Assert.assertNotNull(currentFlagValueString)
-        val currentFlagValue: String = currentFlagValueString!!
+        val currentFlags = flagsmith.getFeatureFlagsSync().getOrThrow()
 
-        // After 5 seconds try to update the value using the retrofit service
+        // Find our flag
+        val currentFlag: Flag = currentFlags.first { flag -> flag.feature.name == featureId }
+        println("currentFlag: $currentFlag")
+
+        // After 5 seconds try to update the enabled status to the opposite value using the retrofit service
         CoroutineScope(Dispatchers.IO).launch {
             // Wait 5 seconds before updating the value
             delay(5000)
 
             val response = retrofitService
-                .setFeatureStates(authToken, featureStateId, environmentKey!!, FeatureStatePutBody(true, "new-value"))
+                .setFeatureStates(authToken, featureStateId,
+                    environmentKey!!, FeatureStatePutBody(!currentFlag.enabled, "new-value"))
                 .execute()
             if (!response.isSuccessful) println("ERROR response: $response")
             println("Response: $response")
             Assert.assertTrue(response.isSuccessful)
         }
 
-        var newUpdatedFeatureValue: String? = ""
+        var newUpdatedEnabledStatus: Boolean? = null
         do {
-            newUpdatedFeatureValue = flagsmith.flagUpdateFlow.value
-                .find { flag -> flag.feature.name == featureId }?.featureStateValue as String? ?: ""
+            newUpdatedEnabledStatus = flagsmith.flagUpdateFlow.value
+                .find { flag -> flag.feature.name == featureId }?.enabled
             delay(300L) // Delay a little while to give the CPU some time back
-        } while (newUpdatedFeatureValue.isNullOrEmpty() || newUpdatedFeatureValue == currentFlagValueString)
+        } while (newUpdatedEnabledStatus == null || newUpdatedEnabledStatus == currentFlag.enabled)
 
-        Assert.assertEquals("new-value", newUpdatedFeatureValue)
+        Assert.assertEquals("Enabled status should be swapped", !currentFlag.enabled, newUpdatedEnabledStatus)
+
+        // Now we need to make sure that the feature is enabled as it'll cause issues with some of the other tests
+        CoroutineScope(Dispatchers.IO).launch {
+            val response = retrofitService
+                .setFeatureStates(authToken, featureStateId,
+                    environmentKey!!, FeatureStatePutBody(true, "new-value"))
+                .execute()
+            if (!response.isSuccessful) println("ERROR response: $response")
+            println("Response: $response")
+            Assert.assertTrue(response.isSuccessful)
+        }
+        return@runBlocking
     }
 
-    // Update after 65 secs to ensure we've done a reconnect, should be done in 100 seconds or fail
-    @Test(timeout = 100000)
+    // Update after 35 secs to ensure we've done a reconnect, should be done in 50 seconds or fail
+    @Test(timeout = 50_000)
     fun testGettingFlagsWithRealtimeUpdatesAfterPuttingNewValueAndReconnect() = runBlocking {
         // Get the current value
         val currentFlagValueString =
@@ -160,9 +173,8 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         Assert.assertNotNull(currentFlagValueString)
 
         CoroutineScope(Dispatchers.IO).launch {
-            // Wait 65 seconds before updating the value
             // By this time the realtime service will have timed out (30 seconds) and reconnected
-            delay(65000)
+            delay(35000)
 
             val response = retrofitService
                 .setFeatureStates(authToken, featureStateId, environmentKey, FeatureStatePutBody(true, "new-value-after-reconnect"))
@@ -180,9 +192,13 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         } while (newUpdatedFeatureValue.isNullOrEmpty() || newUpdatedFeatureValue == currentFlagValueString)
 
         Assert.assertEquals("new-value-after-reconnect", newUpdatedFeatureValue)
+
+        // Now get the flag again using the normal API and check the value is the same
+        val newUpdatedFeatureValueFromApi = flagsmith.getValueForFeatureSync(featureId).getOrThrow() as String?
+        Assert.assertEquals("new-value-after-reconnect", newUpdatedFeatureValueFromApi)
     }
 
-    @Test(timeout = 60000)
+    @Test(timeout = 70_000)
     fun testGettingFlagsWithRealtimeUpdatesViaFlagUpdateFlow() = runBlocking {
         // Get the current value
         val currentFlagValueString =
