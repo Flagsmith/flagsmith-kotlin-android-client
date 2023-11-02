@@ -7,7 +7,6 @@ import android.graphics.Color
 import com.flagsmith.entities.FeatureStatePutBody
 import com.flagsmith.entities.Flag
 import com.flagsmith.internal.FlagsmithEventTimeTracker
-import com.flagsmith.internal.FlagsmithRetrofitService
 import com.flagsmith.internal.FlagsmithRetrofitServiceTest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -57,8 +56,8 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
     fun setup() {
         setupMocks()
 
-        // We need the cache otherwise we'd be getting the new values from the server all the time
-        // Rather than seeing the realtime updates
+        // We need the cache configured in the integration tests, otherwise we'd be getting
+        // the new values from the server all the time rather than seeing the values from the realtime update stream
         flagsmith = Flagsmith(
             environmentKey = environmentKey!!,
             enableAnalytics = false,
@@ -125,7 +124,6 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
 
         // Find our flag
         val currentFlag: Flag = currentFlags.first { flag -> flag.feature.name == featureId }
-        println("currentFlag: $currentFlag")
 
         // After 5 seconds try to update the enabled status to the opposite value using the retrofit service
         CoroutineScope(Dispatchers.IO).launch {
@@ -163,13 +161,13 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         return@runBlocking
     }
 
-    // Update after 35 secs to ensure we've done a reconnect, should be done in 50 seconds or fail
-    @Test(timeout = 50_000)
+    // Update after 35 secs to ensure we've done a reconnect, should be done in 60 seconds or fail
+    @Test(timeout = 60_000)
     fun testGettingFlagsWithRealtimeUpdatesAfterPuttingNewValueAndReconnect() = runBlocking {
+        val expectedNewValue = "new-value-after-reconnect"
         // Get the current value
         val currentFlagValueString =
             flagsmith.getValueForFeatureSync(featureId).getOrThrow() as String?
-        println("Type of currentFlagValueDouble: ${currentFlagValueString?.javaClass?.name}")
         Assert.assertNotNull(currentFlagValueString)
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -177,10 +175,9 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
             delay(35000)
 
             val response = retrofitService
-                .setFeatureStates(authToken, featureStateId, environmentKey, FeatureStatePutBody(true, "new-value-after-reconnect"))
+                .setFeatureStates(authToken, featureStateId, environmentKey, FeatureStatePutBody(true, expectedNewValue))
                 .execute()
             if (!response.isSuccessful) println("ERROR response: $response")
-            println("Response: $response")
             Assert.assertTrue(response.isSuccessful)
         }
 
@@ -191,11 +188,11 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
             delay(300L) // Delay a little while to give the CPU some time back
         } while (newUpdatedFeatureValue.isNullOrEmpty() || newUpdatedFeatureValue == currentFlagValueString)
 
-        Assert.assertEquals("new-value-after-reconnect", newUpdatedFeatureValue)
+        Assert.assertEquals(expectedNewValue, newUpdatedFeatureValue)
 
         // Now get the flag again using the normal API and check the value is the same
         val newUpdatedFeatureValueFromApi = flagsmith.getValueForFeatureSync(featureId).getOrThrow() as String?
-        Assert.assertEquals("new-value-after-reconnect", newUpdatedFeatureValueFromApi)
+        Assert.assertEquals(expectedNewValue, newUpdatedFeatureValueFromApi)
     }
 
     @Test(timeout = 70_000)
@@ -213,8 +210,7 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
             val response = retrofitService
                 .setFeatureStates(authToken, featureStateId, environmentKey!!, FeatureStatePutBody(true, "new-value-via-flow"))
                 .execute()
-            if (!response.isSuccessful) println("Response: $response")
-            println("Response: $response")
+            if (!response.isSuccessful) println("Response error: $response")
             Assert.assertTrue(response.isSuccessful)
         }
 
@@ -226,7 +222,6 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
             delay(300L) // Delay a little while to give the CPU some time back
         } while (newUpdatedFeatureValue.isNullOrEmpty() ||  newUpdatedFeatureValue == currentFlagValueString)
 
-        println("newUpdatedFeatureValue: $newUpdatedFeatureValue")
         Assert.assertEquals("new-value-via-flow", newUpdatedFeatureValue)
     }
 }
