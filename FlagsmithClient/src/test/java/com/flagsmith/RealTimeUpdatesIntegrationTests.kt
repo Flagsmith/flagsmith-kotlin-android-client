@@ -134,9 +134,8 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
                 .setFeatureStates(authToken, featureStateId,
                     environmentKey!!, FeatureStatePutBody(!currentFlag.enabled, "new-value"))
                 .execute()
-            if (!response.isSuccessful) println("ERROR response: $response")
-            println("Response: $response")
-            Assert.assertTrue(response.isSuccessful)
+
+            Assert.assertTrue("Response should be successful: $response", response.isSuccessful)
         }
 
         var newUpdatedEnabledStatus: Boolean? = null
@@ -154,14 +153,16 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
                 .setFeatureStates(authToken, featureStateId,
                     environmentKey!!, FeatureStatePutBody(true, "new-value"))
                 .execute()
-            if (!response.isSuccessful) println("ERROR response: $response")
-            println("Response: $response")
-            Assert.assertTrue(response.isSuccessful)
+
+            Assert.assertTrue("Response should be successful: $response", response.isSuccessful)
         }
         return@runBlocking
     }
 
     // Update after 35 secs to ensure we've done a reconnect, should be done in 60 seconds or fail
+    // Though 60 seconds sounds like a long time it can take a while for the infrastructure to let
+    // us know that the value has changed. The test still finishes as soon as the value is updated
+    // so will be as quick as the infrastructure allows.
     @Test(timeout = 60_000)
     fun testGettingFlagsWithRealtimeUpdatesAfterPuttingNewValueAndReconnect() = runBlocking {
         val expectedNewValue = "new-value-after-reconnect"
@@ -172,13 +173,14 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
 
         CoroutineScope(Dispatchers.IO).launch {
             // By this time the realtime service will have timed out (30 seconds) and reconnected
+            // So try again 5 seconds later
             delay(35000)
 
             val response = retrofitService
                 .setFeatureStates(authToken, featureStateId, environmentKey, FeatureStatePutBody(true, expectedNewValue))
                 .execute()
-            if (!response.isSuccessful) println("ERROR response: $response")
-            Assert.assertTrue(response.isSuccessful)
+
+            Assert.assertTrue("Response should be successful: $response", response.isSuccessful)
         }
 
         var newUpdatedFeatureValue: String? = ""
@@ -210,8 +212,8 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
             val response = retrofitService
                 .setFeatureStates(authToken, featureStateId, environmentKey!!, FeatureStatePutBody(true, "new-value-via-flow"))
                 .execute()
-            if (!response.isSuccessful) println("Response error: $response")
-            Assert.assertTrue(response.isSuccessful)
+
+            Assert.assertTrue("Response should be successful: $response", response.isSuccessful)
         }
 
         var newUpdatedFeatureValue: String?
