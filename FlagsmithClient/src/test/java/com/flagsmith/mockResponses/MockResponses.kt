@@ -1,9 +1,9 @@
 package com.flagsmith.mockResponses
 
+import com.flagsmith.entities.Trait
 import com.flagsmith.mockResponses.endpoints.FlagsEndpoint
 import com.flagsmith.mockResponses.endpoints.IdentityFlagsAndTraitsEndpoint
 import com.flagsmith.mockResponses.endpoints.TraitsEndpoint
-import com.flagsmith.entities.Trait
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.matchers.Times
 import org.mockserver.model.HttpError
