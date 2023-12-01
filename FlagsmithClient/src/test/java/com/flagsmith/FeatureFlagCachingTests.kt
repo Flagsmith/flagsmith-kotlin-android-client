@@ -291,4 +291,89 @@ class FeatureFlagCachingTests {
         Assert.assertNotNull(foundFromServer)
         Assert.assertEquals(7.0, foundFromServer?.featureStateValue)
     }
+
+    @Test
+    fun testGetFeatureFlagsWithNewCachedFlagsmithGetsCachedValue() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
+        mockServer.mockFailureFor(MockEndpoint.GET_IDENTITIES)
+
+        // First time around we should be successful and cache the response
+        var foundFromServer: Flag? = null
+        flagsmithWithCache.clearCache()
+        flagsmithWithCache.getFeatureFlags(identity = "person") { result ->
+            Assert.assertTrue(result.isSuccess)
+
+            foundFromServer =
+                result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
+        }
+
+        await untilNotNull { foundFromServer }
+        Assert.assertNotNull(foundFromServer)
+        Assert.assertEquals(756.0, foundFromServer?.featureStateValue)
+
+        // Now get a new Flagsmith instance with the same cache and expect the cached response to be returned
+        val newFlagsmithWithCache = Flagsmith(
+            environmentKey = "",
+            baseUrl = "http://localhost:${mockServer.localPort}",
+            enableAnalytics = false,
+            context = mockApplicationContext,
+            cacheConfig = FlagsmithCacheConfig(enableCache = true)
+        )
+
+        // Now we mock the failure and expect the cached response to be returned from the new flagsmith instance
+        var foundFromCache: Flag? = null
+        newFlagsmithWithCache.getFeatureFlags(identity = "person") { result ->
+            Assert.assertTrue("The request will fail but we should be successful as we fall back on the cache", result.isSuccess)
+
+            foundFromCache =
+                result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
+        }
+
+        await untilNotNull { foundFromCache }
+        Assert.assertNotNull(foundFromCache)
+        Assert.assertEquals(756.0, foundFromCache?.featureStateValue)
+    }
+
+    @Test
+    fun testGetFeatureFlagsWithNewCachedFlagsmithDoesntGetCachedValueWhenWeClearTheCache() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
+        mockServer.mockFailureFor(MockEndpoint.GET_IDENTITIES)
+
+        // First time around we should be successful and cache the response
+        var foundFromServer: Flag? = null
+        flagsmithWithCache.clearCache()
+        flagsmithWithCache.getFeatureFlags(identity = "person") { result ->
+            Assert.assertTrue(result.isSuccess)
+
+            foundFromServer =
+                result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
+        }
+
+        await untilNotNull { foundFromServer }
+        Assert.assertNotNull(foundFromServer)
+        Assert.assertEquals(756.0, foundFromServer?.featureStateValue)
+
+        // Now get a new Flagsmith instance with the same cache and evict the cache straight away
+        val newFlagsmithWithClearedCache = Flagsmith(
+            environmentKey = "",
+            baseUrl = "http://localhost:${mockServer.localPort}",
+            enableAnalytics = false,
+            context = mockApplicationContext,
+            cacheConfig = FlagsmithCacheConfig(enableCache = true)
+        )
+        newFlagsmithWithClearedCache.clearCache()
+
+        // Now we mock the failure and expect the get to fail as we don't have the cache to fall back on
+        var foundFromCache: Flag? = null
+        newFlagsmithWithClearedCache.getFeatureFlags(identity = "person") { result ->
+            Assert.assertFalse("This un-cached response should fail", result.isSuccess)
+
+            foundFromCache =
+                result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
+        }
+
+        await untilNotNull { foundFromCache }
+        Assert.assertNotNull(foundFromCache)
+        Assert.assertEquals(756.0, foundFromCache?.featureStateValue)
+    }
 }
