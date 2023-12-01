@@ -13,6 +13,7 @@ import com.flagsmith.mockResponses.mockResponseFor
 import org.awaitility.Awaitility
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilNotNull
+import org.awaitility.kotlin.untilTrue
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -25,6 +26,7 @@ import org.mockito.MockitoAnnotations
 import org.mockserver.integration.ClientAndServer
 import java.io.File
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 class FeatureFlagCachingTests {
@@ -365,15 +367,16 @@ class FeatureFlagCachingTests {
 
         // Now we mock the failure and expect the get to fail as we don't have the cache to fall back on
         var foundFromCache: Flag? = null
+        val hasFinishedGetRequest = AtomicBoolean(false)
         newFlagsmithWithClearedCache.getFeatureFlags(identity = "person") { result ->
             Assert.assertFalse("This un-cached response should fail", result.isSuccess)
 
             foundFromCache =
-                result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
+                result.getOrNull()?.find { flag -> flag.feature.name == "with-value" }
+            hasFinishedGetRequest.set(true)
         }
 
-        await untilNotNull { foundFromCache }
-        Assert.assertNotNull(foundFromCache)
-        Assert.assertEquals(756.0, foundFromCache?.featureStateValue)
+        await untilTrue(hasFinishedGetRequest)
+        Assert.assertNull("Shouldn't get any data back as we don't have a cache", foundFromCache)
     }
 }
