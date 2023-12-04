@@ -160,10 +160,10 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
     }
 
     // Update after 35 secs to ensure we've done a reconnect, should be done in 60 seconds or fail
-    // Though 60 seconds sounds like a long time it can take a while for the infrastructure to let
+    // Though 120 seconds sounds like a long time it can take a while for the infrastructure to let
     // us know that the value has changed. The test still finishes as soon as the value is updated
     // so will be as quick as the infrastructure allows.
-    @Test(timeout = 60_000)
+    @Test(timeout = 120_000)
     fun testGettingFlagsWithRealtimeUpdatesAfterPuttingNewValueAndReconnect() = runBlocking {
         val expectedNewValue = "new-value-after-reconnect"
         // Get the current value
@@ -197,7 +197,7 @@ class RealTimeUpdatesIntegrationTests : FlagsmithEventTimeTracker {
         Assert.assertEquals(expectedNewValue, newUpdatedFeatureValueFromApi)
     }
 
-    @Test(timeout = 70_000)
+    @Test(timeout = 120_000)
     fun testGettingFlagsWithRealtimeUpdatesViaFlagUpdateFlow() = runBlocking {
         // Get the current value
         val currentFlagValueString =
