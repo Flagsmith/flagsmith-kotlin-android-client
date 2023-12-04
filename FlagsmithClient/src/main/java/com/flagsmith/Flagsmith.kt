@@ -150,6 +150,10 @@ class Flagsmith constructor(
         retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult(defaults = null, result = result)
             .also { lastUsedIdentity = identity }
 
+    fun clearCache() {
+        cache?.evictAll()
+    }
+
     private fun getFeatureFlag(
         featureId: String,
         identity: String?,

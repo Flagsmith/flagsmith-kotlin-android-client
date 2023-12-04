@@ -96,9 +96,6 @@ interface FlagsmithRetrofitService {
                 .cache(cache)
                 .build()
 
-            // Make sure that we start with a clean cache
-            client.cache?.evictAll()
-
             val retrofit = Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .addConverterFactory(GsonConverterFactory.create())
