@@ -45,10 +45,7 @@ class Flagsmith constructor(
     private lateinit var retrofit: FlagsmithRetrofitService
     private var cache: Cache? = null
     private var lastUsedIdentity: String? = null
-    private val analytics: FlagsmithAnalytics? =
-        if (!enableAnalytics) null
-        else if (context != null) FlagsmithAnalytics(context, retrofit, analyticsFlushPeriod)
-        else throw IllegalArgumentException("Flagsmith requires a context to use the analytics feature")
+    private var analytics: FlagsmithAnalytics? = null //TODO: Make this a lateinit var and instead initialise in init block
 
     private val eventService: FlagsmithEventService? =
         if (!enableRealtimeUpdates) null
@@ -93,6 +90,13 @@ class Flagsmith constructor(
             writeTimeoutSeconds = writeTimeoutSeconds, timeTracker = this, klass = FlagsmithRetrofitService::class.java)
         retrofit = pair.first
         cache = pair.second
+
+        if (enableAnalytics) {
+            if (context == null || context.applicationContext == null) {
+                throw IllegalArgumentException("Flagsmith requires a context to use the analytics feature")
+            }
+            analytics = FlagsmithAnalytics(context, retrofit, analyticsFlushPeriod)
+        }
     }
 
     companion object {
