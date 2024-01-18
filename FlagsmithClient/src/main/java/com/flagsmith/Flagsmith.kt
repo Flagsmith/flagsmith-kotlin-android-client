@@ -45,7 +45,7 @@ class Flagsmith constructor(
     private lateinit var retrofit: FlagsmithRetrofitService
     private var cache: Cache? = null
     private var lastUsedIdentity: String? = null
-    private var analytics: FlagsmithAnalytics? = null //TODO: Make this a lateinit var and instead initialise in init block
+    private var analytics: FlagsmithAnalytics? = null
 
     private val eventService: FlagsmithEventService? =
         if (!enableRealtimeUpdates) null
