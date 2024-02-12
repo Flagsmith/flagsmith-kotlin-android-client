@@ -77,7 +77,7 @@ class FeatureFlagCachingTests {
         flagsmithWithCache = Flagsmith(
             environmentKey = "",
             baseUrl = "http://localhost:${mockServer.localPort}",
-            enableAnalytics = false,
+            enableAnalytics = true, // Mix up the analytics flag to test initialisation
             context = mockApplicationContext,
             defaultFlags = defaultFlags,
             cacheConfig = FlagsmithCacheConfig(enableCache = true)
@@ -112,6 +112,7 @@ class FeatureFlagCachingTests {
         `when`(mockContextResources.getBoolean(anyInt())).thenReturn(false)
         `when`(mockContextResources.getDimension(anyInt())).thenReturn(100f)
         `when`(mockContextResources.getIntArray(anyInt())).thenReturn(intArrayOf(1, 2, 3))
+        `when`(mockApplicationContext.applicationContext).thenReturn(mockApplicationContext)
     }
 
     @After
