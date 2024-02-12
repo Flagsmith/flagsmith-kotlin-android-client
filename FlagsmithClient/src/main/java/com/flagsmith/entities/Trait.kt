@@ -6,8 +6,17 @@ import com.google.gson.annotations.SerializedName
 data class Trait(
     val identifier: String? = null,
     @SerializedName(value = "trait_key") val key: String,
-    @SerializedName(value = "trait_value") val value: String
+    @SerializedName(value = "trait_value") val trait_value: Any
+
 ) {
+    val value: String?
+        get() = stringValue
+    val stringValue: String?
+        get() = trait_value as? String
+
+    val intValue: Int?
+        get() = trait_value as? Int
+
     constructor(key: String, value: String) : this(null, key, value)
 }
 
