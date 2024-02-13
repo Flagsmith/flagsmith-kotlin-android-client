@@ -8,6 +8,13 @@ data class Trait(
     @SerializedName(value = "trait_key") val key: String,
     @SerializedName(value = "trait_value") val traitValue: Any
 ) {
+
+    constructor(key: String, value: String) : this(null, key, value)
+    constructor(key: String, value: Int) : this(null, key, value)
+    constructor(key: String, value: Double) : this(null, key, value)
+    constructor(key: String, value: Boolean) : this(null, key, value)
+
+    @Deprecated("Use traitValue instead", ReplaceWith("traitValue"))
     val value: String?
         get() = stringValue
 
@@ -15,7 +22,7 @@ data class Trait(
         get() = traitValue as? String
 
     val intValue: Int?
-        get() = traitValue as? Int
+        get() = (traitValue as? Double)?.toInt()
 
     val doubleValue: Double?
         get() = traitValue as? Double
@@ -23,7 +30,6 @@ data class Trait(
     val booleanValue: Boolean?
         get() = traitValue as? Boolean
 
-    constructor(key: String, value: Any) : this(null, key, value)
 }
 
 data class TraitWithIdentity(
