@@ -14,7 +14,7 @@ data class Trait(
     constructor(key: String, value: Double) : this(null, key, value)
     constructor(key: String, value: Boolean) : this(null, key, value)
 
-    @Deprecated("Use traitValue instead", ReplaceWith("traitValue"))
+    @Deprecated("Use traitValue instead or one of the type-safe getters", ReplaceWith("traitValue"))
     val value: String?
         get() = stringValue
 
