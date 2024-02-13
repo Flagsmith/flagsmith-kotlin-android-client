@@ -37,9 +37,16 @@ data class TraitWithIdentity(
     @SerializedName(value = "trait_value") val value: Any,
     val identity: Identity,
 ) {
-    // Add a constructor that takes a string and sets the value to it
-    constructor(key: String, value: String?, identity: Identity) : this(key, value as Any, identity)
+    val stringValue: String?
+        get() = value as? String
 
-    // Add a constructor that takes an int and sets the value to it
-    constructor(key: String, value: Int, identity: Identity) : this(key, value as Any, identity)
+    val intValue: Int?
+        get() = (value as? Double)?.toInt()
+
+    val doubleValue: Double?
+        get() = value as? Double
+
+    val booleanValue: Boolean?
+        get() = value as? Boolean
+
 }
