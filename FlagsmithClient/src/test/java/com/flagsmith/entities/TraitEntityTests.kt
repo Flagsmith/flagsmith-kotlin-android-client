@@ -1,49 +1,75 @@
 package com.flagsmith.entities
 
+import com.flagsmith.Flagsmith
+import com.flagsmith.FlagsmithCacheConfig
+import com.flagsmith.getTraitSync
+import com.flagsmith.mockResponses.MockEndpoint
+import com.flagsmith.mockResponses.mockResponseFor
+import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
+import org.mockserver.integration.ClientAndServer
 
 class TraitEntityTests {
-    @Test
-    fun testTraitEntity() {
-        val trait = Trait("trait_key", "trait_value")
-        Assert.assertEquals("trait_key", trait.key)
-        Assert.assertEquals("trait_value", trait.value)
+
+    private lateinit var mockServer: ClientAndServer
+    private lateinit var flagsmith: Flagsmith
+
+    @Before
+    fun setup() {
+        mockServer = ClientAndServer.startClientAndServer()
+        flagsmith = Flagsmith(
+            environmentKey = "",
+            baseUrl = "http://localhost:${mockServer.localPort}",
+            enableAnalytics = false,
+            cacheConfig = FlagsmithCacheConfig(enableCache = false)
+        )
+    }
+
+    @After
+    fun tearDown() {
+        mockServer.stop()
     }
 
     @Test
     fun testTraitValueStringType() {
-        val trait = Trait("trait_key", "trait_value")
-        Assert.assertEquals("trait_value", trait.stringValue)
-        Assert.assertNull(trait.intValue)
-        Assert.assertNull(trait.doubleValue)
-        Assert.assertNull(trait.booleanValue)
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES_TRAIT_STRING)
+        runBlocking {
+            val result = flagsmith.getTraitSync("client-key", "person")
+            Assert.assertTrue(result.isSuccess)
+            Assert.assertEquals("12345", result.getOrThrow()?.stringValue)
+        }
     }
 
     @Test
     fun testTraitValueIntType() {
-        val trait = Trait("trait_key", 1)
-        Assert.assertEquals(1, trait.intValue)
-        Assert.assertNull(trait.stringValue)
-        Assert.assertNull(trait.doubleValue)
-        Assert.assertNull(trait.booleanValue)
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES_TRAIT_INTEGER)
+        runBlocking {
+            val result = flagsmith.getTraitSync("client-key", "person")
+            Assert.assertTrue(result.isSuccess)
+            Assert.assertEquals(5, result.getOrThrow()?.intValue)
+        }
     }
 
     @Test
     fun testTraitValueDoubleType() {
-        val trait = Trait("trait_key", 0.5)
-        Assert.assertEquals(0.5, trait.doubleValue)
-        Assert.assertNull(trait.stringValue)
-        Assert.assertNull(trait.intValue)
-        Assert.assertNull(trait.booleanValue)
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES_TRAIT_DOUBLE)
+        runBlocking {
+            val result = flagsmith.getTraitSync("client-key", "person")
+            Assert.assertTrue(result.isSuccess)
+            Assert.assertEquals(0.5, result.getOrThrow()?.doubleValue)
+        }
     }
 
     @Test
     fun testTraitValueBooleanType() {
-        val trait = Trait("trait_key", true)
-        Assert.assertEquals(true, trait.booleanValue)
-        Assert.assertNull(trait.intValue)
-        Assert.assertNull(trait.intValue)
-        Assert.assertNull(trait.doubleValue)
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES_TRAIT_BOOLEAN)
+        runBlocking {
+            val result = flagsmith.getTraitSync("client-key", "person")
+            Assert.assertTrue(result.isSuccess)
+            Assert.assertEquals(true, result.getOrThrow()?.booleanValue)
+        }
     }
 }
