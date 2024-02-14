@@ -9,6 +9,14 @@ data class Trait(
     @SerializedName(value = "trait_value") val traitValue: Any
 ) {
 
+    constructor(key: String, value: String) : this(null, key, value)
+
+    constructor(key: String, value: Int) : this(null, key, value)
+
+    constructor(key: String, value: Double) : this(null, key, value)
+
+    constructor(key: String, value: Boolean) : this(null, key, value)
+
     @Deprecated("Use traitValue instead or one of the type-safe getters", ReplaceWith("traitValue"))
     val value: String?
         get() = stringValue
