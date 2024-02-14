@@ -3,36 +3,39 @@ package com.flagsmith.entities
 
 import com.google.gson.annotations.SerializedName
 
-data class Trait(
+data class Trait constructor(
     val identifier: String? = null,
     @SerializedName(value = "trait_key") val key: String,
     @SerializedName(value = "trait_value") val traitValue: Any
 ) {
 
-    constructor(key: String, value: String) : this(null, key, value)
+    constructor(key: String, value: String)
+            : this(key = key, traitValue = value)
 
-    constructor(key: String, value: Int) : this(null, key, value)
+    constructor(key: String, value: Int)
+            : this(key = key, traitValue = value)
 
-    constructor(key: String, value: Double) : this(null, key, value)
+    constructor(key: String, value: Double)
+            : this(key = key, traitValue = value)
 
-    constructor(key: String, value: Boolean) : this(null, key, value)
-
-    init {
-        when (traitValue) {
-            is String, is Int, is Boolean, is Double -> {} // Do nothing, these types are allowed
-            else -> throw IllegalArgumentException("Parameter type is not supported. Supported types are: String, Int, Boolean, and Double.")
-        }
-    }
+    constructor(key: String, value: Boolean)
+            : this(key = key, traitValue = value)
 
     @Deprecated("Use traitValue instead or one of the type-safe getters", ReplaceWith("traitValue"))
-    val value: String?
-        get() = stringValue
+    val value: String
+        get()  { return traitValue as? String ?: traitValue.toString() }
 
     val stringValue: String?
         get() = traitValue as? String
 
     val intValue: Int?
-        get() = (traitValue as? Double)?.toInt()
+        get()  {
+            return when (traitValue) {
+                is Int -> traitValue
+                is Double -> traitValue.toInt()
+                else -> null
+            }
+        }
 
     val doubleValue: Double?
         get() = traitValue as? Double

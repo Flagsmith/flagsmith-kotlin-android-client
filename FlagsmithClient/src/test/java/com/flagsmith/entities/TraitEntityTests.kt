@@ -50,6 +50,8 @@ class TraitEntityTests {
             val result = flagsmith.getTraitSync("client-key", "person")
             Assert.assertTrue(result.isSuccess)
             Assert.assertEquals(5, result.getOrThrow()?.intValue)
+            Assert.assertTrue("Integers in the JSON actually get decoded as Double",
+                (result.getOrThrow()?.traitValue) is Double)
         }
     }
 
@@ -71,5 +73,48 @@ class TraitEntityTests {
             Assert.assertTrue(result.isSuccess)
             Assert.assertEquals(true, result.getOrThrow()?.booleanValue)
         }
+    }
+
+    @Test
+    fun testTraitConstructorStringType() {
+        val trait = Trait( "string-key", "string-value")
+        Assert.assertEquals("string-value", trait.traitValue)
+        Assert.assertEquals("string-value", trait.stringValue)
+        Assert.assertNull(trait.intValue)
+    }
+
+    @Test
+    fun testTraitConstructorIntType() {
+        val trait = Trait("string-key", 1)
+        Assert.assertEquals(1, trait.traitValue)
+        Assert.assertEquals(1, trait.intValue)
+        Assert.assertNull("Can't convert an int to a double", trait.doubleValue)
+        Assert.assertNull(trait.stringValue)
+        Assert.assertEquals("We should maintain the original functionality for the String .value",
+            "1", trait.value)
+    }
+
+    @Test
+    fun testTraitConstructorDoubleType() {
+        val trait = Trait("string-key", 1.0)
+        Assert.assertEquals(1.0, trait.traitValue)
+        Assert.assertEquals(1.0, trait.doubleValue)
+        Assert.assertEquals("JS ints are actually doubles so we should handle this",
+            1, trait.intValue)
+        Assert.assertNull(trait.stringValue)
+        Assert.assertEquals("We should maintain the original functionality for the String .value",
+            "1.0", trait.value)
+    }
+
+    @Test
+    fun testTraitConstructorBooleanType() {
+        val trait = Trait("string-key", true)
+        Assert.assertEquals(true, trait.traitValue)
+        Assert.assertEquals(true, trait.booleanValue)
+        Assert.assertNull(trait.intValue)
+        Assert.assertNull(trait.doubleValue)
+        Assert.assertNull(trait.stringValue)
+        Assert.assertEquals("We should maintain the original functionality for the String .value",
+            "true", trait.value)
     }
 }
