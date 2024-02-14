@@ -42,7 +42,7 @@ class TraitsTests {
             assertTrue(result.getOrThrow().isNotEmpty())
             assertEquals(
                 "electric pink",
-                result.getOrThrow().find { trait -> trait.key == "favourite-colour" }?.value
+                result.getOrThrow().find { trait -> trait.key == "favourite-colour" }?.stringValue
             )
         }
     }
@@ -54,7 +54,7 @@ class TraitsTests {
             val result = flagsmith.getTraitsSync("person")
             assertTrue(result.isSuccess)
             assertTrue(result.getOrThrow().isNotEmpty())
-            assertNull(result.getOrThrow().find { trait -> trait.key == "fake-trait" }?.value)
+            assertNull(result.getOrThrow().find { trait -> trait.key == "fake-trait" }?.stringValue)
         }
     }
 
@@ -64,7 +64,7 @@ class TraitsTests {
         runBlocking {
             val result = flagsmith.getTraitSync("favourite-colour", "person")
             assertTrue(result.isSuccess)
-            assertEquals("electric pink", result.getOrThrow()?.value)
+            assertEquals("electric pink", result.getOrThrow()?.stringValue)
         }
     }
 
@@ -140,7 +140,7 @@ class TraitsTests {
             assertTrue(result.getOrThrow().flags.isNotEmpty())
             assertEquals(
                 "electric pink",
-                result.getOrThrow().traits.find { trait -> trait.key == "favourite-colour" }?.value
+                result.getOrThrow().traits.find { trait -> trait.key == "favourite-colour" }?.stringValue
             )
         }
     }
