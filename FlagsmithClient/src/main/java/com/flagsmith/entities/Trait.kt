@@ -17,6 +17,13 @@ data class Trait(
 
     constructor(key: String, value: Boolean) : this(null, key, value)
 
+    init {
+        when (traitValue) {
+            is String, is Int, is Boolean, is Double -> {} // Do nothing, these types are allowed
+            else -> throw IllegalArgumentException("Parameter type is not supported. Supported types are: String, Int, Boolean, and Double.")
+        }
+    }
+
     @Deprecated("Use traitValue instead or one of the type-safe getters", ReplaceWith("traitValue"))
     val value: String?
         get() = stringValue
