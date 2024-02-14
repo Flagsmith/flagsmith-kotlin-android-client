@@ -15,10 +15,10 @@ import java.util.concurrent.TimeUnit
 enum class MockEndpoint(val path: String, val body: String) {
     GET_IDENTITIES(IdentityFlagsAndTraitsEndpoint("").path, MockResponses.getIdentities),
     GET_FLAGS(FlagsEndpoint.path, MockResponses.getFlags),
-    SET_TRAIT(TraitsEndpoint(Trait(key = "", value = ""), "").path, MockResponses.setTrait),
-    SET_TRAIT_INTEGER(TraitsEndpoint(Trait(key = "", value = ""), "").path, MockResponses.setTraitInteger),
-    SET_TRAIT_DOUBLE(TraitsEndpoint(Trait(key = "", value = ""), "").path, MockResponses.setTraitDouble),
-    SET_TRAIT_BOOLEAN(TraitsEndpoint(Trait(key = "", value = ""), "").path, MockResponses.setTraitBoolean),
+    SET_TRAIT(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTrait),
+    SET_TRAIT_INTEGER(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitInteger),
+    SET_TRAIT_DOUBLE(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitDouble),
+    SET_TRAIT_BOOLEAN(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitBoolean),
     GET_IDENTITIES_TRAIT_STRING(
         IdentityFlagsAndTraitsEndpoint("").path,
         MockResponses.getTraitString
