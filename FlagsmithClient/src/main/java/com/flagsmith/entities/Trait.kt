@@ -45,21 +45,42 @@ data class Trait (
 
 }
 
-data class TraitWithIdentity(
+data class TraitWithIdentity (
     @SerializedName(value = "trait_key") val key: String,
-    @SerializedName(value = "trait_value") val value: Any,
+    @SerializedName(value = "trait_value") val traitValue: Any,
     val identity: Identity,
 ) {
+    constructor(key: String, value: String, identity: Identity)
+            : this(key = key, traitValue = value, identity = identity)
+
+    constructor(key: String, value: Int, identity: Identity)
+            : this(key = key, traitValue = value, identity = identity)
+
+    constructor(key: String, value: Double, identity: Identity)
+            : this(key = key, traitValue = value, identity = identity)
+
+    constructor(key: String, value: Boolean, identity: Identity)
+            : this(key = key, traitValue = value, identity = identity)
+
+    @Deprecated("Use traitValue instead or one of the type-safe getters", ReplaceWith("traitValue"))
+    val value: String
+        get()  { return traitValue as? String ?: traitValue.toString() }
+
     val stringValue: String?
-        get() = value as? String
+        get() = traitValue as? String
 
     val intValue: Int?
-        get() = (value as? Double)?.toInt()
+        get()  {
+            return when (traitValue) {
+                is Int -> traitValue
+                is Double -> traitValue.toInt()
+                else -> null
+            }
+        }
 
     val doubleValue: Double?
-        get() = value as? Double
+        get() = traitValue as? Double
 
     val booleanValue: Boolean?
-        get() = value as? Boolean
-
+        get() = traitValue as? Boolean
 }

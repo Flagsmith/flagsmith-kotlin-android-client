@@ -11,7 +11,7 @@ data class TraitsEndpoint(private val trait: Trait, private val identity: String
         body = Gson().toJson(
             TraitWithIdentity(
                 key = trait.key,
-                value = trait.traitValue,
+                traitValue = trait.traitValue,
                 identity = Identity(identity)
             )
         ),
