@@ -148,7 +148,7 @@ class Flagsmith constructor(
         }.also { lastUsedIdentity = identity }
 
     fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) =
-        retrofit.postTraits(TraitWithIdentity(trait.key, trait.value, Identity(identity))).enqueueWithResult(result = result)
+        retrofit.postTraits(TraitWithIdentity(trait.key, trait.traitValue, Identity(identity))).enqueueWithResult(result = result)
 
     fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
         retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult(defaults = null, result = result)

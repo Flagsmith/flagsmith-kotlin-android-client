@@ -42,7 +42,7 @@ class TraitsTests {
             assertTrue(result.getOrThrow().isNotEmpty())
             assertEquals(
                 "electric pink",
-                result.getOrThrow().find { trait -> trait.key == "favourite-colour" }?.value
+                result.getOrThrow().find { trait -> trait.key == "favourite-colour" }?.stringValue
             )
         }
     }
@@ -54,7 +54,7 @@ class TraitsTests {
             val result = flagsmith.getTraitsSync("person")
             assertTrue(result.isSuccess)
             assertTrue(result.getOrThrow().isNotEmpty())
-            assertNull(result.getOrThrow().find { trait -> trait.key == "fake-trait" }?.value)
+            assertNull(result.getOrThrow().find { trait -> trait.key == "fake-trait" }?.stringValue)
         }
     }
 
@@ -64,7 +64,7 @@ class TraitsTests {
         runBlocking {
             val result = flagsmith.getTraitSync("favourite-colour", "person")
             assertTrue(result.isSuccess)
-            assertEquals("electric pink", result.getOrThrow()?.value)
+            assertEquals("electric pink", result.getOrThrow()?.stringValue)
         }
     }
 
@@ -86,7 +86,46 @@ class TraitsTests {
                 flagsmith.setTraitSync(Trait(key = "set-from-client", value = "12345"), "person")
             assertTrue(result.isSuccess)
             assertEquals("set-from-client", result.getOrThrow().key)
-            assertEquals("12345", result.getOrThrow().value)
+            assertEquals("12345", result.getOrThrow().stringValue)
+            assertEquals("person", result.getOrThrow().identity.identifier)
+        }
+    }
+
+    @Test
+    fun testSetTraitInteger() {
+        mockServer.mockResponseFor(MockEndpoint.SET_TRAIT_INTEGER)
+        runBlocking {
+            val result =
+                flagsmith.setTraitSync(Trait(key = "set-from-client", value = 5), "person")
+            assertTrue(result.isSuccess)
+            assertEquals("set-from-client", result.getOrThrow().key)
+            assertEquals(5, result.getOrThrow().intValue)
+            assertEquals("person", result.getOrThrow().identity.identifier)
+        }
+    }
+
+    @Test
+    fun testSetTraitDouble() {
+        mockServer.mockResponseFor(MockEndpoint.SET_TRAIT_DOUBLE)
+        runBlocking {
+            val result =
+                flagsmith.setTraitSync(Trait(key = "set-from-client", value = 0.5), "person")
+            assertTrue(result.isSuccess)
+            assertEquals("set-from-client", result.getOrThrow().key)
+            assertEquals(0.5, result.getOrThrow().doubleValue)
+            assertEquals("person", result.getOrThrow().identity.identifier)
+        }
+    }
+
+    @Test
+    fun testSetTraitBoolean() {
+        mockServer.mockResponseFor(MockEndpoint.SET_TRAIT_BOOLEAN)
+        runBlocking {
+            val result =
+                flagsmith.setTraitSync(Trait(key = "set-from-client", value = true), "person")
+            assertTrue(result.isSuccess)
+            assertEquals("set-from-client", result.getOrThrow().key)
+            assertEquals(true, result.getOrThrow().booleanValue)
             assertEquals("person", result.getOrThrow().identity.identifier)
         }
     }
@@ -101,7 +140,7 @@ class TraitsTests {
             assertTrue(result.getOrThrow().flags.isNotEmpty())
             assertEquals(
                 "electric pink",
-                result.getOrThrow().traits.find { trait -> trait.key == "favourite-colour" }?.value
+                result.getOrThrow().traits.find { trait -> trait.key == "favourite-colour" }?.stringValue
             )
         }
     }

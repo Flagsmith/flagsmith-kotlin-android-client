@@ -15,7 +15,26 @@ import java.util.concurrent.TimeUnit
 enum class MockEndpoint(val path: String, val body: String) {
     GET_IDENTITIES(IdentityFlagsAndTraitsEndpoint("").path, MockResponses.getIdentities),
     GET_FLAGS(FlagsEndpoint.path, MockResponses.getFlags),
-    SET_TRAIT(TraitsEndpoint(Trait(key = "", value = ""), "").path, MockResponses.setTrait)
+    SET_TRAIT(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTrait),
+    SET_TRAIT_INTEGER(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitInteger),
+    SET_TRAIT_DOUBLE(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitDouble),
+    SET_TRAIT_BOOLEAN(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitBoolean),
+    GET_IDENTITIES_TRAIT_STRING(
+        IdentityFlagsAndTraitsEndpoint("").path,
+        MockResponses.getTraitString
+    ),
+    GET_IDENTITIES_TRAIT_INTEGER(
+        IdentityFlagsAndTraitsEndpoint("").path,
+        MockResponses.getTraitInteger
+    ),
+    GET_IDENTITIES_TRAIT_DOUBLE(
+        IdentityFlagsAndTraitsEndpoint("").path,
+        MockResponses.getTraitDouble
+    ),
+    GET_IDENTITIES_TRAIT_BOOLEAN(
+        IdentityFlagsAndTraitsEndpoint("").path,
+        MockResponses.getTraitBoolean
+    ),
 }
 
 fun ClientAndServer.mockResponseFor(endpoint: MockEndpoint) {
@@ -33,7 +52,10 @@ fun ClientAndServer.mockDelayFor(endpoint: MockEndpoint) {
             response()
                 .withContentType(MediaType.APPLICATION_JSON)
                 .withBody(endpoint.body)
-                .withDelay(TimeUnit.SECONDS, 8) // REQUEST_TIMEOUT_SECONDS is 4 in the client, so needs to be more
+                .withDelay(
+                    TimeUnit.SECONDS,
+                    8
+                ) // REQUEST_TIMEOUT_SECONDS is 4 in the client, so needs to be more
         )
 }
 
@@ -141,6 +163,212 @@ object MockResponses {
           "identity": {
             "identifier": "person"
           }
+        }
+    """.trimIndent()
+
+    val setTraitInteger = """
+        {
+          "trait_key": "set-from-client",
+          "trait_value": 5,
+          "identity": {
+            "identifier": "person"
+          }
+        }
+    """.trimIndent()
+
+    val setTraitDouble = """
+        {
+          "trait_key": "set-from-client",
+          "trait_value": 0.5,
+          "identity": {
+            "identifier": "person"
+          }
+        }
+    """.trimIndent()
+
+    val setTraitBoolean = """
+        {
+          "trait_key": "set-from-client",
+          "trait_value": true,
+          "identity": {
+            "identifier": "person"
+          }
+        }
+    """.trimIndent()
+
+    val getTraitString = """
+        {
+          "flags": [
+            {
+              "feature_state_value": null,
+              "feature": {
+                "type": "STANDARD",
+                "name": "no-value",
+                "id": 35506
+              },
+              "enabled": true
+            },
+            {
+              "feature_state_value": 756,
+              "feature": {
+                "type": "STANDARD",
+                "name": "with-value",
+                "id": 35507
+              },
+              "enabled": true
+            },
+            {
+              "feature_state_value": "",
+              "feature": {
+                "type": "STANDARD",
+                "name": "with-value-just-person-enabled",
+                "id": 35508
+              },
+              "enabled": true
+            }
+          ],
+          "traits": [
+            {
+              "trait_value": "12345",
+              "trait_key": "client-key"
+            },
+            {
+              "trait_value": "electric pink",
+              "trait_key": "favourite-colour"
+            }
+          ]
+        }
+    """.trimIndent()
+
+    val getTraitInteger = """
+        {
+          "flags": [
+            {
+              "feature_state_value": null,
+              "feature": {
+                "type": "STANDARD",
+                "name": "no-value",
+                "id": 35506
+              },
+              "enabled": true
+            },
+            {
+              "feature_state_value": 756,
+              "feature": {
+                "type": "STANDARD",
+                "name": "with-value",
+                "id": 35507
+              },
+              "enabled": true
+            },
+            {
+              "feature_state_value": "",
+              "feature": {
+                "type": "STANDARD",
+                "name": "with-value-just-person-enabled",
+                "id": 35508
+              },
+              "enabled": true
+            }
+          ],
+          "traits": [
+            {
+              "trait_value": 5,
+              "trait_key": "client-key"
+            },
+            {
+              "trait_value": "electric pink",
+              "trait_key": "favourite-colour"
+            }
+          ]
+        }
+    """.trimIndent()
+
+    val getTraitDouble = """
+        {
+          "flags": [
+            {
+              "feature_state_value": null,
+              "feature": {
+                "type": "STANDARD",
+                "name": "no-value",
+                "id": 35506
+              },
+              "enabled": true
+            },
+            {
+              "feature_state_value": 756,
+              "feature": {
+                "type": "STANDARD",
+                "name": "with-value",
+                "id": 35507
+              },
+              "enabled": true
+            },
+            {
+              "feature_state_value": "",
+              "feature": {
+                "type": "STANDARD",
+                "name": "with-value-just-person-enabled",
+                "id": 35508
+              },
+              "enabled": true
+            }
+          ],
+          "traits": [
+            {
+              "trait_value": 0.5,
+              "trait_key": "client-key"
+            },
+            {
+              "trait_value": "electric pink",
+              "trait_key": "favourite-colour"
+            }
+          ]
+        }
+    """.trimIndent()
+
+    val getTraitBoolean = """
+       {
+          "flags": [
+            {
+              "feature_state_value": null,
+              "feature": {
+                "type": "STANDARD",
+                "name": "no-value",
+                "id": 35506
+              },
+              "enabled": true
+            },
+            {
+              "feature_state_value": 756,
+              "feature": {
+                "type": "STANDARD",
+                "name": "with-value",
+                "id": 35507
+              },
+              "enabled": true
+            },
+            {
+              "feature_state_value": "",
+              "feature": {
+                "type": "STANDARD",
+                "name": "with-value-just-person-enabled",
+                "id": 35508
+              },
+              "enabled": true
+            }
+          ],
+          "traits": [
+            {
+              "trait_value": true,
+              "trait_key": "client-key"
+            },
+            {
+              "trait_value": "electric pink",
+              "trait_key": "favourite-colour"
+            }
+          ]
         }
     """.trimIndent()
 }
