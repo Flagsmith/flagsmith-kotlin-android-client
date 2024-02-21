@@ -3,6 +3,7 @@ package com.flagsmith.mockResponses
 import com.flagsmith.entities.Trait
 import com.flagsmith.mockResponses.endpoints.FlagsEndpoint
 import com.flagsmith.mockResponses.endpoints.IdentityFlagsAndTraitsEndpoint
+import com.flagsmith.mockResponses.endpoints.TraitsBulkEndpoint
 import com.flagsmith.mockResponses.endpoints.TraitsEndpoint
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.matchers.Times
@@ -16,6 +17,7 @@ enum class MockEndpoint(val path: String, val body: String) {
     GET_IDENTITIES(IdentityFlagsAndTraitsEndpoint("").path, MockResponses.getIdentities),
     GET_FLAGS(FlagsEndpoint.path, MockResponses.getFlags),
     SET_TRAIT(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTrait),
+    SET_TRAITS(TraitsBulkEndpoint(listOf(Trait(key = "", traitValue = "")), "").path, MockResponses.setTraits),
     SET_TRAIT_INTEGER(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitInteger),
     SET_TRAIT_DOUBLE(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitDouble),
     SET_TRAIT_BOOLEAN(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitBoolean),
@@ -164,6 +166,18 @@ object MockResponses {
             "identifier": "person"
           }
         }
+    """.trimIndent()
+
+    val setTraits = """
+        [
+            {
+              "trait_key": "set-from-client",
+              "trait_value": "12345",
+              "identity": {
+                "identifier": "person"
+              }
+            }
+        ]
     """.trimIndent()
 
     val setTraitInteger = """
