@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.flagsmith.entities.Flag
 import com.flagsmith.entities.Identity
+import com.flagsmith.entities.IdentityAndTraits
 import com.flagsmith.entities.IdentityFlagsAndTraits
 import com.flagsmith.entities.Trait
 import com.flagsmith.entities.TraitWithIdentity
@@ -148,11 +149,25 @@ class Flagsmith constructor(
         }.also { lastUsedIdentity = identity }
 
     fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) =
-        retrofit.postTrait(TraitWithIdentity(trait.key, trait.traitValue, Identity(identity))).enqueueWithResult(result = result)
+        retrofit.postTraits(IdentityAndTraits(identity, listOf(trait)))
+            .enqueueWithResult(result = {
+                result(it.map { response -> TraitWithIdentity(
+                    key = response.traits.first().key,
+                    traitValue = response.traits.first().traitValue,
+                    identity = Identity(identity)
+                )})
+            })
 
     fun setTraits(traits: List<Trait>, identity: String, result: (Result<List<TraitWithIdentity>>) -> Unit) {
-        val request = traits.map { TraitWithIdentity(it.key, it.traitValue, Identity(identity)) }
-        retrofit.postTraits(request).enqueueWithResult(result = result)
+        retrofit.postTraits(IdentityAndTraits(identity, traits)).enqueueWithResult(result = {
+            result(it.map { response -> response.traits.map { trait ->
+                TraitWithIdentity(
+                    key = trait.key,
+                    traitValue = trait.traitValue,
+                    identity = Identity(identity)
+                )
+            }})
+        })
     }
 
     fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
