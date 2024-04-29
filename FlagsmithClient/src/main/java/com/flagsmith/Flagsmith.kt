@@ -15,6 +15,7 @@ import com.flagsmith.internal.FlagsmithRetrofitService
 import com.flagsmith.internal.enqueueWithResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.Cache
+import java.io.IOException
 
 /**
  * Flagsmith
@@ -175,7 +176,11 @@ class Flagsmith constructor(
             .also { lastUsedIdentity = identity }
 
     fun clearCache() {
-        cache?.evictAll()
+        try {
+            cache?.evictAll()
+        } catch (e: IOException) {
+            Log.e("Flagsmith", "Error clearing cache", e)
+        }
     }
 
     private fun getFeatureFlag(
