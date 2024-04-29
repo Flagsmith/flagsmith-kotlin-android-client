@@ -160,53 +160,66 @@ object MockResponses {
 
     val setTrait = """
         {
-          "trait_key": "set-from-client",
-          "trait_value": "12345",
-          "identity": {
-            "identifier": "person"
-          }
+          "identifier": "person",
+          "flags": [],
+          "traits": [
+            {
+              "trait_value": "12345",
+              "trait_key": "set-from-client"
+            }
+          ]
         }
     """.trimIndent()
 
     val setTraits = """
-        [
+        {
+          "identifier": "person",
+          "flags": [],
+          "traits": [
             {
-              "trait_key": "set-from-client",
               "trait_value": "12345",
-              "identity": {
-                "identifier": "person"
-              }
+              "trait_key": "set-from-client"
             }
-        ]
+          ]
+        }
     """.trimIndent()
 
     val setTraitInteger = """
         {
-          "trait_key": "set-from-client",
-          "trait_value": 5,
-          "identity": {
-            "identifier": "person"
-          }
+          "identifier": "person",
+          "flags": [],
+          "traits": [
+            {
+              "trait_value": 5,
+              "trait_key": "set-from-client"
+            }
+          ]
         }
     """.trimIndent()
 
     val setTraitDouble = """
         {
-          "trait_key": "set-from-client",
-          "trait_value": 0.5,
-          "identity": {
-            "identifier": "person"
-          }
+          "identifier": "person",
+          "flags": [],
+          "traits": [
+            {
+              "trait_value": 0.5,
+              "trait_key": "set-from-client"
+            }
+          ]
         }
     """.trimIndent()
 
     val setTraitBoolean = """
         {
-          "trait_key": "set-from-client",
-          "trait_value": true,
-          "identity": {
-            "identifier": "person"
-          }
+          "identifier": "person",
+          "flags": [],
+          "traits": [
+            {
+              "trait_value": true,
+              "trait_key": "set-from-client"
+            }
+          ]
         }
     """.trimIndent()
 

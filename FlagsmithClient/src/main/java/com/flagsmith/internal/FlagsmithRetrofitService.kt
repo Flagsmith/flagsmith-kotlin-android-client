@@ -4,8 +4,8 @@ import android.content.Context
 import android.util.Log
 import com.flagsmith.FlagsmithCacheConfig
 import com.flagsmith.entities.Flag
+import com.flagsmith.entities.IdentityAndTraits
 import com.flagsmith.entities.IdentityFlagsAndTraits
-import com.flagsmith.entities.TraitWithIdentity
 import okhttp3.Cache
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -14,7 +14,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
-import retrofit2.http.PUT
 import retrofit2.http.Query
 
 interface FlagsmithRetrofitService {
@@ -25,11 +24,8 @@ interface FlagsmithRetrofitService {
     @GET("flags/")
     fun getFlags() : Call<List<Flag>>
 
-    @POST("traits/")
-    fun postTrait(@Body trait: TraitWithIdentity) : Call<TraitWithIdentity>
-
-    @PUT("traits/bulk/")
-    fun postTraits(@Body traits: List<TraitWithIdentity>) : Call<List<TraitWithIdentity>>
+    @POST("identities/")
+    fun postTraits(@Body identity: IdentityAndTraits) : Call<IdentityFlagsAndTraits>
 
     @POST("analytics/flags/")
     fun postAnalytics(@Body eventMap: Map<String, Int?>) : Call<Unit>
