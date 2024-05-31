@@ -175,6 +175,12 @@ class Flagsmith constructor(
         retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult(defaults = null, result = result)
             .also { lastUsedIdentity = identity }
 
+    fun getIdentityFlags(identity: String, traits: List<Trait>, result: (Result<ArrayList<Flag>>) -> Unit) {
+        retrofit.postTraits(IdentityAndTraits(identity, traits)).enqueueWithResult(result = {
+            result(it.map { response -> response.flags })
+        }).also { lastUsedIdentity = identity }
+    }
+
     fun clearCache() {
         try {
             cache?.evictAll()
