@@ -31,3 +31,6 @@ suspend fun Flagsmith.setTraitsSync(traits: List<Trait>, identity: String) : Res
 suspend fun Flagsmith.getIdentitySync(identity: String): Result<IdentityFlagsAndTraits>
     = suspendCoroutine { cont -> this.getIdentity(identity) { cont.resume(it) } }
 
+suspend fun Flagsmith.getIdentityFlagsSync(identity: String, traits: List<Trait>): Result<ArrayList<Flag>>
+    = suspendCoroutine { cont -> this.getIdentityFlags(identity, traits) { cont.resume(it) } }
+
