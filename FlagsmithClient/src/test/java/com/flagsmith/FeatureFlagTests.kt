@@ -149,7 +149,7 @@ class FeatureFlagTests {
     fun testGetFeatureFlagsWithIdentityAndTraits() {
         mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
         runBlocking {
-            val result = flagsmith.getIdentityFlagsSync(identity = "person", traits = listOf())
+            val result = flagsmith.getFeatureFlagsSync(identity = "person", traits = listOf())
             assertTrue(result.isSuccess)
 
             val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
