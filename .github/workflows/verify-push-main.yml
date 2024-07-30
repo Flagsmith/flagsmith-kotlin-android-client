@@ -8,7 +8,7 @@ on:
 jobs:
   test:
     name: Run Unit Tests
-    runs-on: General-Purpose-4c-Runner
+    runs-on: ubuntu-latest
 
     env:
       INTEGRATION_TESTS_ENVIRONMENT_KEY: NTtWcerSBE5yj7a5optMSk
@@ -17,7 +17,7 @@ jobs:
       INTEGRATION_TESTS_API_TOKEN: ${{ secrets.INTEGRATION_TESTS_API_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Preconfigure gradle
         uses: ./.github/actions/prepare-gradle
 

@@ -8,12 +8,24 @@ on:
 jobs:
   test:
     name: Run Unit Tests
-    runs-on: General-Purpose-4c-Runner
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Preconfigure gradle
         uses: ./.github/actions/prepare-gradle
 
       - name: Run unit tests
         run: ./gradlew check -x koverVerify -P excludeIntegrationTests
+
+  build:
+    name: Test build process
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preconfigure gradle
+        uses: ./.github/actions/prepare-gradle
+
+      - name: Test Build Process
+        run: ./gradlew publishMavenToLocal
