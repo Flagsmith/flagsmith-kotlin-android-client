@@ -28,4 +28,4 @@ jobs:
         uses: ./.github/actions/prepare-gradle
 
       - name: Test Build Process
-        run: ./gradlew publishMavenToLocal
+        run: ./gradlew publishToMavenLocal
