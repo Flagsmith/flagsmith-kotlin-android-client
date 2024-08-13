@@ -25,9 +25,9 @@ suspend fun Flagsmith.getTraitSync(id: String, identity: String): Result<Trait?>
 suspend fun Flagsmith.setTraitSync(trait: Trait, identity: String) : Result<TraitWithIdentity>
     = suspendCoroutine { cont -> this.setTrait(trait, identity) { cont.resume(it) } }
 
-suspend fun Flagsmith.setTraitsSync(traits: List<Trait>, identity: String) : Result<List<TraitWithIdentity>>
-        = suspendCoroutine { cont -> this.setTraits(traits, identity) { cont.resume(it) } }
+suspend fun Flagsmith.setTraitsSync(traits: List<Trait>, identity: String, transient: Boolean = false) : Result<List<TraitWithIdentity>>
+        = suspendCoroutine { cont -> this.setTraits(traits, identity, transient) { cont.resume(it) } }
 
-suspend fun Flagsmith.getIdentitySync(identity: String): Result<IdentityFlagsAndTraits>
-    = suspendCoroutine { cont -> this.getIdentity(identity) { cont.resume(it) } }
+suspend fun Flagsmith.getIdentitySync(identity: String, transient: Boolean = false): Result<IdentityFlagsAndTraits>
+    = suspendCoroutine { cont -> this.getIdentity(identity, transient) { cont.resume(it) } }
 

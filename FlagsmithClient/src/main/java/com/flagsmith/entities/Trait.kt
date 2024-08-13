@@ -6,20 +6,21 @@ import com.google.gson.annotations.SerializedName
 data class Trait (
     val identifier: String? = null,
     @SerializedName(value = "trait_key") val key: String,
-    @SerializedName(value = "trait_value") val traitValue: Any
+    @SerializedName(value = "trait_value") val traitValue: Any,
+    val transient: Boolean = false,
 ) {
 
-    constructor(key: String, value: String)
-            : this(key = key, traitValue = value)
+    constructor(key: String, value: String, transient: Boolean)
+            : this(key = key, traitValue = value, transient = transient)
 
-    constructor(key: String, value: Int)
-            : this(key = key, traitValue = value)
+    constructor(key: String, value: Int, transient: Boolean)
+            : this(key = key, traitValue = value, transient = transient)
 
-    constructor(key: String, value: Double)
-            : this(key = key, traitValue = value)
+    constructor(key: String, value: Double, transient: Boolean)
+            : this(key = key, traitValue = value, transient = transient)
 
-    constructor(key: String, value: Boolean)
-            : this(key = key, traitValue = value)
+    constructor(key: String, value: Boolean, transient: Boolean)
+            : this(key = key, traitValue = value, transient = transient)
 
     @Deprecated("Use traitValue instead or one of the type-safe getters", ReplaceWith("traitValue"))
     val value: String
@@ -49,18 +50,19 @@ data class TraitWithIdentity (
     @SerializedName(value = "trait_key") val key: String,
     @SerializedName(value = "trait_value") val traitValue: Any,
     val identity: Identity,
+    val transient: Boolean = false,
 ) {
-    constructor(key: String, value: String, identity: Identity)
-            : this(key = key, traitValue = value, identity = identity)
+    constructor(key: String, value: String, transient: Boolean, identity: Identity)
+            : this(key = key, traitValue = value, transient = transient, identity = identity)
 
-    constructor(key: String, value: Int, identity: Identity)
-            : this(key = key, traitValue = value, identity = identity)
+    constructor(key: String, value: Int, transient: Boolean, identity: Identity)
+            : this(key = key, traitValue = value, transient = transient, identity = identity)
 
-    constructor(key: String, value: Double, identity: Identity)
-            : this(key = key, traitValue = value, identity = identity)
+    constructor(key: String, value: Double, transient: Boolean, identity: Identity)
+            : this(key = key, traitValue = value, transient = transient, identity = identity)
 
-    constructor(key: String, value: Boolean, identity: Identity)
-            : this(key = key, traitValue = value, identity = identity)
+    constructor(key: String, value: Boolean, transient: Boolean, identity: Identity)
+            : this(key = key, traitValue = value, transient = transient, identity = identity)
 
     @Deprecated("Use traitValue instead or one of the type-safe getters", ReplaceWith("traitValue"))
     val value: String

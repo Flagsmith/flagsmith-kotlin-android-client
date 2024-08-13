@@ -149,30 +149,32 @@ class Flagsmith constructor(
             result(res.map { it.traits })
         }.also { lastUsedIdentity = identity }
 
-    fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) =
-        retrofit.postTraits(IdentityAndTraits(identity, listOf(trait)))
+    fun setTrait(trait: Trait, identity: String, transient: Boolean = false, result: (Result<TraitWithIdentity>) -> Unit) =
+        retrofit.postTraits(IdentityAndTraits(identity, listOf(trait), transient))
             .enqueueWithResult(result = {
                 result(it.map { response -> TraitWithIdentity(
                     key = response.traits.first().key,
                     traitValue = response.traits.first().traitValue,
-                    identity = Identity(identity)
+                    identity = Identity(identity),
+                    transient = response.traits.first().transient
                 )})
             })
 
-    fun setTraits(traits: List<Trait>, identity: String, result: (Result<List<TraitWithIdentity>>) -> Unit) {
-        retrofit.postTraits(IdentityAndTraits(identity, traits)).enqueueWithResult(result = {
+    fun setTraits(traits: List<Trait>, identity: String, transient: Boolean, result: (Result<List<TraitWithIdentity>>) -> Unit) {
+        retrofit.postTraits(IdentityAndTraits(identity, traits, transient)).enqueueWithResult(result = {
             result(it.map { response -> response.traits.map { trait ->
                 TraitWithIdentity(
                     key = trait.key,
                     traitValue = trait.traitValue,
-                    identity = Identity(identity)
+                    identity = Identity(identity),
+                    transient = trait.transient
                 )
             }})
         })
     }
 
-    fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
-        retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult(defaults = null, result = result)
+    fun getIdentity(identity: String, transient: Boolean, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
+        retrofit.getIdentityFlagsAndTraits(identity, transient).enqueueWithResult(defaults = null, result = result)
             .also { lastUsedIdentity = identity }
 
     fun clearCache() {

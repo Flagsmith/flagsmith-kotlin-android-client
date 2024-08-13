@@ -77,7 +77,7 @@ class TraitEntityTests {
 
     @Test
     fun testTraitConstructorStringType() {
-        val trait = Trait( "string-key", "string-value")
+        val trait = Trait( "string-key", "string-value", false)
         Assert.assertEquals("string-value", trait.traitValue)
         Assert.assertEquals("string-value", trait.stringValue)
         Assert.assertNull(trait.intValue)
@@ -90,7 +90,7 @@ class TraitEntityTests {
 
     @Test
     fun testTraitConstructorIntType() {
-        val trait = Trait("string-key", 1)
+        val trait = Trait("string-key", 1, false)
         Assert.assertEquals(1, trait.traitValue)
         Assert.assertEquals(1, trait.intValue)
         Assert.assertNull("Can't convert an int to a double", trait.doubleValue)
@@ -109,7 +109,7 @@ class TraitEntityTests {
 
     @Test
     fun testTraitConstructorDoubleType() {
-        val trait = Trait("string-key", 1.0)
+        val trait = Trait("string-key", 1.0, false)
         Assert.assertEquals(1.0, trait.traitValue)
         Assert.assertEquals(1.0, trait.doubleValue)
         Assert.assertEquals("JS ints are actually doubles so we should handle this",
@@ -130,7 +130,7 @@ class TraitEntityTests {
 
     @Test
     fun testTraitConstructorBooleanType() {
-        val trait = Trait("string-key", true)
+        val trait = Trait("string-key", true, false)
         Assert.assertEquals(true, trait.traitValue)
         Assert.assertEquals(true, trait.booleanValue)
         Assert.assertNull(trait.intValue)

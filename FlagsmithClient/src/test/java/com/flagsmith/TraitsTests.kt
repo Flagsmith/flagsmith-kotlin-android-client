@@ -83,7 +83,7 @@ class TraitsTests {
         mockServer.mockResponseFor(MockEndpoint.SET_TRAIT)
         runBlocking {
             val result =
-                flagsmith.setTraitSync(Trait(key = "set-from-client", value = "12345"), "person")
+                flagsmith.setTraitSync(Trait(key = "set-from-client", traitValue = "12345"), "person")
             assertTrue(result.isSuccess)
             assertEquals("set-from-client", result.getOrThrow().key)
             assertEquals("12345", result.getOrThrow().stringValue)
@@ -96,7 +96,7 @@ class TraitsTests {
         mockServer.mockResponseFor(MockEndpoint.SET_TRAITS)
         runBlocking {
             val result =
-                flagsmith.setTraitsSync(listOf(Trait(key = "set-from-client", value = "12345")), "person")
+                flagsmith.setTraitsSync(listOf(Trait(key = "set-from-client", traitValue = "12345")), "person")
             assertTrue(result.isSuccess)
             assertEquals("set-from-client", result.getOrThrow().first().key)
             assertEquals("12345", result.getOrThrow().first().stringValue)
@@ -105,11 +105,37 @@ class TraitsTests {
     }
 
     @Test
+    fun testSetTraitsWithTransient() {
+        mockServer.mockResponseFor(MockEndpoint.SET_TRANSIENT_TRAITS)
+        runBlocking {
+            val result =
+                flagsmith.setTraitsSync(
+                    listOf(
+                        Trait(
+                            key = "trait-one-with-transient",
+                            traitValue = "transient-trait-one",
+                            transient = true
+                        ),
+                        Trait(
+                            key = "trait-two-with-transient",
+                            traitValue = "transient-trait-two",
+                            transient= false
+                        ),
+                        ), "identity-with-transient-traits")
+            assertTrue(result.isSuccess)
+            assertEquals("trait-one-with-transient", result.getOrThrow().first().key)
+            assertEquals("transient-trait-one", result.getOrThrow().first().stringValue)
+            assertEquals("identity-with-transient-traits", result.getOrThrow().first().identity.identifier)
+            assertTrue(result.getOrThrow().first().transient)
+        }
+    }
+
+    @Test
     fun testSetTraitInteger() {
         mockServer.mockResponseFor(MockEndpoint.SET_TRAIT_INTEGER)
         runBlocking {
             val result =
-                flagsmith.setTraitSync(Trait(key = "set-from-client", value = 5), "person")
+                flagsmith.setTraitSync(Trait(key = "set-from-client", traitValue = 5), "person")
             assertTrue(result.isSuccess)
             assertEquals("set-from-client", result.getOrThrow().key)
             assertEquals(5, result.getOrThrow().intValue)
@@ -122,7 +148,7 @@ class TraitsTests {
         mockServer.mockResponseFor(MockEndpoint.SET_TRAIT_DOUBLE)
         runBlocking {
             val result =
-                flagsmith.setTraitSync(Trait(key = "set-from-client", value = 0.5), "person")
+                flagsmith.setTraitSync(Trait(key = "set-from-client", traitValue = 0.5), "person")
             assertTrue(result.isSuccess)
             assertEquals("set-from-client", result.getOrThrow().key)
             assertEquals(0.5, result.getOrThrow().doubleValue)
@@ -135,7 +161,7 @@ class TraitsTests {
         mockServer.mockResponseFor(MockEndpoint.SET_TRAIT_BOOLEAN)
         runBlocking {
             val result =
-                flagsmith.setTraitSync(Trait(key = "set-from-client", value = true), "person")
+                flagsmith.setTraitSync(Trait(key = "set-from-client", traitValue = true), "person")
             assertTrue(result.isSuccess)
             assertEquals("set-from-client", result.getOrThrow().key)
             assertEquals(true, result.getOrThrow().booleanValue)
@@ -155,6 +181,22 @@ class TraitsTests {
                 "electric pink",
                 result.getOrThrow().traits.find { trait -> trait.key == "favourite-colour" }?.stringValue
             )
+        }
+    }
+
+    @Test
+    fun testGetTransientIdentity() {
+        mockServer.mockResponseFor(MockEndpoint.GET_TRANSIENT_IDENTITIES)
+        runBlocking {
+            val result = flagsmith.getIdentitySync("transient-identity")
+            assertTrue(result.isSuccess)
+            assertTrue(result.getOrThrow().traits.isNotEmpty())
+            assertTrue(result.getOrThrow().flags.isNotEmpty())
+            assertEquals(
+                "electric pink",
+                result.getOrThrow().traits.find { trait -> trait.key == "favourite-colour" }?.stringValue
+            )
+            assertTrue(result.getOrThrow().traits.find { trait -> trait.transient == true }?.transient == true)
         }
     }
 }
