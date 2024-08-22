@@ -119,7 +119,7 @@ class TraitsTests {
                         Trait(
                             key = "trait-two-with-transient",
                             traitValue = "transient-trait-two",
-                            transient= false
+                            transient = false
                         ),
                         ), "identity-with-transient-traits")
             assertTrue(result.isSuccess)
