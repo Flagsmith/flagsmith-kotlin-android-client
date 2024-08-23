@@ -3,32 +3,25 @@ package com.flagsmith.entities
 
 import com.google.gson.annotations.SerializedName
 
-data class TraitConfig(
-    val value: TraitValue,
-    val transient: Boolean? = false,
-)
 
 data class Trait (
     val identifier: String? = null,
     @SerializedName(value = "trait_key") val key: String,
     @SerializedName(value = "trait_value") val traitValue: Any,
-    @SerializedName(value = "transient") val transient: Boolean? = null
+    val transient: Boolean? = null
 ) {
 
-    constructor(key: String, value: String)
-            : this(key = key, traitValue = value)
+    constructor(key: String, value: String, transient: Boolean? = null)
+            : this(key = key, traitValue = value, transient = transient)
 
-    constructor(key: String, value: Int)
-            : this(key = key, traitValue = value)
+    constructor(key: String, value: Int, transient: Boolean? = null)
+            : this(key = key, traitValue = value, transient = transient)
 
-    constructor(key: String, value: Double)
-            : this(key = key, traitValue = value)
+    constructor(key: String, value: Double, transient: Boolean? = null)
+            : this(key = key, traitValue = value, transient = transient)
 
-    constructor(key: String, value: Boolean)
-            : this(key = key, traitValue = value)
-
-    // constructor(key: String, value: TrairConfig)
-    //         : this(key = key, traitValue = value)
+    constructor(key: String, value: Boolean, transient: Boolean? = null)
+            : this(key = key, traitValue = value, transient = transient)
 
     @Deprecated("Use traitValue instead or one of the type-safe getters", ReplaceWith("traitValue"))
     val value: String
@@ -51,14 +44,13 @@ data class Trait (
 
     val booleanValue: Boolean?
         get() = traitValue as? Boolean
-
 }
 
 data class TraitWithIdentity (
     @SerializedName(value = "trait_key") val key: String,
     @SerializedName(value = "trait_value") val traitValue: Any,
     val identity: Identity,
-    @SerializedName(value = "transient") val transient: Boolean? = null
+    val transient: Boolean? = null
 ) {
     constructor(key: String, value: String, identity: Identity)
             : this(key = key, traitValue = value, identity = identity)
