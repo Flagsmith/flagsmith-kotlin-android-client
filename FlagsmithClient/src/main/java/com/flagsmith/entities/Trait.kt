@@ -12,7 +12,7 @@ data class Trait (
     val identifier: String? = null,
     @SerializedName(value = "trait_key") val key: String,
     @SerializedName(value = "trait_value") val traitValue: Any,
-    val transient: Boolean? = false,
+    @SerializedName(value = "transient") val transient: Boolean? = null
 ) {
 
     constructor(key: String, value: String)
@@ -58,7 +58,7 @@ data class TraitWithIdentity (
     @SerializedName(value = "trait_key") val key: String,
     @SerializedName(value = "trait_value") val traitValue: Any,
     val identity: Identity,
-    val transient: Boolean? = false,
+    @SerializedName(value = "transient") val transient: Boolean? = null
 ) {
     constructor(key: String, value: String, identity: Identity)
             : this(key = key, traitValue = value, identity = identity)

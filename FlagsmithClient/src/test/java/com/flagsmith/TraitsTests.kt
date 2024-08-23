@@ -83,7 +83,7 @@ class TraitsTests {
         mockServer.mockResponseFor(MockEndpoint.SET_TRAIT)
         runBlocking {
             val result =
-                flagsmith.setTraitSync(Trait(key = "set-from-client", traitValue = "12345"), "person")
+                flagsmith.setTraitSync(Trait(key = "set-from-client", value = "12345"), "person")
             assertTrue(result.isSuccess)
             assertEquals("set-from-client", result.getOrThrow().key)
             assertEquals("12345", result.getOrThrow().stringValue)
@@ -96,7 +96,7 @@ class TraitsTests {
         mockServer.mockResponseFor(MockEndpoint.SET_TRAITS)
         runBlocking {
             val result =
-                flagsmith.setTraitsSync(listOf(Trait(key = "set-from-client", traitValue = "12345")), "person")
+                flagsmith.setTraitsSync(listOf(Trait(key = "set-from-client", value = "12345")), "person")
             assertTrue(result.isSuccess)
             assertEquals("set-from-client", result.getOrThrow().first().key)
             assertEquals("12345", result.getOrThrow().first().stringValue)
@@ -113,12 +113,12 @@ class TraitsTests {
                     listOf(
                         Trait(
                             key = "trait-one-with-transient",
-                            traitValue = "transient-trait-one",
+                            value = "transient-trait-one",
                             transient = true
                         ),
                         Trait(
-                            key = "trait-two-with-transient",
-                            traitValue = "transient-trait-two",
+                            key = "trait-two",
+                            value = "trait-two-value",
                             transient = false
                         ),
                         ), "identity-with-transient-traits")
@@ -135,7 +135,7 @@ class TraitsTests {
         mockServer.mockResponseFor(MockEndpoint.SET_TRAIT_INTEGER)
         runBlocking {
             val result =
-                flagsmith.setTraitSync(Trait(key = "set-from-client", traitValue = 5), "person")
+                flagsmith.setTraitSync(Trait(key = "set-from-client", value = 5), "person")
             assertTrue(result.isSuccess)
             assertEquals("set-from-client", result.getOrThrow().key)
             assertEquals(5, result.getOrThrow().intValue)
