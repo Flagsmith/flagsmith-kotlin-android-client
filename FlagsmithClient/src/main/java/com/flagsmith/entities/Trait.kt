@@ -52,17 +52,17 @@ data class TraitWithIdentity (
     val identity: Identity,
     val transient: Boolean? = null
 ) {
-    constructor(key: String, value: String, identity: Identity)
-            : this(key = key, traitValue = value, identity = identity)
+    constructor(key: String, value: String, identity: Identity, transient: Boolean? = null)
+            : this(key = key, traitValue = value, identity = identity, transient = transient)
 
-    constructor(key: String, value: Int, identity: Identity)
-            : this(key = key, traitValue = value, identity = identity)
+    constructor(key: String, value: Int, identity: Identity, transient: Boolean? = null)
+            : this(key = key, traitValue = value, identity = identity, transient = transient)
 
-    constructor(key: String, value: Double, identity: Identity)
-            : this(key = key, traitValue = value, identity = identity)
+    constructor(key: String, value: Double, identity: Identity, transient: Boolean? = null)
+            : this(key = key, traitValue = value, identity = identity, transient = transient)
 
-    constructor(key: String, value: Boolean, identity: Identity)
-            : this(key = key, traitValue = value, identity = identity)
+    constructor(key: String, value: Boolean, identity: Identity, transient: Boolean? = null)
+            : this(key = key, traitValue = value, identity = identity, transient = transient)
 
     @Deprecated("Use traitValue instead or one of the type-safe getters", ReplaceWith("traitValue"))
     val value: String

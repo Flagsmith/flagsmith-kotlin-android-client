@@ -161,21 +161,21 @@ class Flagsmith constructor(
     }
 
     fun setTrait(trait: Trait, identity: String, transient: Boolean? = null, result: (Result<TraitWithIdentity>) -> Unit) {
-    val identityAndTraits = if (transient != null) {
-            IdentityAndTraits(identity, listOf(trait), transient)
-        } else {
-            IdentityAndTraits(identity, listOf(trait))
+        val identityAndTraits = if (transient != null) {
+                IdentityAndTraits(identity, listOf(trait), transient)
+            } else {
+                IdentityAndTraits(identity, listOf(trait))
+            }
+        retrofit.postTraits(identityAndTraits)
+            .enqueueWithResult(result = {
+                result(it.map { response -> TraitWithIdentity(
+                    key = response.traits.first().key,
+                    traitValue = response.traits.first().traitValue,
+                    identity = Identity(identity),
+                    transient = response.traits.first().transient
+                )})
+            })
         }
-    retrofit.postTraits(identityAndTraits)
-        .enqueueWithResult(result = {
-            result(it.map { response -> TraitWithIdentity(
-                key = response.traits.first().key,
-                traitValue = response.traits.first().traitValue,
-                identity = Identity(identity),
-                transient = response.traits.first().transient
-            )})
-        })
-    }
 
     fun setTraits(traits: List<Trait>, identity: String, transient: Boolean? = null, result: (Result<List<TraitWithIdentity>>) -> Unit) {
         val identityAndTraits = if (transient != null) {

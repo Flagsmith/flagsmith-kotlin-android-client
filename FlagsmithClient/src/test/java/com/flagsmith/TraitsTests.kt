@@ -121,12 +121,12 @@ class TraitsTests {
                             value = "trait-two-value",
                             transient = false
                         ),
-                        ), "identity-with-transient-traits")
+                    ), "identity-with-transient-traits")
             assertTrue(result.isSuccess)
             assertEquals("trait-one-with-transient", result.getOrThrow().first().key)
             assertEquals("transient-trait-one", result.getOrThrow().first().stringValue)
             assertEquals("identity-with-transient-traits", result.getOrThrow().first().identity.identifier)
-            // assertTrue(result.getOrThrow().first().transient)
+            assertEquals(true, result.getOrThrow().first().transient)
         }
     }
 
@@ -184,19 +184,19 @@ class TraitsTests {
         }
     }
 
-    // @Test
-    // fun testGetTransientIdentity() {
-    //     mockServer.mockResponseFor(MockEndpoint.GET_TRANSIENT_IDENTITIES)
-    //     runBlocking {
-    //         val result = flagsmith.getIdentitySync("transient-identity")
-    //         assertTrue(result.isSuccess)
-    //         assertTrue(result.getOrThrow().traits.isNotEmpty())
-    //         assertTrue(result.getOrThrow().flags.isNotEmpty())
-    //         assertEquals(
-    //             "electric pink",
-    //             result.getOrThrow().traits.find { trait -> trait.key == "favourite-colour" }?.stringValue
-    //         )
-    //         // assertTrue(result.getOrThrow().traits.find { trait -> trait.transient == true }?.transient == true)
-    //     }
-    // }
+    @Test
+    fun testGetTransientIdentity() {
+        mockServer.mockResponseFor(MockEndpoint.GET_TRANSIENT_IDENTITIES)
+        runBlocking {
+            val result = flagsmith.getIdentitySync("transient-identity", true)
+            assertTrue(result.isSuccess)
+            assertTrue(result.getOrThrow().traits.isNotEmpty())
+            assertTrue(result.getOrThrow().flags.isNotEmpty())
+            assertEquals(
+                "electric pink",
+                result.getOrThrow().traits.find { trait -> trait.key == "favourite-colour" }?.stringValue
+            )
+            assertEquals(true, result.getOrThrow().flags.isNotEmpty())
+        }
+    }
 }
