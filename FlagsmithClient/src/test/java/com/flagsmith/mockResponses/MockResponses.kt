@@ -55,7 +55,8 @@ object MockResponses {
           "traits": [
             {
               "trait_value": "12345",
-              "trait_key": "set-from-client"
+              "trait_key": "set-from-client",
+              "transient": true
             },
             {
               "trait_value": "electric pink",
