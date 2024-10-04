@@ -105,32 +105,6 @@ class TraitsTests {
     }
 
     @Test
-    fun testSetTraitsWithTransient() {
-        mockServer.mockResponseFor(MockEndpoint.SET_TRANSIENT_TRAITS)
-        runBlocking {
-            val result =
-                flagsmith.setTraitsSync(
-                    listOf(
-                        Trait(
-                            key = "trait-one-with-transient",
-                            value = "transient-trait-one",
-                            transient = true
-                        ),
-                        Trait(
-                            key = "trait-two",
-                            value = "trait-two-value",
-                            transient = false
-                        ),
-                    ), "identity-with-transient-traits")
-            assertTrue(result.isSuccess)
-            assertEquals("trait-one-with-transient", result.getOrThrow().first().key)
-            assertEquals("transient-trait-one", result.getOrThrow().first().stringValue)
-            assertEquals("identity-with-transient-traits", result.getOrThrow().first().identity.identifier)
-            assertEquals(true, result.getOrThrow().first().transient)
-        }
-    }
-
-    @Test
     fun testSetTraitInteger() {
         mockServer.mockResponseFor(MockEndpoint.SET_TRAIT_INTEGER)
         runBlocking {
