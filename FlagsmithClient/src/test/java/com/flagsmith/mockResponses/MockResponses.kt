@@ -117,11 +117,13 @@ object MockResponses {
           "traits": [
             {
               "trait_value": "12345",
-              "trait_key": "set-from-client"
+              "trait_key": "set-from-client",
+              "transient": false
             },
             {
               "trait_value": "electric pink",
-              "trait_key": "favourite-colour"
+              "trait_key": "favourite-colour",
+              "transient": false
             }
           ]
         }
@@ -144,15 +146,14 @@ object MockResponses {
             {
               "trait_value": "12345",
               "trait_key": "set-from-client",
-              "transient": false
+              "transient": true
             },
             {
               "trait_value": "electric pink",
               "trait_key": "favourite-colour",
               "transient": true
             }
-          ],
-          "transient": true
+          ]
         }
     """.trimIndent()
 
@@ -195,7 +196,8 @@ object MockResponses {
           "traits": [
             {
               "trait_value": "12345",
-              "trait_key": "set-from-client"
+              "trait_key": "set-from-client",
+              "transient": false
             }
           ]
         }
@@ -208,7 +210,8 @@ object MockResponses {
           "traits": [
             {
               "trait_value": "12345",
-              "trait_key": "set-from-client"
+              "trait_key": "set-from-client",
+              "transient": false
             }
           ]
         }
