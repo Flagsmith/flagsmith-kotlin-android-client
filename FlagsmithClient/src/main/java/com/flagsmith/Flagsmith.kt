@@ -149,26 +149,15 @@ class Flagsmith constructor(
         result(res.map { flag -> flag?.featureStateValue })
     }
 
-    fun getTrait(
-        id: String,
-        identity: String,
-        transient: Boolean? = null,
-        result: (Result<Trait?>) -> Unit
-    ) {
-        retrofit.getIdentityFlagsAndTraits(identity, transient).enqueueWithResult { res ->
+    fun getTrait(id: String, identity: String, result: (Result<Trait?>) -> Unit) =
+        retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult { res ->
             result(res.map { value -> value.traits.find { it.key == id } })
         }.also { lastUsedIdentity = identity }
-    }
 
-    fun getTraits(
-        identity: String,
-        transient: Boolean? = null,
-        result: (Result<List<Trait>>) -> Unit
-    ) {
-        retrofit.getIdentityFlagsAndTraits(identity, transient).enqueueWithResult { res ->
+    fun getTraits(identity: String, result: (Result<List<Trait>>) -> Unit) =
+        retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult { res ->
             result(res.map { it.traits })
         }.also { lastUsedIdentity = identity }
-    }
 
     fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) =
         retrofit.postTraits(IdentityAndTraits(identity, listOf(trait)))
