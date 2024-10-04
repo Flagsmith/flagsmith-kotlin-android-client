@@ -8,19 +8,19 @@ data class Trait (
     val identifier: String? = null,
     @SerializedName(value = "trait_key") val key: String,
     @SerializedName(value = "trait_value") val traitValue: Any,
-    val transient: Boolean? = null
+    val transient: Boolean = false
 ) {
 
-    constructor(key: String, value: String, transient: Boolean? = null)
+    constructor(key: String, value: String, transient: Boolean = false)
             : this(key = key, traitValue = value, transient = transient)
 
-    constructor(key: String, value: Int, transient: Boolean? = null)
+    constructor(key: String, value: Int, transient: Boolean = false)
             : this(key = key, traitValue = value, transient = transient)
 
-    constructor(key: String, value: Double, transient: Boolean? = null)
+    constructor(key: String, value: Double, transient: Boolean = false)
             : this(key = key, traitValue = value, transient = transient)
 
-    constructor(key: String, value: Boolean, transient: Boolean? = null)
+    constructor(key: String, value: Boolean, transient: Boolean = false)
             : this(key = key, traitValue = value, transient = transient)
 
     @Deprecated("Use traitValue instead or one of the type-safe getters", ReplaceWith("traitValue"))
@@ -50,18 +50,18 @@ data class TraitWithIdentity (
     @SerializedName(value = "trait_key") val key: String,
     @SerializedName(value = "trait_value") val traitValue: Any,
     val identity: Identity,
-    val transient: Boolean? = null
+    val transient: Boolean = false
 ) {
-    constructor(key: String, value: String, identity: Identity, transient: Boolean? = null)
+    constructor(key: String, value: String, identity: Identity, transient: Boolean = false)
             : this(key = key, traitValue = value, identity = identity, transient = transient)
 
-    constructor(key: String, value: Int, identity: Identity, transient: Boolean? = null)
+    constructor(key: String, value: Int, identity: Identity, transient: Boolean = false)
             : this(key = key, traitValue = value, identity = identity, transient = transient)
 
-    constructor(key: String, value: Double, identity: Identity, transient: Boolean? = null)
+    constructor(key: String, value: Double, identity: Identity, transient: Boolean = false)
             : this(key = key, traitValue = value, identity = identity, transient = transient)
 
-    constructor(key: String, value: Boolean, identity: Identity, transient: Boolean? = null)
+    constructor(key: String, value: Boolean, identity: Identity, transient: Boolean = false)
             : this(key = key, traitValue = value, identity = identity, transient = transient)
 
     @Deprecated("Use traitValue instead or one of the type-safe getters", ReplaceWith("traitValue"))
