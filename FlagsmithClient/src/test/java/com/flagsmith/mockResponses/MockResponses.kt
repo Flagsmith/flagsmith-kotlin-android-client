@@ -18,7 +18,6 @@ enum class MockEndpoint(val path: String, val body: String) {
     GET_FLAGS(FlagsEndpoint.path, MockResponses.getFlags),
     SET_TRAIT(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTrait),
     SET_TRAITS(TraitsBulkEndpoint(listOf(Trait(key = "", traitValue = "")), "").path, MockResponses.setTraits),
-    SET_TRANSIENT_TRAITS(TraitsBulkEndpoint(listOf(Trait(key = "", traitValue = "")), "").path, MockResponses.setTransientTraits),
     GET_TRANSIENT_IDENTITIES(IdentityFlagsAndTraitsEndpoint("").path, MockResponses.getTransientIdentities),
     SET_TRAIT_INTEGER(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitInteger),
     SET_TRAIT_DOUBLE(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitDouble),
@@ -197,25 +196,6 @@ object MockResponses {
             {
               "trait_value": "12345",
               "trait_key": "set-from-client"
-            }
-          ]
-        }
-    """.trimIndent()
-
-    val setTransientTraits = """
-        {
-          "identifier": "identity-with-transient-traits",
-          "flags": [],
-          "traits": [
-            {
-              "trait_value": "transient-trait-one",
-              "trait_key": "trait-one-with-transient",
-              "transient": true
-            },
-            {
-              "trait_value": "transient-trait-two",
-              "trait_key": "trait-two-with-transient",
-              "transient": false
             }
           ]
         }
