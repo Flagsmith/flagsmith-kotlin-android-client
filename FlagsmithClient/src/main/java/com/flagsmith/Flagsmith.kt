@@ -170,36 +170,23 @@ class Flagsmith constructor(
         }.also { lastUsedIdentity = identity }
     }
 
-    fun setTrait(trait: Trait, identity: String, transient: Boolean? = null, result: (Result<TraitWithIdentity>) -> Unit) {
-        val identityAndTraits = if (transient != null) {
-                IdentityAndTraits(identity, listOf(trait), transient)
-            } else {
-                IdentityAndTraits(identity, listOf(trait))
-            }
-        retrofit.postTraits(identityAndTraits)
+    fun setTrait(trait: Trait, identity: String, result: (Result<TraitWithIdentity>) -> Unit) =
+        retrofit.postTraits(IdentityAndTraits(identity, listOf(trait)))
             .enqueueWithResult(result = {
                 result(it.map { response -> TraitWithIdentity(
                     key = response.traits.first().key,
                     traitValue = response.traits.first().traitValue,
-                    identity = Identity(identity),
-                    transient = response.traits.first().transient
+                    identity = Identity(identity)
                 )})
             })
-        }
 
-    fun setTraits(traits: List<Trait>, identity: String, transient: Boolean? = null, result: (Result<List<TraitWithIdentity>>) -> Unit) {
-        val identityAndTraits = if (transient != null) {
-            IdentityAndTraits(identity, traits, transient)
-        } else {
-            IdentityAndTraits(identity, traits)
-        }
-        retrofit.postTraits(identityAndTraits).enqueueWithResult(result = {
+    fun setTraits(traits: List<Trait>, identity: String, result: (Result<List<TraitWithIdentity>>) -> Unit) {
+        retrofit.postTraits(IdentityAndTraits(identity, traits)).enqueueWithResult(result = {
             result(it.map { response -> response.traits.map { trait ->
                 TraitWithIdentity(
                     key = trait.key,
                     traitValue = trait.traitValue,
-                    identity = Identity(identity),
-                    transient = trait.transient
+                    identity = Identity(identity)
                 )
             }})
         })
