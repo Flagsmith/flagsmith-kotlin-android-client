@@ -106,7 +106,7 @@ class Flagsmith constructor(
         const val DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS = 10
     }
 
-    fun getFeatureFlags(identity: String? = null, traits: List<Trait>? = null, transient: Boolean? = null, result: (Result<List<Flag>>) -> Unit) {
+    fun getFeatureFlags(identity: String? = null, traits: List<Trait>? = null, transient: Boolean = false, result: (Result<List<Flag>>) -> Unit) {
         // Save the last used identity as we'll refresh with this if we get update events
         lastUsedIdentity = identity
 
@@ -181,7 +181,7 @@ class Flagsmith constructor(
         })
     }
 
-    fun getIdentity(identity: String, transient: Boolean? = null, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
+    fun getIdentity(identity: String, transient: Boolean = false, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
         retrofit.getIdentityFlagsAndTraits(identity, transient).enqueueWithResult(defaults = null, result = result)
             .also { lastUsedIdentity = identity }
 
