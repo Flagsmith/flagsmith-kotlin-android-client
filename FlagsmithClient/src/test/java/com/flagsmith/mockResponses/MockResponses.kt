@@ -38,6 +38,10 @@ enum class MockEndpoint(val path: String, val body: String) {
         IdentityFlagsAndTraitsEndpoint("").path,
         MockResponses.getTraitBoolean
     ),
+    POST_TRANSIENT_TRAITS(
+        IdentityFlagsAndTraitsEndpoint("").path,
+        MockResponses.postTransientIdentities
+    ),
 }
 
 fun ClientAndServer.mockResponseFor(endpoint: MockEndpoint) {
@@ -142,16 +146,33 @@ object MockResponses {
               "enabled": true
             }
           ],
+          "traits": []
+        }
+    """.trimIndent()
+
+    val postTransientIdentities = """
+        {
+          "flags": [
+            {
+              "feature_state_value": null,
+              "feature": {
+                "type": "STANDARD",
+                "name": "no-value",
+                "id": 35506
+              },
+              "enabled": true
+            }
+          ],
           "traits": [
             {
-              "trait_value": "12345",
-              "trait_key": "set-from-client",
-              "transient": true
+              "trait_key": "persisted-trait", 
+              "trait_value": "value",
+              "transient": false
             },
             {
-              "trait_value": "electric pink",
-              "trait_key": "favourite-colour",
-              "transient": true
+              "trait_key": "transient-trait",
+              "trait_value": "value",
+              "transient": true,
             }
           ]
         }

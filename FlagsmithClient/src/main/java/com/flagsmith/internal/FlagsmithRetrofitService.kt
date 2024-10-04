@@ -24,6 +24,7 @@ interface FlagsmithRetrofitService {
     @GET("flags/")
     fun getFlags() : Call<List<Flag>>
 
+    // todo: rename this function
     @POST("identities/")
     fun postTraits(@Body identity: IdentityAndTraits) : Call<IdentityFlagsAndTraits>
 

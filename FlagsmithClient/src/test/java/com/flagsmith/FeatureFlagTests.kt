@@ -1,6 +1,8 @@
 package com.flagsmith
 
+import com.flagsmith.entities.Trait
 import com.flagsmith.mockResponses.MockEndpoint
+import com.flagsmith.mockResponses.MockResponses
 import com.flagsmith.mockResponses.mockResponseFor
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -13,6 +15,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockserver.integration.ClientAndServer
+import org.mockserver.model.HttpRequest.request
+import org.mockserver.model.HttpResponse.response
+import org.mockserver.model.JsonBody.json
 
 class FeatureFlagTests {
 
@@ -155,6 +160,86 @@ class FeatureFlagTests {
             val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
             assertNotNull(found)
             assertEquals(756.0, found?.featureStateValue)
+        }
+    }
+
+    @Test
+    fun testGetFeatureFlagsWithTransientTraits() {
+        mockServer.`when`(
+            request()
+                .withPath("/identities/")
+                .withMethod("POST")
+                .withBody(
+                    json(
+                        """
+                            {
+                              "identifier": "identity",
+                              "traits": [
+                                {
+                                  "trait_key": "transient-trait",
+                                  "trait_value": "value",
+                                  "transient": true
+                                },
+                                {
+                                  "trait_key": "persisted-trait",
+                                  "trait_value": "value",
+                                  "transient": false
+                                }
+                              ],
+                              "transient": false
+                            }
+                        """.trimIndent()
+                    )
+                )
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+                    .withBody(MockResponses.getTransientIdentities)
+            )
+
+        runBlocking {
+            val transientTrait = Trait("transient-trait", "value", true)
+            val persistedTrait = Trait("persisted-trait", "value", false)
+            val result = flagsmith.getFeatureFlagsSync(
+                "identity",
+                listOf(transientTrait, persistedTrait),
+                false,
+            )
+
+            assertTrue(result.isSuccess)
+        }
+    }
+
+    @Test
+    fun testGetFeatureFlagsWithTransientIdentity() {
+        mockServer.`when`(
+            request()
+                .withPath("/identities/")
+                .withMethod("POST")
+                .withBody(
+                    json(
+                        """
+                            {
+                              "identifier": "identity",
+                              "traits": [],
+                              "transient": true
+                            }
+                        """.trimIndent()
+                    )
+                )
+        )
+            .respond(
+                response()
+                    .withStatusCode(200)
+                    .withBody(MockResponses.getTransientIdentities)
+            )
+
+        runBlocking {
+            val result = flagsmith.getFeatureFlagsSync(
+                "identity", listOf(),true,
+            )
+            assertTrue(result.isSuccess)
         }
     }
 }
