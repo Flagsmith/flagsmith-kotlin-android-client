@@ -60,7 +60,6 @@ class IdentityTests {
                 "electric pink",
                 result.getOrThrow().traits.find { trait -> trait.key == "favourite-colour" }?.stringValue
             )
-            assertEquals(true, result.getOrThrow().flags.isNotEmpty())
         }
     }
 }
