@@ -106,19 +106,29 @@ class Flagsmith constructor(
         const val DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS = 10
     }
 
-    fun getFeatureFlags(identity: String? = null, transient: Boolean? = null, result: (Result<List<Flag>>) -> Unit) {
+    fun getFeatureFlags(identity: String? = null, traits: List<Trait>? = null, transient: Boolean? = null, result: (Result<List<Flag>>) -> Unit) {
         // Save the last used identity as we'll refresh with this if we get update events
         lastUsedIdentity = identity
 
         if (identity != null) {
-            retrofit.getIdentityFlagsAndTraits(identity, transient).enqueueWithResult { res ->
-                flagUpdateFlow.tryEmit(res.getOrNull()?.flags ?: emptyList())
-                result(res.map { it.flags })
+            if (traits != null) {
+                retrofit.postTraits(IdentityAndTraits(identity, traits, transient)).enqueueWithResult(result = {
+                    result(it.map { response -> response.flags })
+                }).also { lastUsedIdentity = identity }
+            } else {
+                retrofit.getIdentityFlagsAndTraits(identity, transient).enqueueWithResult { res ->
+                    flagUpdateFlow.tryEmit(res.getOrNull()?.flags ?: emptyList())
+                    result(res.map { it.flags })
+                }
             }
         } else {
-            retrofit.getFlags().enqueueWithResult(defaults = defaultFlags) { res ->
-                flagUpdateFlow.tryEmit(res.getOrNull() ?: emptyList())
-                result(res)
+            if (traits != null) {
+                throw IllegalArgumentException("Cannot set traits without an identity");
+            } else {
+                retrofit.getFlags().enqueueWithResult(defaults = defaultFlags) { res ->
+                    flagUpdateFlow.tryEmit(res.getOrNull() ?: emptyList())
+                    result(res)
+                }
             }
         }
     }
