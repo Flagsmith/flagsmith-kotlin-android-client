@@ -106,17 +106,17 @@ class Flagsmith constructor(
         const val DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS = 10
     }
 
-    fun getFeatureFlags(identity: String? = null, traits: List<Trait>? = null, result: (Result<List<Flag>>) -> Unit) {
+    fun getFeatureFlags(identity: String? = null, traits: List<Trait>? = null, transient: Boolean = false, result: (Result<List<Flag>>) -> Unit) {
         // Save the last used identity as we'll refresh with this if we get update events
         lastUsedIdentity = identity
 
         if (identity != null) {
             if (traits != null) {
-                retrofit.postTraits(IdentityAndTraits(identity, traits)).enqueueWithResult(result = {
+                retrofit.postTraits(IdentityAndTraits(identity, traits, transient)).enqueueWithResult(result = {
                     result(it.map { response -> response.flags })
                 }).also { lastUsedIdentity = identity }
             } else {
-                retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult { res ->
+                retrofit.getIdentityFlagsAndTraits(identity, transient).enqueueWithResult { res ->
                     flagUpdateFlow.tryEmit(res.getOrNull()?.flags ?: emptyList())
                     result(res.map { it.flags })
                 }
@@ -181,8 +181,8 @@ class Flagsmith constructor(
         })
     }
 
-    fun getIdentity(identity: String, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
-        retrofit.getIdentityFlagsAndTraits(identity).enqueueWithResult(defaults = null, result = result)
+    fun getIdentity(identity: String, transient: Boolean = false, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
+        retrofit.getIdentityFlagsAndTraits(identity, transient).enqueueWithResult(defaults = null, result = result)
             .also { lastUsedIdentity = identity }
 
     fun clearCache() {

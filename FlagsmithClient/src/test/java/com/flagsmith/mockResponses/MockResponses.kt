@@ -18,6 +18,7 @@ enum class MockEndpoint(val path: String, val body: String) {
     GET_FLAGS(FlagsEndpoint.path, MockResponses.getFlags),
     SET_TRAIT(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTrait),
     SET_TRAITS(TraitsBulkEndpoint(listOf(Trait(key = "", traitValue = "")), "").path, MockResponses.setTraits),
+    GET_TRANSIENT_IDENTITIES(IdentityFlagsAndTraitsEndpoint("").path, MockResponses.getTransientIdentities),
     SET_TRAIT_INTEGER(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitInteger),
     SET_TRAIT_DOUBLE(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitDouble),
     SET_TRAIT_BOOLEAN(TraitsEndpoint(Trait(key = "", traitValue = ""), "").path, MockResponses.setTraitBoolean),
@@ -36,6 +37,10 @@ enum class MockEndpoint(val path: String, val body: String) {
     GET_IDENTITIES_TRAIT_BOOLEAN(
         IdentityFlagsAndTraitsEndpoint("").path,
         MockResponses.getTraitBoolean
+    ),
+    POST_TRANSIENT_TRAITS(
+        IdentityFlagsAndTraitsEndpoint("").path,
+        MockResponses.postTransientIdentities
     ),
 }
 
@@ -116,11 +121,58 @@ object MockResponses {
           "traits": [
             {
               "trait_value": "12345",
-              "trait_key": "set-from-client"
+              "trait_key": "set-from-client",
+              "transient": false
             },
             {
               "trait_value": "electric pink",
-              "trait_key": "favourite-colour"
+              "trait_key": "favourite-colour",
+              "transient": false
+            }
+          ]
+        }
+    """.trimIndent()
+
+    val getTransientIdentities = """
+        {
+          "flags": [
+            {
+              "feature_state_value": null,
+              "feature": {
+                "type": "STANDARD",
+                "name": "no-value",
+                "id": 35506
+              },
+              "enabled": true
+            }
+          ],
+          "traits": []
+        }
+    """.trimIndent()
+
+    val postTransientIdentities = """
+        {
+          "flags": [
+            {
+              "feature_state_value": null,
+              "feature": {
+                "type": "STANDARD",
+                "name": "no-value",
+                "id": 35506
+              },
+              "enabled": true
+            }
+          ],
+          "traits": [
+            {
+              "trait_key": "persisted-trait", 
+              "trait_value": "value",
+              "transient": false
+            },
+            {
+              "trait_key": "transient-trait",
+              "trait_value": "value",
+              "transient": true,
             }
           ]
         }
@@ -165,7 +217,8 @@ object MockResponses {
           "traits": [
             {
               "trait_value": "12345",
-              "trait_key": "set-from-client"
+              "trait_key": "set-from-client",
+              "transient": false
             }
           ]
         }
@@ -178,7 +231,8 @@ object MockResponses {
           "traits": [
             {
               "trait_value": "12345",
-              "trait_key": "set-from-client"
+              "trait_key": "set-from-client",
+              "transient": false
             }
           ]
         }

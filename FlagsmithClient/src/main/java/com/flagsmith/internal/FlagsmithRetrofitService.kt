@@ -19,11 +19,12 @@ import retrofit2.http.Query
 interface FlagsmithRetrofitService {
 
     @GET("identities/")
-    fun getIdentityFlagsAndTraits(@Query("identifier") identity: String) : Call<IdentityFlagsAndTraits>
+    fun getIdentityFlagsAndTraits(@Query("identifier") identity: String, @Query("transient") transient: Boolean = false) : Call<IdentityFlagsAndTraits>
 
     @GET("flags/")
     fun getFlags() : Call<List<Flag>>
 
+    // todo: rename this function
     @POST("identities/")
     fun postTraits(@Body identity: IdentityAndTraits) : Call<IdentityFlagsAndTraits>
 
