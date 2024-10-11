@@ -7,11 +7,15 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import java.io.ByteArrayOutputStream
 import java.util.Date
 
+import com.vanniktech.maven.publish.SonatypeHost
+
 plugins {
     id("com.android.library")
     kotlin("android")
     id("org.jetbrains.kotlinx.kover")
     id("maven-publish")
+
+    id("com.vanniktech.maven.publish").version("0.29.0")
 }
 
 val versionNumber: String by lazy {
@@ -187,16 +191,36 @@ fun String.contentLine(length: Int, extraPadding: String = "  ") =
 fun tableLine(length: Int, leading: String, trailing: String) =
     "─".repeat(length - 2).wrapWith(leading, trailing)
 
-publishing {
-    publications {
-        register<MavenPublication>("release") {
-            groupId = "com.flagsmith"
-            artifactId = "flagsmith-kotlin-android-client"
-            version = versionNumber
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
 
-            afterEvaluate {
-                from(components["release"])
+    signAllPublications()
+
+    coordinates("io.flagsmith.flagsmith-kotlin-android-client", "flagsmith-kotlin-android-client", versionNumber)
+
+    pom {
+        name.set("Flagsmith Kotlin Android Client")
+        description.set("A library for integrating Flagsmith feature flagging.")
+        inceptionYear.set("2024")
+        url.set("https://github.com/flagsmith/flagsmith-kotlin-android-client/")
+        licenses {
+            license {
+                name.set("BSD 3-Clause \"New\" or \"Revised\" License")
+                url.set("https://github.com/Flagsmith/flagsmith-kotlin-android-client/blob/main/LICENSE")
+                distribution.set("repo")
             }
+        }
+        developers {
+            developer {
+                id.set("flagsmith")
+                name.set("Flagsmith")
+                url.set("https://github.com/flagsmith/")
+            }
+        }
+        scm {
+            url.set("https://github.com/flagsmith/flagsmith-kotlin-android-client/")
+            connection.set("scm:git:git://github.com/flagsmith/flagsmith-kotlin-android-client.git")
+            developerConnection.set("scm:git:ssh://git@github.com/flagsmith/flagsmith-kotlin-android-client.git")
         }
     }
 }
