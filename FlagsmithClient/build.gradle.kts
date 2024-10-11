@@ -196,7 +196,7 @@ mavenPublishing {
 
     signAllPublications()
 
-    coordinates("io.flagsmith.flagsmith-kotlin-android-client", "flagsmith-kotlin-android-client", versionNumber)
+    coordinates("io.flagsmith", "flagsmith-kotlin-android-client", versionNumber)
 
     pom {
         name.set("Flagsmith Kotlin Android Client")

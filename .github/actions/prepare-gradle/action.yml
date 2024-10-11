@@ -4,7 +4,7 @@ description: ""
 inputs:
   java-version:
     description: "Java Version"
-    default: "11"
+    default: "17"
   distribution:
     description: "Java Distribution"
     default: "temurin"
@@ -12,7 +12,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup JDK 11
+    - name: Setup JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: ${{ inputs.java-version }}
