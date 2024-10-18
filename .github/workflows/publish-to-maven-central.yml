@@ -1,0 +1,22 @@
+name: Publish to Maven Central
+
+on:
+  push:
+    tags:
+      - "*"
+    branches:
+      - ci/publish-to-maven
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preconfigure gradle
+        uses: ./.github/actions/prepare-gradle
+
+      - name: Publish to Maven Central
+        run: ./gradlew publishAllPublicationsToMavenCentralRepository
