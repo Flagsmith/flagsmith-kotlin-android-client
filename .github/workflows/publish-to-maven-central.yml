@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - "*"
-    branches:
-      - ci/publish-to-maven
 
 jobs:
   publish:
