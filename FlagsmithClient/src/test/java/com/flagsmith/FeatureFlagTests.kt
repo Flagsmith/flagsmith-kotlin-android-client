@@ -182,11 +182,9 @@ class FeatureFlagTests {
                                 },
                                 {
                                   "trait_key": "persisted-trait",
-                                  "trait_value": "value",
-                                  "transient": false
+                                  "trait_value": "value"
                                 }
-                              ],
-                              "transient": false
+                              ]
                             }
                         """.trimIndent()
                     )
