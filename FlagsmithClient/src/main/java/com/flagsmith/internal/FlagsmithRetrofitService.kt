@@ -5,7 +5,10 @@ import android.util.Log
 import com.flagsmith.FlagsmithCacheConfig
 import com.flagsmith.entities.Flag
 import com.flagsmith.entities.IdentityAndTraits
+import com.flagsmith.entities.IdentityAndTraitsSerializer
 import com.flagsmith.entities.IdentityFlagsAndTraits
+import com.flagsmith.entities.Trait
+import com.flagsmith.entities.TraitSerializer
 import okhttp3.Cache
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -15,6 +18,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
+import com.google.gson.GsonBuilder
 
 interface FlagsmithRetrofitService {
 
@@ -97,9 +101,14 @@ interface FlagsmithRetrofitService {
                 .cache(cache)
                 .build()
 
+            val gson = GsonBuilder()
+                .registerTypeAdapter(IdentityAndTraits::class.java, IdentityAndTraitsSerializer())
+                .registerTypeAdapter(Trait::class.java, TraitSerializer())
+                .create()
+
             val retrofit = Retrofit.Builder()
                 .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(client)
                 .build()
 

@@ -1,8 +1,8 @@
 package com.flagsmith.entities
 
-
+import com.google.gson.*
 import com.google.gson.annotations.SerializedName
-
+import java.lang.reflect.Type
 
 data class Trait (
     val identifier: String? = null,
@@ -44,6 +44,19 @@ data class Trait (
 
     val booleanValue: Boolean?
         get() = traitValue as? Boolean
+}
+
+class TraitSerializer : JsonSerializer<Trait> {
+    override fun serialize(src: Trait, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+        val jsonObject = JsonObject()
+        src.identifier?.let { jsonObject.addProperty("identifier", it) }
+        jsonObject.addProperty("trait_key", src.key)
+        jsonObject.addProperty("trait_value", src.traitValue.toString())
+        if (src.transient) {
+            jsonObject.addProperty("transient", true)
+        }
+        return jsonObject
+    }
 }
 
 data class TraitWithIdentity (
