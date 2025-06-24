@@ -116,7 +116,7 @@ class Flagsmith constructor(
                     result(it.map { response -> response.flags })
                 }).also { lastUsedIdentity = identity }
             } else {
-                retrofit.getIdentityFlagsAndTraits(identity, transient).enqueueWithResult { res ->
+                retrofit.getIdentityFlagsAndTraits(identity, if (transient) true else null).enqueueWithResult { res ->
                     flagUpdateFlow.tryEmit(res.getOrNull()?.flags ?: emptyList())
                     result(res.map { it.flags })
                 }
@@ -182,7 +182,7 @@ class Flagsmith constructor(
     }
 
     fun getIdentity(identity: String, transient: Boolean = false, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
-        retrofit.getIdentityFlagsAndTraits(identity, transient).enqueueWithResult(defaults = null, result = result)
+        retrofit.getIdentityFlagsAndTraits(identity, if (transient) true else null).enqueueWithResult(defaults = null, result = result)
             .also { lastUsedIdentity = identity }
 
     fun clearCache() {

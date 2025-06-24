@@ -240,4 +240,23 @@ class FeatureFlagTests {
             assertTrue(result.isSuccess)
         }
     }
+
+    @Test
+    fun testGetFeatureFlagsWithNullTraitsHasNoTransientParam() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
+
+        runBlocking {
+            flagsmith.getFeatureFlagsSync("", null, false)
+            val requests = mockServer.retrieveRecordedRequests(
+                request()
+                    .withPath("/identities/")
+                    .withMethod("GET")
+            )
+            assertEquals(1, requests.size)
+            val request = requests[0]
+            val transientParam = request.queryStringParameterList.find { it.name.toString() == "transient" }
+            assertNull("transient parameter should not be present", transientParam)
+        }
+    }
+
 }
