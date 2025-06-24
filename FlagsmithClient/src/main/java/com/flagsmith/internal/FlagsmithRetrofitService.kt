@@ -88,29 +88,11 @@ interface FlagsmithRetrofitService {
                 }
             }
 
-            fun queryInterceptor(): Interceptor {
-                return Interceptor { chain ->
-                    val request = chain.request()
-                    if (request.method == "GET" && request.url.pathSegments.contains("identities") && request.url.queryParameter("transient") == "false") {
-                        val url = request.url.newBuilder()
-                            .removeAllQueryParameters("transient")
-                            .build()
-                        val newRequest = request.newBuilder()
-                            .url(url)
-                            .build()
-                        chain.proceed(newRequest)
-                    } else {
-                        chain.proceed(request)
-                    }
-                }
-            }
-
             val cache = if (context != null && cacheConfig.enableCache) Cache(context.cacheDir, cacheConfig.cacheSize) else null
 
             val client = OkHttpClient.Builder()
                 .addInterceptor(envKeyInterceptor(environmentKey))
                 .addInterceptor(updatedAtInterceptor(timeTracker))
-                .addInterceptor(queryInterceptor())
                 .addInterceptor(jsonContentTypeInterceptor())
                 .let { if (cacheConfig.enableCache) it.addNetworkInterceptor(cacheControlInterceptor()) else it }
                 .callTimeout(requestTimeoutSeconds, java.util.concurrent.TimeUnit.SECONDS)
