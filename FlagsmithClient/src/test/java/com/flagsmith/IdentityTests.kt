@@ -58,6 +58,38 @@ class IdentityTests {
         }
     }
 
+    @Test(expected = AssertionError::class)
+    fun testGetIdentityWithExpectedParameterMissing() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
+        runBlocking {
+            flagsmith.getIdentitySync("person")
+
+            mockServer.verify(
+                request()
+                    .withPath("/identities/")
+                    .withMethod("GET")
+                    .withQueryStringParameter("transient")
+            )
+        }
+    }
+
+    @Test
+    fun testGetIdentityWithoutTransientParameter() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
+        runBlocking {
+            flagsmith.getIdentitySync("person")
+            val requests = mockServer.retrieveRecordedRequests(
+                request()
+                    .withPath("/identities/")
+                    .withMethod("GET")
+            )
+            assertEquals(1, requests.size)
+            val request = requests[0]
+            val transientParam = request.queryStringParameterList.find { it.name.toString() == "transient" }
+            assertNull("transient parameter should not be present", transientParam)
+        }
+    }
+
     @Test
     fun testGetTransientIdentity() {
         mockServer.mockResponseFor(MockEndpoint.GET_TRANSIENT_IDENTITIES)

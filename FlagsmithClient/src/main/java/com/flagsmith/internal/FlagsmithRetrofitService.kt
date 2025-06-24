@@ -23,7 +23,7 @@ import com.google.gson.GsonBuilder
 interface FlagsmithRetrofitService {
 
     @GET("identities/")
-    fun getIdentityFlagsAndTraits(@Query("identifier") identity: String, @Query("transient") transient: Boolean = false) : Call<IdentityFlagsAndTraits>
+    fun getIdentityFlagsAndTraits(@Query("identifier") identity: String, @Query("transient") transient: Boolean? = null) : Call<IdentityFlagsAndTraits>
 
     @GET("flags/")
     fun getFlags() : Call<List<Flag>>
