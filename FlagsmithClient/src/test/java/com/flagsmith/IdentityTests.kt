@@ -58,21 +58,6 @@ class IdentityTests {
         }
     }
 
-    @Test(expected = AssertionError::class)
-    fun testGetIdentityWithExpectedParameterMissing() {
-        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
-        runBlocking {
-            flagsmith.getIdentitySync("person")
-
-            mockServer.verify(
-                request()
-                    .withPath("/identities/")
-                    .withMethod("GET")
-                    .withQueryStringParameter("transient")
-            )
-        }
-    }
-
     @Test
     fun testGetIdentityWithoutTransientParameter() {
         mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
