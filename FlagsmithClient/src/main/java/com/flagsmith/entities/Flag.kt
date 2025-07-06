@@ -9,11 +9,11 @@ data class Flag(
 )
 
 data class Feature(
-    val id: Long,
     val name: String,
-    @SerializedName(value = "created_date") val createdDate: String,
-    val description: String,
-    @SerializedName(value = "initial_value") val initialValue: String,
-    @SerializedName(value = "default_enabled") val defaultEnabled: Boolean,
-    val type: String
+    val id: Long = 0L,
+    @SerializedName(value = "created_date") val createdDate: String = "",
+    val description: String = "",
+    @SerializedName(value = "initial_value") val initialValue: String = "",
+    @SerializedName(value = "default_enabled") val defaultEnabled: Boolean = false,
+    val type: String = ""
 )
