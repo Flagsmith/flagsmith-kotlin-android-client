@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.7.4...v1.8.0) (2025-07-08)
+
+
+### Features
+
+* Make most Feature fields optional ([dcb4afb](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/dcb4afb8cc4152aae3f292c9d020a28c92458269))
+
 ## [1.7.4](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.7.3...v1.7.4) (2025-07-04)
 
 
