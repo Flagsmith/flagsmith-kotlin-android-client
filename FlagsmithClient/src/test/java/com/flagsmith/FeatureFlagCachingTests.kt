@@ -51,26 +51,14 @@ class FeatureFlagCachingTests {
         setupMocks()
         val defaultFlags = listOf(
             Flag(
-                feature = Feature(
-                    id = 345345L,
-                    name = "Flag 1",
-                    createdDate = "2023‐07‐07T09:07:16Z",
-                    description = "Flag 1 description",
-                    type = "CONFIG",
-                    defaultEnabled = true,
-                    initialValue = "true"
-                ), enabled = true, featureStateValue = "Vanilla Ice"
+                feature = Feature(name = "Flag 1"),
+                enabled = true,
+                featureStateValue = "Vanilla Ice"
             ),
             Flag(
-                feature = Feature(
-                    id = 34345L,
-                    name = "Flag 2",
-                    createdDate = "2023‐07‐07T09:07:16Z",
-                    description = "Flag 2 description",
-                    type = "CONFIG",
-                    defaultEnabled = true,
-                    initialValue = "true"
-                ), enabled = true, featureStateValue = "value2"
+                feature = Feature(name = "Flag 2"),
+                enabled = true,
+                featureStateValue = "value2"
             ),
         )
 
