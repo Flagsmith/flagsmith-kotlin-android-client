@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.8.0...v1.8.1) (2025-09-10)
+
+
+### Other
+
+* Add `CODEOWNERS` ([#72](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/72)) ([a9ecc05](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/a9ecc055d89ba42d943fbe88e10e1d18ba03f33a))
+
 ## [1.8.0](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.7.4...v1.8.0) (2025-07-08)
 
 
