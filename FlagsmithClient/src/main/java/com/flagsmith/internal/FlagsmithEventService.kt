@@ -1,5 +1,6 @@
 package com.flagsmith.internal
 
+import android.content.Context
 import android.util.Log
 import com.flagsmith.entities.FlagEvent
 import com.google.gson.Gson
@@ -15,10 +16,12 @@ import java.util.concurrent.TimeUnit
 internal class FlagsmithEventService constructor(
     private val eventSourceBaseUrl: String?,
     private val environmentKey: String,
+    private val context: Context?,
     private val updates: (Result<FlagEvent>) -> Unit
 ) {
     private val sseClient = OkHttpClient.Builder()
         .addInterceptor(FlagsmithRetrofitService.envKeyInterceptor(environmentKey))
+        .addInterceptor(FlagsmithRetrofitService.userAgentInterceptor(context))
         .connectTimeout(6, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.MINUTES)
         .writeTimeout(10, TimeUnit.MINUTES)
