@@ -43,12 +43,19 @@ interface FlagsmithRetrofitService {
         private const val USER_AGENT_PREFIX = "flagsmith-kotlin-android-sdk"
 
         private fun getUserAgent(context: Context?): String {
+            val sdkVersion = getSdkVersion()
+            return "$USER_AGENT_PREFIX/$sdkVersion"
+        }
+
+        private fun getSdkVersion(): String {
             return try {
-                val packageInfo = context?.packageManager?.getPackageInfo(context.packageName, 0)
-                val version = packageInfo?.versionName ?: "unknown"
-                "$USER_AGENT_PREFIX/$version"
+                // Try to get version from BuildConfig
+                val buildConfigClass = Class.forName("com.flagsmith.kotlin.BuildConfig")
+                val versionField = buildConfigClass.getField("VERSION_NAME")
+                versionField.get(null) as String
             } catch (e: Exception) {
-                "$USER_AGENT_PREFIX/unknown"
+                // Fallback to hardcoded version if BuildConfig is not available
+                "unknown"
             }
         }
 
