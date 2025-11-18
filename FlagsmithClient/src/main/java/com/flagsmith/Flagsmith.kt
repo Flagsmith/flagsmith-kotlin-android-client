@@ -51,7 +51,7 @@ class Flagsmith constructor(
 
     private val eventService: FlagsmithEventService? =
         if (!enableRealtimeUpdates) null
-        else FlagsmithEventService(eventSourceBaseUrl = eventSourceBaseUrl, environmentKey = environmentKey, context = context) { event ->
+        else FlagsmithEventService(eventSourceBaseUrl = eventSourceBaseUrl, environmentKey = environmentKey) { event ->
             if (event.isSuccess) {
                 lastEventUpdate = event.getOrNull()?.updatedAt ?: lastEventUpdate
 

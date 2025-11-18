@@ -43,7 +43,7 @@ class SdkVersionRetrievalTest {
     @Test
     fun testUserAgentInterceptorReturnsValidFormat() {
         // Given - Create a client with the user agent interceptor
-        val interceptor = FlagsmithRetrofitService.userAgentInterceptor(null)
+        val interceptor = FlagsmithRetrofitService.userAgentInterceptor()
         val client = OkHttpClient.Builder()
             .addInterceptor(interceptor)
             .build()
@@ -71,7 +71,7 @@ class SdkVersionRetrievalTest {
     @Test
     fun testVersionFormatIsValid() {
         // Given - Create a client with the user agent interceptor
-        val interceptor = FlagsmithRetrofitService.userAgentInterceptor(null)
+        val interceptor = FlagsmithRetrofitService.userAgentInterceptor()
         val client = OkHttpClient.Builder()
             .addInterceptor(interceptor)
             .build()
@@ -104,7 +104,7 @@ class SdkVersionRetrievalTest {
     @Test
     fun testUserAgentHeaderIsPersistentAcrossRequests() {
         // Given - Create a client with the user agent interceptor
-        val interceptor = FlagsmithRetrofitService.userAgentInterceptor(null)
+        val interceptor = FlagsmithRetrofitService.userAgentInterceptor()
         val client = OkHttpClient.Builder()
             .addInterceptor(interceptor)
             .build()

@@ -42,7 +42,7 @@ interface FlagsmithRetrofitService {
         private const val USER_AGENT_HEADER = "User-Agent"
         private const val USER_AGENT_PREFIX = "flagsmith-kotlin-android-sdk"
 
-        private fun getUserAgent(context: Context?): String {
+        private fun getUserAgent(): String {
             val sdkVersion = getSdkVersion()
             return "$USER_AGENT_PREFIX/$sdkVersion"
         }
@@ -53,9 +53,9 @@ interface FlagsmithRetrofitService {
             // x-release-please-end
         }
 
-        fun userAgentInterceptor(context: Context?): Interceptor {
+        fun userAgentInterceptor(): Interceptor {
             return Interceptor { chain ->
-                val userAgent = getUserAgent(context)
+                val userAgent = getUserAgent()
                 val request = chain.request().newBuilder()
                     .addHeader(USER_AGENT_HEADER, userAgent)
                     .build()
@@ -115,7 +115,7 @@ interface FlagsmithRetrofitService {
 
             val client = OkHttpClient.Builder()
                 .addInterceptor(envKeyInterceptor(environmentKey))
-                .addInterceptor(userAgentInterceptor(context))
+                .addInterceptor(userAgentInterceptor())
                 .addInterceptor(updatedAtInterceptor(timeTracker))
                 .addInterceptor(jsonContentTypeInterceptor())
                 .let { if (cacheConfig.enableCache) it.addNetworkInterceptor(cacheControlInterceptor()) else it }
