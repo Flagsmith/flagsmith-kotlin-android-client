@@ -18,12 +18,11 @@ class UserAgentTests {
     private lateinit var flagsmith: Flagsmith
 
     companion object {
-        // Expected version when BuildConfig is not available (in tests)
-        // This matches the hardcoded version in FlagsmithRetrofitService.getHardcodedVersion()
+        // Expected version set by release-please in FlagsmithRetrofitService.getSdkVersion()
         // x-release-please-start-version
-        private const val EXPECTED_FALLBACK_VERSION = "1.8.0"
+        private const val EXPECTED_SDK_VERSION = "1.8.0"
         // x-release-please-end
-        private const val EXPECTED_USER_AGENT = "flagsmith-kotlin-android-sdk/$EXPECTED_FALLBACK_VERSION"
+        private const val EXPECTED_USER_AGENT = "flagsmith-kotlin-android-sdk/$EXPECTED_SDK_VERSION"
     }
 
     @Before
@@ -38,7 +37,7 @@ class UserAgentTests {
 
     @Test
     fun testUserAgentHeaderSentWithGetFlags() {
-        // Given - BuildConfig is not available in tests, so falls back to hardcoded version (1.8.0)
+        // Given - SDK version is set by release-please
         flagsmith = Flagsmith(
             environmentKey = "test-key",
             baseUrl = "http://localhost:${mockServer.localPort}",
@@ -55,7 +54,7 @@ class UserAgentTests {
             assertTrue(result.isSuccess)
         }
 
-        // Then - Verify User-Agent contains hardcoded version since BuildConfig is not available in tests
+        // Then - Verify User-Agent contains the SDK version from release-please
         mockServer.verify(
             request()
                 .withPath("/flags/")
@@ -67,7 +66,6 @@ class UserAgentTests {
     @Test
     fun testUserAgentHeaderSentWithNullContext() {
         // Given - Context being null doesn't affect SDK version retrieval
-        // BuildConfig lookup is independent of Android context
         flagsmith = Flagsmith(
             environmentKey = "test-key",
             baseUrl = "http://localhost:${mockServer.localPort}",
@@ -84,7 +82,7 @@ class UserAgentTests {
             assertTrue(result.isSuccess)
         }
 
-        // Then - Should still get hardcoded version
+        // Then - Should get the SDK version from release-please
         mockServer.verify(
             request()
                 .withPath("/flags/")
@@ -184,7 +182,7 @@ class UserAgentTests {
         val version = userAgentHeader.substringAfter("flagsmith-kotlin-android-sdk/")
         assertTrue("Version should not be empty", version.isNotEmpty())
 
-        // In test environment, should be the hardcoded fallback version
-        assertEquals(EXPECTED_FALLBACK_VERSION, version)
+        // Should be the version set by release-please
+        assertEquals(EXPECTED_SDK_VERSION, version)
     }
 }

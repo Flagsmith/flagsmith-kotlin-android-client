@@ -48,25 +48,6 @@ interface FlagsmithRetrofitService {
         }
 
         private fun getSdkVersion(): String {
-            return try {
-                // Try to get version from BuildConfig
-                val buildConfigClass = Class.forName("com.flagsmith.kotlin.BuildConfig")
-                val versionField = buildConfigClass.getField("VERSION_NAME")
-                val version = versionField.get(null) as? String
-
-                // If version is null or empty, fall back to hardcoded version
-                if (version.isNullOrBlank()) {
-                    getHardcodedVersion()
-                } else {
-                    version
-                }
-            } catch (_: Exception) {
-                // Fallback to hardcoded version if BuildConfig is not available or any error occurs
-                getHardcodedVersion()
-            }
-        }
-
-        private fun getHardcodedVersion(): String {
             // x-release-please-start-version
             return "1.8.0"
             // x-release-please-end

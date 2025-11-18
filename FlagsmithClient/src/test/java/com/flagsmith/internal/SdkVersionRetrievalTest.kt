@@ -15,18 +15,16 @@ import org.junit.Test
 /**
  * Unit tests for SDK version retrieval functionality in FlagsmithRetrofitService.
  *
- * These tests verify the robustness of getSdkVersion() and its fallback behavior
- * when BuildConfig is not available or returns invalid values.
+ * These tests verify that getSdkVersion() correctly returns the version set by release-please.
  */
 class SdkVersionRetrievalTest {
 
     private lateinit var mockServer: MockWebServer
 
     companion object {
-        // This should match the version in getHardcodedVersion()
-        // and in .release-please-manifest.json
+        // This should match the version in getSdkVersion() and in .release-please-manifest.json
         // x-release-please-start-version
-        private const val EXPECTED_FALLBACK_VERSION = "1.8.0"
+        private const val EXPECTED_SDK_VERSION = "1.8.0"
         // x-release-please-end
         private const val USER_AGENT_PREFIX = "flagsmith-kotlin-android-sdk"
     }
@@ -66,35 +64,6 @@ class SdkVersionRetrievalTest {
             assertTrue(
                 "User-Agent should start with correct prefix: $userAgent",
                 userAgent!!.startsWith("$USER_AGENT_PREFIX/")
-            )
-        }
-    }
-
-    @Test
-    fun testFallbackVersionIsUsedWhenBuildConfigNotAvailable() {
-        // Given - In test environment, BuildConfig is not available
-        // Create a client with the user agent interceptor
-        val interceptor = FlagsmithRetrofitService.userAgentInterceptor(null)
-        val client = OkHttpClient.Builder()
-            .addInterceptor(interceptor)
-            .build()
-
-        mockServer.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
-
-        // When - Make a request
-        val request = Request.Builder()
-            .url(mockServer.url("/"))
-            .build()
-
-        client.newCall(request).execute().use { response ->
-            // Then - Should use the hardcoded fallback version
-            val recordedRequest = mockServer.takeRequest()
-            val userAgent = recordedRequest.getHeader("User-Agent")
-
-            assertEquals(
-                "User-Agent should contain fallback version when BuildConfig is not available",
-                "$USER_AGENT_PREFIX/$EXPECTED_FALLBACK_VERSION",
-                userAgent
             )
         }
     }
@@ -165,7 +134,7 @@ class SdkVersionRetrievalTest {
 
         assertEquals(
             "User-Agent should be the expected value",
-            "$USER_AGENT_PREFIX/$EXPECTED_FALLBACK_VERSION",
+            "$USER_AGENT_PREFIX/$EXPECTED_SDK_VERSION",
             userAgent1
         )
     }
