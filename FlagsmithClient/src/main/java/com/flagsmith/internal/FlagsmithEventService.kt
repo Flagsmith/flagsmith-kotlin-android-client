@@ -19,6 +19,7 @@ internal class FlagsmithEventService constructor(
 ) {
     private val sseClient = OkHttpClient.Builder()
         .addInterceptor(FlagsmithRetrofitService.envKeyInterceptor(environmentKey))
+        .addInterceptor(FlagsmithRetrofitService.userAgentInterceptor())
         .connectTimeout(6, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.MINUTES)
         .writeTimeout(10, TimeUnit.MINUTES)
