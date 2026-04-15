@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.9.0](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.8.0...v1.9.0) (2026-04-15)
+
+
+### Features
+
+* Send a standard User-Agent: sdk-name/version header ([#83](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/83)) ([5956f8d](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/5956f8d36661f075852f0e505abbf0567b9a347f))
+
+
+### Other
+
+* Add `CODEOWNERS` ([#72](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/72)) ([a9ecc05](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/a9ecc055d89ba42d943fbe88e10e1d18ba03f33a))
+* Remove amannn/action-semantic-pull-request workflow ([#80](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/80)) ([3076d21](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/3076d21f16beccfa5742d29609df3301dba3f917))
+
 ## [1.8.0](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.7.4...v1.8.0) (2025-07-08)
 
 
