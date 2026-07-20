@@ -38,7 +38,7 @@ class Flagsmith constructor(
     private val enableRealtimeUpdates: Boolean = false,
     private val analyticsFlushPeriod: Int = DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS,
     private val cacheConfig: FlagsmithCacheConfig = FlagsmithCacheConfig(),
-    private val defaultFlags: List<Flag>? = null,
+    private val defaultFlags: List<Flag>? = emptyList(),
     private val requestTimeoutSeconds: Long = 4L,
     private val readTimeoutSeconds: Long = 6L,
     private val writeTimeoutSeconds: Long = 6L,
