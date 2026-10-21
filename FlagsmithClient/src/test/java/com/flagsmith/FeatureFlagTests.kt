@@ -210,6 +210,49 @@ class FeatureFlagTests {
     }
 
     @Test
+    fun testGetFeatureFlagsWithTypedTraits() {
+        mockServer.`when`(
+            request()
+                .withPath("/identities/")
+                .withMethod("POST")
+                .withBody(
+                    json(
+                        """
+                            {
+                              "identifier": "identity",
+                              "traits": [
+                                { "trait_key": "string-trait", "trait_value": "value" },
+                                { "trait_key": "int-trait", "trait_value": 5 },
+                                { "trait_key": "double-trait", "trait_value": 0.5 },
+                                { "trait_key": "boolean-trait", "trait_value": true }
+                              ]
+                            }
+                        """.trimIndent()
+                    )
+                )
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+                    .withBody(MockResponses.getTransientIdentities)
+            )
+
+        runBlocking {
+            val result = flagsmith.getFeatureFlagsSync(
+                "identity",
+                listOf(
+                    Trait("string-trait", "value"),
+                    Trait("int-trait", 5),
+                    Trait("double-trait", 0.5),
+                    Trait("boolean-trait", true),
+                ),
+            )
+
+            assertTrue(result.isSuccess)
+        }
+    }
+
+    @Test
     fun testGetFeatureFlagsWithTransientIdentity() {
         mockServer.`when`(
             request()
