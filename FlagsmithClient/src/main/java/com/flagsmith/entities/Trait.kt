@@ -51,7 +51,7 @@ class TraitSerializer : JsonSerializer<Trait> {
         val jsonObject = JsonObject()
         src.identifier?.let { jsonObject.addProperty("identifier", it) }
         jsonObject.addProperty("trait_key", src.key)
-        jsonObject.addProperty("trait_value", src.traitValue.toString())
+        jsonObject.add("trait_value", context.serialize(src.traitValue))
         if (src.transient) {
             jsonObject.addProperty("transient", true)
         }

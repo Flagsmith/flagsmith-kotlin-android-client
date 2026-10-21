@@ -61,6 +61,28 @@ class SerializerTests {
     }
 
     @Test
+    fun `TraitSerializer keeps the JSON type of trait values`() {
+        assertEquals("""{"trait_key":"key","trait_value":"value"}""", gson.toJson(Trait("key", "value")))
+        assertEquals("""{"trait_key":"key","trait_value":5}""", gson.toJson(Trait("key", 5)))
+        assertEquals("""{"trait_key":"key","trait_value":0.5}""", gson.toJson(Trait("key", 0.5)))
+        assertEquals("""{"trait_key":"key","trait_value":true}""", gson.toJson(Trait("key", true)))
+    }
+
+    @Test
+    fun `IdentityAndTraitsSerializer keeps the JSON type of trait values`() {
+        val identity = IdentityAndTraits(
+            identifier = "test-user",
+            traits = listOf(Trait("plan", "premium"), Trait("age", 30), Trait("verified", true))
+        )
+
+        assertEquals(
+            """{"identifier":"test-user","traits":[{"trait_key":"plan","trait_value":"premium"},""" +
+                """{"trait_key":"age","trait_value":30},{"trait_key":"verified","trait_value":true}]}""",
+            gson.toJson(identity)
+        )
+    }
+
+    @Test
     fun `TraitSerializer handles optional identifier`() {
         val traitWithId = Trait(
             identifier = "test-id",
