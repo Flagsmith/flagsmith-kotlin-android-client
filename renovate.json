@@ -17,7 +17,8 @@
     "packageRules": [
         {
             "matchPackageNames": ["Flagsmith/sdk-spec"],
-            "groupName": "SDK spec"
+            "groupName": "SDK spec",
+            "addLabels": ["sdk-spec"]
         }
     ]
 }
