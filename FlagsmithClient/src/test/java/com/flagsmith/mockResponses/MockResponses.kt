@@ -178,6 +178,58 @@ object MockResponses {
         }
     """.trimIndent()
 
+    val postIdentityInExperiment = """
+        {
+          "flags": [
+            {
+              "feature_state_value": "hello treatment",
+              "feature": {
+                "type": "MULTIVARIATE",
+                "name": "banner",
+                "id": 35507
+              },
+              "enabled": true,
+              "variant": "treatment",
+              "metadata": {
+                "experiment": {
+                  "id": 7,
+                  "name": "banner experiment",
+                  "in_experiment": true
+                }
+              }
+            }
+          ],
+          "traits": [
+            {
+              "trait_key": "plan",
+              "trait_value": "premium"
+            }
+          ]
+        }
+    """.trimIndent()
+
+    val postIdentityOutsideExperiment = """
+        {
+          "flags": [
+            {
+              "feature_state_value": "hello",
+              "feature": {
+                "type": "STANDARD",
+                "name": "banner",
+                "id": 35507
+              },
+              "enabled": true
+            }
+          ],
+          "traits": [
+            {
+              "trait_key": "plan",
+              "trait_value": "premium"
+            }
+          ]
+        }
+    """.trimIndent()
+
     val getFlags = """
         [
           {
