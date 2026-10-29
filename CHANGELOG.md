@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.9.1](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.9.0...v1.9.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* Send trait values with their JSON types ([#90](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/90)) ([644d69f](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/644d69f792a0904b8333cbc4b0b85d7a377620e1))
+
+
+### CI
+
+* Run the Flagsmith SDK behavioural spec ([#89](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/89)) ([169807e](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/169807e6e9bc7d4f08f097f8827f197b26640e93))
+
+
+### Other
+
+* Give Renovate's pull requests Conventional Commit titles ([#94](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/94)) ([1e5a09e](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/1e5a09e911a0554249bf53536013cec8cad9ddc7))
+
 ## [1.9.0](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.8.0...v1.9.0) (2026-04-15)
 
 
