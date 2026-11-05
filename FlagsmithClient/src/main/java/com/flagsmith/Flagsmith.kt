@@ -9,6 +9,7 @@ import com.flagsmith.entities.IdentityFlagsAndTraits
 import com.flagsmith.entities.Trait
 import com.flagsmith.entities.TraitWithIdentity
 import com.flagsmith.internal.FlagsmithAnalytics
+import com.flagsmith.internal.FlagsmithEventProcessor
 import com.flagsmith.internal.FlagsmithEventService
 import com.flagsmith.internal.FlagsmithEventTimeTracker
 import com.flagsmith.internal.FlagsmithRetrofitService
@@ -27,6 +28,9 @@ import java.io.IOException
  * @property context The current context is required to use the Flagsmith Analytics functionality
  * @property enableAnalytics Enable analytics - default true
  * @property analyticsFlushPeriod The period in seconds between attempts by the Flagsmith SDK to push analytic events to the server
+ * @property enableEvents Send tracking and exposure events to Flagsmith, e.g. for experiments - default false
+ * @property eventsBaseUrl The base URL of Flagsmith's events API
+ * @property eventsFlushPeriod The period in seconds between attempts by the Flagsmith SDK to send events to the events API
  * @constructor Create empty Flagsmith
  */
 class Flagsmith constructor(
@@ -42,12 +46,18 @@ class Flagsmith constructor(
     private val requestTimeoutSeconds: Long = 4L,
     private val readTimeoutSeconds: Long = 6L,
     private val writeTimeoutSeconds: Long = 6L,
-    override var lastFlagFetchTime: Double = 0.0 // from FlagsmithEventTimeTracker
+    override var lastFlagFetchTime: Double = 0.0, // from FlagsmithEventTimeTracker
+    private val enableEvents: Boolean = false,
+    private val eventsBaseUrl: String = DEFAULT_EVENTS_BASE_URL,
+    private val eventsFlushPeriod: Int = DEFAULT_EVENTS_FLUSH_PERIOD_SECONDS
 ) : FlagsmithEventTimeTracker {
     private lateinit var retrofit: FlagsmithRetrofitService
     private var cache: Cache? = null
     private var lastUsedIdentity: String? = null
     private var analytics: FlagsmithAnalytics? = null
+    private val eventProcessor: FlagsmithEventProcessor? =
+        if (!enableEvents) null
+        else FlagsmithEventProcessor(environmentKey, eventsBaseUrl, eventsFlushPeriod)
 
     private val eventService: FlagsmithEventService? =
         if (!enableRealtimeUpdates) null
@@ -104,6 +114,8 @@ class Flagsmith constructor(
     companion object {
         const val DEFAULT_ENABLE_ANALYTICS = true
         const val DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS = 10
+        const val DEFAULT_EVENTS_BASE_URL = "https://events.api.flagsmith.com/"
+        const val DEFAULT_EVENTS_FLUSH_PERIOD_SECONDS = 10
     }
 
     fun getFeatureFlags(identity: String? = null, traits: List<Trait>? = null, transient: Boolean = false, result: (Result<List<Flag>>) -> Unit) {
@@ -184,6 +196,80 @@ class Flagsmith constructor(
     fun getIdentity(identity: String, transient: Boolean = false, result: (Result<IdentityFlagsAndTraits>) -> Unit) =
         retrofit.getIdentityFlagsAndTraits(identity, if (transient) true else null).enqueueWithResult(defaults = null, result = result)
             .also { lastUsedIdentity = identity }
+
+    /**
+     * Gets a feature's flag for an identity, and records an exposure event when the identity
+     * is enrolled in an experiment running on the feature.
+     *
+     * Exposures are recorded only with [enableEvents], and only for enabled flags.
+     */
+    fun getExperimentFlag(
+        featureName: String,
+        identity: String,
+        traits: List<Trait>? = null,
+        transient: Boolean = false,
+        result: (Result<Flag?>) -> Unit
+    ) = getFeatureFlags(identity, traits, transient) { res ->
+        result(res.map { flags ->
+            val flag = flags.find { it.feature.name == featureName }
+            analytics?.trackEvent(featureName)
+            val experiment = flag?.metadata?.experiment
+            if (flag != null && flag.enabled && experiment != null && experiment.inExperiment) {
+                trackExposureEvent(
+                    featureName,
+                    identity = identity,
+                    value = flag.variant,
+                    traits = traits?.associate { it.key to it.traitValue },
+                    metadata = mapOf("experiment_id" to experiment.id)
+                )
+            }
+            flag
+        })
+    }
+
+    /**
+     * Records an event, e.g. a conversion, for the identity. Does nothing unless [enableEvents].
+     *
+     * @param identity Defaults to the identity flags were last fetched for.
+     */
+    fun trackEvent(
+        event: String,
+        identity: String? = lastUsedIdentity,
+        value: Any? = null,
+        traits: Map<String, Any?>? = null,
+        metadata: Map<String, Any?>? = null
+    ) {
+        require(!event.startsWith("\$")) {
+            "Event names starting with \"\$\" are reserved; use trackExposureEvent to record an exposure"
+        }
+        eventProcessor?.trackEvent(event, identity, value, traits, metadata)
+    }
+
+    /**
+     * Records that the identity was shown a variant of a feature, as a `$flag_exposure` event.
+     * Does nothing unless [enableEvents].
+     *
+     * @param identity Defaults to the identity flags were last fetched for.
+     */
+    fun trackExposureEvent(
+        featureName: String,
+        identity: String? = lastUsedIdentity,
+        value: Any? = null,
+        traits: Map<String, Any?>? = null,
+        metadata: Map<String, Any?>? = null
+    ) {
+        val processor = eventProcessor ?: return
+        if (identity == null) {
+            Log.e("Flagsmith", "Not tracking an exposure of $featureName without an identity")
+            return
+        }
+        processor.trackExposureEvent(featureName, identity, value, traits, metadata)
+    }
+
+    /** Sends the events recorded so far, without waiting for the next periodic send. */
+    fun flushEvents() {
+        eventProcessor?.flush()
+    }
 
     fun clearCache() {
         try {

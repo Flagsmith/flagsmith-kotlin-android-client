@@ -9,6 +9,10 @@ public final class Log {
         return println("I", tag, msg);
     }
 
+    public static int w(String tag, String msg) {
+        return println("W", tag, msg);
+    }
+
     public static int e(String tag, String msg) {
         return println("E", tag, msg);
     }
