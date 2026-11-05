@@ -106,7 +106,8 @@ object MockResponses {
                 "name": "with-value",
                 "id": 35507
               },
-              "enabled": true
+              "enabled": true,
+              "reason": "IDENTITY_OVERRIDE"
             },
             {
               "feature_state_value": "",
@@ -196,7 +197,8 @@ object MockResponses {
               "id": 35507,
               "name": "with-value"
             },
-            "feature_state_value": 7
+            "feature_state_value": 7,
+            "reason": "SPLIT; weight=30"
           },
           {
             "enabled": false,

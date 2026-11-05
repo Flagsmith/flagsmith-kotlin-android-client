@@ -87,6 +87,42 @@ class FeatureFlagTests {
     }
 
     @Test
+    fun testGetFeatureFlagsReturnsReason() {
+        mockServer.mockResponseFor(MockEndpoint.GET_FLAGS)
+        runBlocking {
+            val result = flagsmith.getFeatureFlagsSync()
+            assertTrue(result.isSuccess)
+
+            val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
+            assertNotNull(found)
+            assertEquals("SPLIT; weight=30", found?.reason)
+
+            val withoutReason =
+                result.getOrThrow().find { flag -> flag.feature.name == "no-value" }
+            assertNotNull(withoutReason)
+            assertNull(withoutReason?.reason)
+        }
+    }
+
+    @Test
+    fun testGetFeatureFlagsWithIdentityReturnsReason() {
+        mockServer.mockResponseFor(MockEndpoint.GET_IDENTITIES)
+        runBlocking {
+            val result = flagsmith.getFeatureFlagsSync(identity = "person")
+            assertTrue(result.isSuccess)
+
+            val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
+            assertNotNull(found)
+            assertEquals("IDENTITY_OVERRIDE", found?.reason)
+
+            val withoutReason =
+                result.getOrThrow().find { flag -> flag.feature.name == "no-value" }
+            assertNotNull(withoutReason)
+            assertNull(withoutReason?.reason)
+        }
+    }
+
+    @Test
     fun testGetValueForFeatureExisting() {
         mockServer.mockResponseFor(MockEndpoint.GET_FLAGS)
         runBlocking {

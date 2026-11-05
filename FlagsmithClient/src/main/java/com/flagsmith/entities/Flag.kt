@@ -5,7 +5,8 @@ import com.google.gson.annotations.SerializedName
 data class Flag(
     val feature: Feature,
     @SerializedName(value = "feature_state_value") val featureStateValue: Any?,
-    val enabled: Boolean
+    val enabled: Boolean,
+    val reason: String? = null
 )
 
 data class Feature(
