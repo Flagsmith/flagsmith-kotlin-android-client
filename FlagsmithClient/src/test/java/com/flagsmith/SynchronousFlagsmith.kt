@@ -34,3 +34,6 @@ suspend fun Flagsmith.getIdentitySync(identity: String, transient: Boolean = fal
 
 suspend fun Flagsmith.getExperimentFlagSync(featureName: String, identity: String, traits: List<Trait>? = null): Result<Flag?>
     = suspendCoroutine { cont -> this.getExperimentFlag(featureName, identity, traits) { cont.resume(it) } }
+
+suspend fun Flagsmith.flushEventsSync()
+    = suspendCoroutine { cont -> this.flushEvents { cont.resume(Unit) } }

@@ -266,9 +266,14 @@ class Flagsmith constructor(
         processor.trackExposureEvent(featureName, identity, value, traits, metadata)
     }
 
-    /** Sends the events recorded so far, without waiting for the next periodic send. */
-    fun flushEvents() {
-        eventProcessor?.flush()
+    /**
+     * Sends the events recorded so far, without waiting for the next periodic send.
+     *
+     * @param completion Called once every send in progress has finished, successfully or not.
+     */
+    fun flushEvents(completion: (() -> Unit)? = null) {
+        val processor = eventProcessor ?: return run { completion?.invoke() }
+        processor.flush(completion)
     }
 
     fun clearCache() {

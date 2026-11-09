@@ -3,8 +3,6 @@ package com.flagsmith
 import com.flagsmith.entities.Trait
 import com.flagsmith.mockResponses.MockResponses
 import kotlinx.coroutines.runBlocking
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.untilAsserted
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -16,7 +14,6 @@ import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
 import org.mockserver.model.JsonBody.json
 import org.mockserver.verify.VerificationTimes
-import java.time.Duration
 
 class EventsTests {
 
@@ -53,36 +50,34 @@ class EventsTests {
             value = 42,
             metadata = mapOf("currency" to "GBP")
         )
-        flagsmith.flushEvents()
+        runBlocking { flagsmith.flushEventsSync() }
 
         // Then
-        await.atMost(Duration.ofSeconds(5)) untilAsserted {
-            mockServer.verify(
-                request()
-                    .withPath("/v1/events")
-                    .withMethod("POST")
-                    .withHeader("X-Environment-Key", "environment-key")
-                    .withBody(
-                        json(
-                            """
+        mockServer.verify(
+            request()
+                .withPath("/v1/events")
+                .withMethod("POST")
+                .withHeader("X-Environment-Key", "environment-key")
+                .withBody(
+                    json(
+                        """
+                            {
+                              "events": [
                                 {
-                                  "events": [
-                                    {
-                                      "event": "checkout_completed",
-                                      "feature_name": null,
-                                      "identifier": "user_123",
-                                      "value": "42",
-                                      "traits": null,
-                                      "metadata": { "currency": "GBP" }
-                                    }
-                                  ]
+                                  "event": "checkout_completed",
+                                  "feature_name": null,
+                                  "identifier": "user_123",
+                                  "value": "42",
+                                  "traits": null,
+                                  "metadata": { "currency": "GBP" }
                                 }
-                            """.trimIndent()
-                        )
-                    ),
-                VerificationTimes.once()
-            )
-        }
+                              ]
+                            }
+                        """.trimIndent()
+                    )
+                ),
+            VerificationTimes.once()
+        )
     }
 
     @Test
@@ -95,36 +90,34 @@ class EventsTests {
         val flag = runBlocking {
             flagsmith.getExperimentFlagSync("banner", "user_123", listOf(Trait("plan", "premium")))
         }.getOrThrow()
-        flagsmith.flushEvents()
+        runBlocking { flagsmith.flushEventsSync() }
 
         // Then
         assertEquals("hello treatment", flag?.featureStateValue)
         assertEquals("treatment", flag?.variant)
-        await.atMost(Duration.ofSeconds(5)) untilAsserted {
-            mockServer.verify(
-                request()
-                    .withPath("/v1/events")
-                    .withBody(
-                        json(
-                            """
+        mockServer.verify(
+            request()
+                .withPath("/v1/events")
+                .withBody(
+                    json(
+                        """
+                            {
+                              "events": [
                                 {
-                                  "events": [
-                                    {
-                                      "event": "${'$'}flag_exposure",
-                                      "feature_name": "banner",
-                                      "identifier": "user_123",
-                                      "value": "treatment",
-                                      "traits": { "plan": "premium" },
-                                      "metadata": { "experiment_id": 7 }
-                                    }
-                                  ]
+                                  "event": "${'$'}flag_exposure",
+                                  "feature_name": "banner",
+                                  "identifier": "user_123",
+                                  "value": "treatment",
+                                  "traits": { "plan": "premium" },
+                                  "metadata": { "experiment_id": 7 }
                                 }
-                            """.trimIndent()
-                        )
-                    ),
-                VerificationTimes.once()
-            )
-        }
+                              ]
+                            }
+                        """.trimIndent()
+                    )
+                ),
+            VerificationTimes.once()
+        )
     }
 
     @Test
@@ -137,33 +130,31 @@ class EventsTests {
         runBlocking {
             flagsmith.getExperimentFlagSync("banner", "user_123", emptyList())
         }.getOrThrow()
-        flagsmith.flushEvents()
+        runBlocking { flagsmith.flushEventsSync() }
 
         // Then
-        await.atMost(Duration.ofSeconds(5)) untilAsserted {
-            mockServer.verify(
-                request()
-                    .withPath("/v1/events")
-                    .withBody(
-                        json(
-                            """
+        mockServer.verify(
+            request()
+                .withPath("/v1/events")
+                .withBody(
+                    json(
+                        """
+                            {
+                              "events": [
                                 {
-                                  "events": [
-                                    {
-                                      "event": "${'$'}flag_exposure",
-                                      "feature_name": "banner",
-                                      "identifier": "user_123",
-                                      "value": "treatment",
-                                      "traits": null
-                                    }
-                                  ]
+                                  "event": "${'$'}flag_exposure",
+                                  "feature_name": "banner",
+                                  "identifier": "user_123",
+                                  "value": "treatment",
+                                  "traits": null
                                 }
-                            """.trimIndent()
-                        )
-                    ),
-                VerificationTimes.once()
-            )
-        }
+                              ]
+                            }
+                        """.trimIndent()
+                    )
+                ),
+            VerificationTimes.once()
+        )
     }
 
     @Test
@@ -176,11 +167,10 @@ class EventsTests {
         val flag = runBlocking {
             flagsmith.getExperimentFlagSync("banner", "user_123", listOf(Trait("plan", "premium")))
         }.getOrThrow()
-        flagsmith.flushEvents()
+        runBlocking { flagsmith.flushEventsSync() }
 
         // Then
         assertEquals("hello", flag?.featureStateValue)
-        Thread.sleep(500)
         mockServer.verify(request().withPath("/v1/events"), VerificationTimes.never())
     }
 
@@ -194,12 +184,11 @@ class EventsTests {
         val flag = runBlocking {
             flagsmith.getExperimentFlagSync("banner", "user_123", listOf(Trait("plan", "premium")))
         }.getOrThrow()
-        flagsmith.flushEvents()
+        runBlocking { flagsmith.flushEventsSync() }
 
         // Then
         assertEquals("hello", flag?.featureStateValue)
         assertEquals(null, flag?.variant)
-        Thread.sleep(500)
         mockServer.verify(request().withPath("/v1/events"), VerificationTimes.never())
     }
 
@@ -214,14 +203,12 @@ class EventsTests {
                 metadata = mapOf("experiment_id" to 1)
             )
         }
-        flagsmith.flushEvents()
+        runBlocking { flagsmith.flushEventsSync() }
 
         // Then
-        await.atMost(Duration.ofSeconds(5)) untilAsserted {
-            val requests = mockServer.retrieveRecordedRequests(request().withPath("/v1/events"))
-            assertEquals(1, requests.size)
-            assertEquals(1, Regex("flag_exposure").findAll(requests[0].bodyAsString).count())
-        }
+        val requests = mockServer.retrieveRecordedRequests(request().withPath("/v1/events"))
+        assertEquals(1, requests.size)
+        assertEquals(1, Regex("flag_exposure").findAll(requests[0].bodyAsString).count())
     }
 
     @Test
@@ -235,15 +222,13 @@ class EventsTests {
 
         // When
         flagsmith.trackEvent("checkout_completed", identity = "user_123")
-        flagsmith.flushEvents()
+        runBlocking { flagsmith.flushEventsSync() }
 
         // Then
-        await.atMost(Duration.ofSeconds(10)) untilAsserted {
-            mockServer.verify(
-                request().withPath("/v1/events").withBody(json("""{ "events": [ { "event": "checkout_completed" } ] }""")),
-                VerificationTimes.exactly(2)
-            )
-        }
+        mockServer.verify(
+            request().withPath("/v1/events").withBody(json("""{ "events": [ { "event": "checkout_completed" } ] }""")),
+            VerificationTimes.exactly(2)
+        )
     }
 
     @Test
@@ -268,10 +253,9 @@ class EventsTests {
         // When
         flagsmithWithoutEvents.trackEvent("checkout_completed", identity = "user_123")
         flagsmithWithoutEvents.trackExposureEvent("banner", identity = "user_123", value = "control")
-        flagsmithWithoutEvents.flushEvents()
+        runBlocking { flagsmithWithoutEvents.flushEventsSync() }
 
         // Then
-        Thread.sleep(500)
         mockServer.verify(request().withPath("/v1/events"), VerificationTimes.never())
     }
 }

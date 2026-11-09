@@ -46,6 +46,8 @@ class FlagsmithEventProcessor(
 
     private val buffer = mutableListOf<Event>()
     private val exposureKeys = mutableSetOf<List<Any?>>()
+    private var sendsInProgress = 0
+    private val flushCompletions = mutableListOf<() -> Unit>()
     private val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor { runnable ->
         Thread(runnable, "flagsmith-events").apply { isDaemon = true }
     }
@@ -53,7 +55,7 @@ class FlagsmithEventProcessor(
     init {
         if (flushPeriodSeconds > 0) {
             executor.scheduleWithFixedDelay(
-                ::flush, flushPeriodSeconds.toLong(), flushPeriodSeconds.toLong(), TimeUnit.SECONDS
+                { flush() }, flushPeriodSeconds.toLong(), flushPeriodSeconds.toLong(), TimeUnit.SECONDS
             )
         }
     }
@@ -80,16 +82,19 @@ class FlagsmithEventProcessor(
         metadata: Map<String, Any?>?
     ) = buffer(FLAG_EXPOSURE_EVENT, featureName, identifier, value, traits, metadata)
 
-    /** Sends the buffered events, without waiting for the request to complete. */
-    fun flush() {
+    /** Sends the buffered events, then calls [completion] once every send in progress has finished. */
+    fun flush(completion: (() -> Unit)? = null) {
+        var isComplete = false
         val events = synchronized(buffer) {
-            if (buffer.isEmpty()) return
-            buffer.toList().also {
-                buffer.clear()
-                exposureKeys.clear()
-            }
+            val events = buffer.toList()
+            buffer.clear()
+            exposureKeys.clear()
+            if (events.isNotEmpty()) sendsInProgress++
+            if (sendsInProgress > 0) completion?.let(flushCompletions::add) else isComplete = true
+            events
         }
-        send(events, retry = true)
+        if (events.isNotEmpty()) send(events, retry = true)
+        if (isComplete) completion?.invoke()
     }
 
     private fun buffer(
@@ -125,14 +130,25 @@ class FlagsmithEventProcessor(
         service.postEvents(EventBatch(events)).enqueueWithResult { result ->
             result.onSuccess {
                 Log.i("Flagsmith", "Sent ${events.size} events")
+                finishSend()
             }.onFailure { err ->
                 if (retry) {
                     Log.w("Flagsmith", "Failed sending ${events.size} events, retrying - ${err.localizedMessage}")
                     executor.schedule({ send(events, retry = false) }, retryDelayMillis, TimeUnit.MILLISECONDS)
                 } else {
                     Log.e("Flagsmith", "Failed sending ${events.size} events, dropping them - ${err.localizedMessage}")
+                    finishSend()
                 }
             }
         }
+    }
+
+    private fun finishSend() {
+        val completions = synchronized(buffer) {
+            sendsInProgress--
+            if (sendsInProgress > 0) return
+            flushCompletions.toList().also { flushCompletions.clear() }
+        }
+        completions.forEach { it() }
     }
 }
