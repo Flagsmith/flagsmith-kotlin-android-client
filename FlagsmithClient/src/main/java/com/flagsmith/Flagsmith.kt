@@ -201,7 +201,7 @@ class Flagsmith constructor(
      * Gets a feature's flag for an identity, and records an exposure event when the identity
      * is enrolled in an experiment running on the feature.
      *
-     * Exposures are recorded only with [enableEvents], and only for enabled flags.
+     * Exposures are recorded only with [enableEvents], and only for enabled flags with a variant.
      */
     fun getExperimentFlag(
         featureName: String,
@@ -214,7 +214,7 @@ class Flagsmith constructor(
             val flag = flags.find { it.feature.name == featureName }
             analytics?.trackEvent(featureName)
             val experiment = flag?.metadata?.experiment
-            if (flag != null && flag.enabled && experiment != null && experiment.inExperiment) {
+            if (flag != null && flag.enabled && flag.variant != null && experiment != null && experiment.inExperiment) {
                 trackExposureEvent(
                     featureName,
                     identity = identity,

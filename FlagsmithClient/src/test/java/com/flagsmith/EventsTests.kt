@@ -146,6 +146,25 @@ class EventsTests {
     }
 
     @Test
+    fun testIdentityInExperimentIsNotExposedWhenServedNoVariant() {
+        // Given
+        mockServer.`when`(request().withPath("/identities/").withMethod("POST"))
+            .respond(response().withStatusCode(200).withBody(MockResponses.postIdentityInExperimentWithoutVariant))
+
+        // When
+        val flag = runBlocking {
+            flagsmith.getExperimentFlagSync("banner", "user_123", listOf(Trait("plan", "premium")))
+        }.getOrThrow()
+        flagsmith.flushEvents()
+
+        // Then
+        assertEquals("hello", flag?.featureStateValue)
+        assertEquals(null, flag?.variant)
+        Thread.sleep(500)
+        mockServer.verify(request().withPath("/v1/events"), VerificationTimes.never())
+    }
+
+    @Test
     fun testRepeatedExposuresAreSentOnce() {
         // Given / When
         repeat(2) {
