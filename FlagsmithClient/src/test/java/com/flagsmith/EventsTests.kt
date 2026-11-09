@@ -128,6 +128,45 @@ class EventsTests {
     }
 
     @Test
+    fun testIdentityInExperimentWithEmptyTraitsIsExposedWithoutTraits() {
+        // Given
+        mockServer.`when`(request().withPath("/identities/").withMethod("POST"))
+            .respond(response().withStatusCode(200).withBody(MockResponses.postIdentityInExperiment))
+
+        // When
+        runBlocking {
+            flagsmith.getExperimentFlagSync("banner", "user_123", emptyList())
+        }.getOrThrow()
+        flagsmith.flushEvents()
+
+        // Then
+        await.atMost(Duration.ofSeconds(5)) untilAsserted {
+            mockServer.verify(
+                request()
+                    .withPath("/v1/events")
+                    .withBody(
+                        json(
+                            """
+                                {
+                                  "events": [
+                                    {
+                                      "event": "${'$'}flag_exposure",
+                                      "feature_name": "banner",
+                                      "identifier": "user_123",
+                                      "value": "treatment",
+                                      "traits": null
+                                    }
+                                  ]
+                                }
+                            """.trimIndent()
+                        )
+                    ),
+                VerificationTimes.once()
+            )
+        }
+    }
+
+    @Test
     fun testIdentityOutsideExperimentIsNotExposed() {
         // Given
         mockServer.`when`(request().withPath("/identities/").withMethod("POST"))

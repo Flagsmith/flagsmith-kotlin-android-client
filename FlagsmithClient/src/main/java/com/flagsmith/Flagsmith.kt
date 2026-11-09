@@ -219,7 +219,7 @@ class Flagsmith constructor(
                     featureName,
                     identity = identity,
                     value = flag.variant,
-                    traits = traits?.associate { it.key to it.traitValue },
+                    traits = traits?.takeIf { it.isNotEmpty() }?.associate { it.key to it.traitValue },
                     metadata = mapOf("experiment_id" to experiment.id)
                 )
             }
