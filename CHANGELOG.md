@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.10.0](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.9.0...v1.10.0) (2026-11-10)
+
+
+### Features
+
+* Support `getExperimentFlag`, `trackEvent` and `trackExposure` methods ([#98](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/98)) ([6989568](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/6989568a390dc5049930cf4164f4cd1ec821e459))
+
+
+### Bug Fixes
+
+* Send the Flagsmith-SDK-User-Agent header so Flagsmith can tell which SDK sent each request ([#99](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/99)) ([0c50799](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/0c50799cfff08c1d7d834332d6a6f9c4e0ae3168))
+* Send trait values with their JSON types ([#90](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/90)) ([644d69f](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/644d69f792a0904b8333cbc4b0b85d7a377620e1))
+
+
+### CI
+
+* Run the Flagsmith SDK behavioural spec ([#89](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/89)) ([169807e](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/169807e6e9bc7d4f08f097f8827f197b26640e93))
+
+
+### Other
+
+* Give Renovate's pull requests Conventional Commit titles ([#94](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/94)) ([1e5a09e](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/1e5a09e911a0554249bf53536013cec8cad9ddc7))
+* Let Renovate keep updating spec bumps the webhook handler commits to ([#95](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/95)) ([07f9181](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/07f9181afe262b7f95d32f916ff6a459b53555f3))
+
 ## [1.9.0](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.8.0...v1.9.0) (2026-04-15)
 
 
