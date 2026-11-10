@@ -43,7 +43,7 @@ interface FlagsmithRetrofitService {
         private const val SDK_USER_AGENT_HEADER = "Flagsmith-SDK-User-Agent"
 
         // x-release-please-start-version
-        private const val SDK_VERSION = "1.9.0"
+        internal const val SDK_VERSION = "1.9.0"
         // x-release-please-end
 
         fun userAgentInterceptor(): Interceptor {
