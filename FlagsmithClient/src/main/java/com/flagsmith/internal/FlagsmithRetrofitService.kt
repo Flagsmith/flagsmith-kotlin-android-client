@@ -40,15 +40,18 @@ interface FlagsmithRetrofitService {
         private const val ACCEPT_HEADER_VALUE = "application/json"
         private const val CONTENT_TYPE_HEADER_VALUE = "application/json; charset=utf-8"
         private const val USER_AGENT_HEADER = "User-Agent"
+        private const val SDK_USER_AGENT_HEADER = "Flagsmith-SDK-User-Agent"
 
         // x-release-please-start-version
         private const val SDK_VERSION = "1.9.0"
         // x-release-please-end
 
         fun userAgentInterceptor(): Interceptor {
+            val userAgent = "flagsmith-kotlin-android-sdk/$SDK_VERSION"
             return Interceptor { chain ->
                 val request = chain.request().newBuilder()
-                    .header(USER_AGENT_HEADER, "flagsmith-kotlin-android-sdk/$SDK_VERSION")
+                    .header(USER_AGENT_HEADER, userAgent)
+                    .header(SDK_USER_AGENT_HEADER, userAgent)
                     .build()
                 chain.proceed(request)
             }
