@@ -52,4 +52,29 @@ class UserAgentTests {
         assertEquals("flagsmith-kotlin-android-sdk/1.9.0", userAgent)
         // x-release-please-end
     }
+
+    @Test
+    fun testFlagsmithSdkUserAgentHeaderIsSent() {
+        // Given
+        mockServer.mockResponseFor(MockEndpoint.GET_FLAGS)
+
+        // When
+        runBlocking {
+            val result = flagsmith.getFeatureFlagsSync()
+            assertTrue(result.isSuccess)
+        }
+
+        // Then
+        val requests = mockServer.retrieveRecordedRequests(
+            request()
+                .withPath("/flags/")
+                .withMethod("GET")
+        )
+        assertEquals(1, requests.size)
+
+        val sdkUserAgent = requests[0].getFirstHeader("Flagsmith-SDK-User-Agent")
+        // x-release-please-start-version
+        assertEquals("flagsmith-kotlin-android-sdk/1.9.0", sdkUserAgent)
+        // x-release-please-end
+    }
 }
