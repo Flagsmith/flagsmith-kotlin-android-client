@@ -58,11 +58,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     testOptions {
@@ -79,8 +76,8 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
     // Server Sent Events
-    implementation("com.squareup.okhttp3:okhttp-sse:4.11.0")
-    testImplementation("com.squareup.okhttp3:okhttp-sse:4.11.0")
+    implementation("com.squareup.okhttp3:okhttp-sse:5.3.2")
+    testImplementation("com.squareup.okhttp3:okhttp-sse:5.3.2")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
