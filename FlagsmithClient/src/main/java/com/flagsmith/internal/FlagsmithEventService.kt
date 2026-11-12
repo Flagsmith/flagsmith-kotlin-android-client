@@ -35,6 +35,9 @@ internal class FlagsmithEventService constructor(
 
     private var currentEventSource: EventSource? = null
 
+    @Volatile
+    private var closed = false
+
     var sseEventsFlow = MutableStateFlow(FlagEvent(updatedAt = 0.0))
         private set
 
@@ -44,7 +47,7 @@ internal class FlagsmithEventService constructor(
             Log.d(TAG, "onClosed: $eventSource")
 
             // This isn't uncommon and is the nature of HTTP requests, so just reconnect
-            initEventSource()
+            if (!closed) initEventSource()
         }
 
         override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
@@ -60,6 +63,8 @@ internal class FlagsmithEventService constructor(
         override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
             super.onFailure(eventSource, t, response)
             Log.d(TAG, "onFailure: ${t?.message}")
+            // Cancelled by close()
+            if (closed) return
             if (t != null)
                 updates(Result.failure(t))
             else
@@ -80,6 +85,12 @@ internal class FlagsmithEventService constructor(
         currentEventSource?.cancel()
         currentEventSource = EventSources.createFactory(sseClient)
             .newEventSource(request = sseRequest, listener = sseEventSourceListener)
+    }
+
+    /** Disconnects from the stream, for good. */
+    fun close() {
+        closed = true
+        currentEventSource?.cancel()
     }
 
     companion object {

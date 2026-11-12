@@ -212,7 +212,7 @@ class EventsTests {
     }
 
     @Test
-    fun testEventsAreRetriedOnceWhenFlagsmithFailsToReceiveThem() {
+    fun testEventsAreRetriedWhenFlagsmithFailsToReceiveThem() {
         // Given
         mockServer.reset()
         mockServer.`when`(request().withPath("/v1/events"), Times.once())
@@ -228,6 +228,21 @@ class EventsTests {
         mockServer.verify(
             request().withPath("/v1/events").withBody(json("""{ "events": [ { "event": "checkout_completed" } ] }""")),
             VerificationTimes.exactly(2)
+        )
+    }
+
+    @Test
+    fun testClosingTheClientSendsTrackedEvents() {
+        // Given
+        flagsmith.trackEvent("checkout_completed", identity = "user_123")
+
+        // When
+        flagsmith.close()
+
+        // Then
+        mockServer.verify(
+            request().withPath("/v1/events").withBody(json("""{ "events": [ { "event": "checkout_completed" } ] }""")),
+            VerificationTimes.once()
         )
     }
 

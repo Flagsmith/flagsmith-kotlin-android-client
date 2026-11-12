@@ -70,3 +70,15 @@ fun trackExposureEvent(
     value: Any?,
     metadata: Map<String, Any?>,
 ) = flagsmith.trackExposureEvent(feature, identity = identifier, value = value, metadata = metadata)
+
+// When the application tracks events "event_{first}" to "event_{last}" for identity "{identifier}"
+fun trackNumberedEvents(flagsmith: Flagsmith, first: Long, last: Long, identifier: String) {
+    for (number in first..last) flagsmith.trackEvent("event_$number", identity = identifier)
+}
+
+// When the application flushes events
+fun flushEvents(flagsmith: Flagsmith) =
+    await<Unit> { result -> flagsmith.flushEvents { result(Result.success(Unit)) } }
+
+// When the application closes the client with a timeout of {timeout} seconds
+fun closeClient(flagsmith: Flagsmith, timeout: Long) = flagsmith.close(timeoutSeconds = timeout)
