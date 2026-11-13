@@ -40,11 +40,15 @@ class FlagsmithEventProcessorTest {
         mockServer.stop()
     }
 
-    private fun processor(maxBuffer: Int = FlagsmithEventProcessor.DEFAULT_MAX_BUFFER, requestTimeoutMillis: Long = 3000) =
+    private fun processor(
+        maxBuffer: Int = FlagsmithEventProcessor.DEFAULT_MAX_BUFFER,
+        requestTimeoutMillis: Long = 3000,
+        flushPeriodSeconds: Int = 0
+    ) =
         FlagsmithEventProcessor(
             environmentKey = "environment-key",
             eventsBaseUrl = "http://localhost:${mockServer.localPort}",
-            flushPeriodSeconds = 0,
+            flushPeriodSeconds = flushPeriodSeconds,
             maxBuffer = maxBuffer,
             requestTimeoutMillis = requestTimeoutMillis,
             random = noJitter
@@ -224,7 +228,7 @@ class FlagsmithEventProcessorTest {
     fun testFullBufferHoldingAKeptBatchWaitsForTheNextFlush() {
         // Given
         respondWith(503, 503, 503)
-        val processor = processor(maxBuffer = 3)
+        val processor = processor(maxBuffer = 3, flushPeriodSeconds = 3600)
         (1..3).forEach { processor.track("event_$it") }
         processor.flushSync()
 
@@ -234,6 +238,23 @@ class FlagsmithEventProcessorTest {
 
         // Then
         assertEquals(List(3) { listOf("event_1", "event_2", "event_3") } + listOf(listOf("event_3", "event_4", "event_5")), sentBatches())
+    }
+
+    @Test
+    fun testFullBufferHoldingAKeptBatchIsSentWithoutAFlushTimer() {
+        // Given
+        respondWith(503, 503, 503)
+        val processor = processor(maxBuffer = 3)
+        (1..3).forEach { processor.track("event_$it") }
+        processor.flushSync()
+
+        // When
+        processor.track("event_4")
+
+        // Then
+        val deadline = System.currentTimeMillis() + 5000
+        while (sentBatches().size < 4 && System.currentTimeMillis() < deadline) Thread.sleep(50)
+        assertEquals(List(3) { listOf("event_1", "event_2", "event_3") } + listOf(listOf("event_2", "event_3", "event_4")), sentBatches())
     }
 
     @Test

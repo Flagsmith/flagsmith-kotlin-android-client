@@ -29,7 +29,8 @@ interface FlagsmithEventsRetrofitService {
  *
  * Batches are sent every [flushPeriodSeconds], when [maxBuffer] events are buffered, and on [flush].
  * Repeated exposures within a batch are sent once. When the buffer is full, the oldest event is dropped.
- * While a batch kept after failing is buffered, a full buffer waits for the timer or [flush] to send it.
+ * While a batch kept after failing is buffered, a full buffer waits for the timer, if there is one, or [flush] to
+ * send it.
  *
  * One batch is in flight at a time. A batch is sent up to [MAX_ATTEMPTS] times, each request timing out
  * after [requestTimeoutMillis], backing off from [retryBaseDelayMillis], doubling, with full jitter between
@@ -73,9 +74,12 @@ class FlagsmithEventProcessor(
     private var attemptedCount = 0L
     private var completedSends = 0L
     private var fullBufferFlushPending = false
-    private var hasKeptBatch = false
+    // Set while a kept batch waits for the timer, so that a full buffer does not retry it straight away.
+    private var fullBufferHeld = false
     private var refused = false
     private var closed = false
+
+    private val hasFlushTimer = flushPeriodSeconds > 0
 
     @Volatile
     private var callInFlight: Call<Unit>? = null
@@ -86,7 +90,7 @@ class FlagsmithEventProcessor(
     }
 
     init {
-        if (flushPeriodSeconds > 0) {
+        if (hasFlushTimer) {
             executor.scheduleWithFixedDelay(
                 { send() }, flushPeriodSeconds.toLong(), flushPeriodSeconds.toLong(), TimeUnit.SECONDS
             )
@@ -186,7 +190,7 @@ class FlagsmithEventProcessor(
                 )
             )
             trackedCount++
-            if (buffer.size < maxBuffer || fullBufferFlushPending || hasKeptBatch) return
+            if (buffer.size < maxBuffer || fullBufferFlushPending || fullBufferHeld) return
             fullBufferFlushPending = true
             sendRequest()
         }
@@ -210,18 +214,18 @@ class FlagsmithEventProcessor(
     /**
      * Sends the buffered events as one batch, on the sending thread. Given a [request], does nothing if a send
      * completed since it was asked has attempted every event it asks for. A send for a full buffer does nothing
-     * while a kept batch is buffered.
+     * while a kept batch waits for the timer.
      */
     private fun send(request: SendRequest? = null, isFullBuffer: Boolean = false) {
         val (events, attempted) = synchronized(buffer) {
-            if (buffer.isEmpty() || (isFullBuffer && hasKeptBatch)) return
+            if (buffer.isEmpty() || (isFullBuffer && fullBufferHeld)) return
             if (request != null && completedSends > request.completedSends && attemptedCount >= request.tracked) {
                 return
             }
             val events = buffer.toList()
             buffer.clear()
             exposureKeys.clear()
-            hasKeptBatch = false
+            fullBufferHeld = false
             events to trackedCount
         }
         val outcome = try {
@@ -238,7 +242,7 @@ class FlagsmithEventProcessor(
                     val kept = (events + buffer).takeLast(maxBuffer)
                     buffer.clear()
                     buffer.addAll(kept)
-                    hasKeptBatch = true
+                    fullBufferHeld = hasFlushTimer
                 }
                 Outcome.REFUSED -> {
                     refused = true
