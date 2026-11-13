@@ -17,6 +17,7 @@ import com.flagsmith.internal.enqueueWithResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.Cache
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 /**
  * Flagsmith
@@ -116,6 +117,7 @@ class Flagsmith constructor(
         const val DEFAULT_ANALYTICS_FLUSH_PERIOD_SECONDS = 10
         const val DEFAULT_EVENTS_BASE_URL = "https://events.api.flagsmith.com/"
         const val DEFAULT_EVENTS_FLUSH_PERIOD_SECONDS = 10
+        const val DEFAULT_CLOSE_TIMEOUT_SECONDS = 5L
     }
 
     fun getFeatureFlags(identity: String? = null, traits: List<Trait>? = null, transient: Boolean = false, result: (Result<List<Flag>>) -> Unit) {
@@ -269,11 +271,22 @@ class Flagsmith constructor(
     /**
      * Sends the events recorded so far, without waiting for the next periodic send.
      *
-     * @param completion Called once every send in progress has finished, successfully or not.
+     * @param completion Called once each of them has been sent, dropped, or kept for the next flush,
+     * retries included.
      */
     fun flushEvents(completion: (() -> Unit)? = null) {
         val processor = eventProcessor ?: return run { completion?.invoke() }
         processor.flush(completion)
+    }
+
+    /**
+     * Stops the client's background work, and sends the events recorded so far, blocking until they are sent
+     * or [timeoutSeconds] have passed. Events not sent by then are lost, and events recorded afterwards are
+     * ignored. Call it off the main thread.
+     */
+    fun close(timeoutSeconds: Long = DEFAULT_CLOSE_TIMEOUT_SECONDS) {
+        eventService?.close()
+        eventProcessor?.close(TimeUnit.SECONDS.toMillis(timeoutSeconds))
     }
 
     fun clearCache() {
