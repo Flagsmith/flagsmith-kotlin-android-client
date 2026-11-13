@@ -123,6 +123,21 @@ class FlagsmithEventProcessorTest {
     }
 
     @Test
+    fun testKeptBatchIsSentWithTheNextFlushWhenNothingWasTrackedSince() {
+        // Given
+        respondWith(503, 503, 503)
+        val processor = processor()
+        processor.track("add_to_cart")
+        processor.flushSync()
+
+        // When
+        processor.flushSync()
+
+        // Then
+        assertEquals(List(4) { listOf("add_to_cart") }, sentBatches())
+    }
+
+    @Test
     fun testBatchWhoseLastAttemptFailsOtherwiseIsKeptAfterServerErrors() {
         // Given
         respondWith(500, 500, 503)
@@ -203,6 +218,22 @@ class FlagsmithEventProcessorTest {
 
         // Then
         assertEquals(List(3) { listOf("event_1", "event_2", "event_3") } + listOf(listOf("event_2", "event_3", "event_4")), sentBatches())
+    }
+
+    @Test
+    fun testFullBufferHoldingAKeptBatchWaitsForTheNextFlush() {
+        // Given
+        respondWith(503, 503, 503)
+        val processor = processor(maxBuffer = 3)
+        (1..3).forEach { processor.track("event_$it") }
+        processor.flushSync()
+
+        // When
+        (4..5).forEach { processor.track("event_$it") }
+        processor.flushSync()
+
+        // Then
+        assertEquals(List(3) { listOf("event_1", "event_2", "event_3") } + listOf(listOf("event_3", "event_4", "event_5")), sentBatches())
     }
 
     @Test

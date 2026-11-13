@@ -29,6 +29,7 @@ interface FlagsmithEventsRetrofitService {
  *
  * Batches are sent every [flushPeriodSeconds], when [maxBuffer] events are buffered, and on [flush].
  * Repeated exposures within a batch are sent once. When the buffer is full, the oldest event is dropped.
+ * While a batch kept after failing is buffered, a full buffer waits for the timer or [flush] to send it.
  *
  * One batch is in flight at a time. A batch is sent up to [MAX_ATTEMPTS] times, each request timing out
  * after [requestTimeoutMillis], backing off from [retryBaseDelayMillis], doubling, with full jitter between
@@ -62,12 +63,17 @@ class FlagsmithEventProcessor(
 
     private enum class Outcome { DELIVERED, DROPPED, KEPT, REFUSED }
 
+    /** Asks to send the events tracked up to [tracked], asked once [completedSends] sends had completed. */
+    private class SendRequest(val tracked: Long, val completedSends: Long)
+
     // Guarded by `buffer`.
     private val buffer = ArrayDeque<Event>()
     private val exposureKeys = mutableSetOf<List<Any?>>()
     private var trackedCount = 0L
     private var attemptedCount = 0L
+    private var completedSends = 0L
     private var fullBufferFlushPending = false
+    private var hasKeptBatch = false
     private var refused = false
     private var closed = false
 
@@ -114,11 +120,12 @@ class FlagsmithEventProcessor(
 
     /**
      * Sends the events tracked so far, then calls [completion] once each of them has been delivered, dropped,
-     * or kept for the next flush, retries included. Events another send attempted meanwhile are not sent again.
+     * or kept for the next flush, retries included. Events a send already in flight or queued has attempted are
+     * not sent again.
      */
     fun flush(completion: (() -> Unit)? = null) {
-        val tracked = synchronized(buffer) { trackedCount.takeUnless { closed } }
-        if (tracked == null || !submit { send(tracked); completion?.invoke() }) completion?.invoke()
+        val request = synchronized(buffer) { sendRequest().takeUnless { closed } }
+        if (request == null || !submit { send(request); completion?.invoke() }) completion?.invoke()
     }
 
     /**
@@ -154,7 +161,7 @@ class FlagsmithEventProcessor(
         metadata: Map<String, Any?>?
     ) {
         val stringValue = value?.toString()
-        val tracked = synchronized(buffer) {
+        val request = synchronized(buffer) {
             if (closed) return
             if (refused) {
                 Log.d("Flagsmith", "Not tracking $event: the events API refused the environment key")
@@ -179,15 +186,18 @@ class FlagsmithEventProcessor(
                 )
             )
             trackedCount++
-            if (buffer.size < maxBuffer || fullBufferFlushPending) return
+            if (buffer.size < maxBuffer || fullBufferFlushPending || hasKeptBatch) return
             fullBufferFlushPending = true
-            trackedCount
+            sendRequest()
         }
         submit {
             synchronized(buffer) { fullBufferFlushPending = false }
-            send(tracked)
+            send(request, isFullBuffer = true)
         }
     }
+
+    // Guarded by `buffer`.
+    private fun sendRequest() = SendRequest(trackedCount, completedSends)
 
     /** Runs [task] on the sending thread, returning false if the processor is closed. */
     private fun submit(task: () -> Unit): Boolean = try {
@@ -198,15 +208,20 @@ class FlagsmithEventProcessor(
     }
 
     /**
-     * Sends the buffered events as one batch, on the sending thread. Given [tracked], does nothing if every
-     * event tracked up to it has been attempted already.
+     * Sends the buffered events as one batch, on the sending thread. Given a [request], does nothing if a send
+     * completed since it was asked has attempted every event it asks for. A send for a full buffer does nothing
+     * while a kept batch is buffered.
      */
-    private fun send(tracked: Long? = null) {
+    private fun send(request: SendRequest? = null, isFullBuffer: Boolean = false) {
         val (events, attempted) = synchronized(buffer) {
-            if (buffer.isEmpty() || (tracked != null && attemptedCount >= tracked)) return
+            if (buffer.isEmpty() || (isFullBuffer && hasKeptBatch)) return
+            if (request != null && completedSends > request.completedSends && attemptedCount >= request.tracked) {
+                return
+            }
             val events = buffer.toList()
             buffer.clear()
             exposureKeys.clear()
+            hasKeptBatch = false
             events to trackedCount
         }
         val outcome = try {
@@ -217,11 +232,13 @@ class FlagsmithEventProcessor(
         }
         synchronized(buffer) {
             attemptedCount = attempted
+            completedSends++
             when (outcome) {
                 Outcome.KEPT -> {
                     val kept = (events + buffer).takeLast(maxBuffer)
                     buffer.clear()
                     buffer.addAll(kept)
+                    hasKeptBatch = true
                 }
                 Outcome.REFUSED -> {
                     refused = true
