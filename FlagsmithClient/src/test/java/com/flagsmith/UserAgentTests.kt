@@ -49,7 +49,7 @@ class UserAgentTests {
 
         val userAgent = requests[0].getFirstHeader("User-Agent")
         // x-release-please-start-version
-        assertEquals("flagsmith-kotlin-android-sdk/1.10.0", userAgent)
+        assertEquals("flagsmith-kotlin-android-sdk/1.11.0", userAgent)
         // x-release-please-end
     }
 
@@ -74,7 +74,7 @@ class UserAgentTests {
 
         val sdkUserAgent = requests[0].getFirstHeader("Flagsmith-SDK-User-Agent")
         // x-release-please-start-version
-        assertEquals("flagsmith-kotlin-android-sdk/1.10.0", sdkUserAgent)
+        assertEquals("flagsmith-kotlin-android-sdk/1.11.0", sdkUserAgent)
         // x-release-please-end
     }
 }
