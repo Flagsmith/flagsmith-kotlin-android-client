@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.10.0...v1.11.0) (2026-11-13)
+
+
+### Features
+
+* Retry event delivery and flush on close ([#102](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/102)) ([7fdc86d](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/7fdc86db68d62f1ef587547557672e31d5846454))
+
+
+### Other
+
+* Enable Renovate dependency dashboard ([#101](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/101)) ([40a835d](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/40a835d01452c39c2d7b3ea9739c941797c0005f))
+
 ## [1.10.0](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.9.0...v1.10.0) (2026-11-10)
 
 
