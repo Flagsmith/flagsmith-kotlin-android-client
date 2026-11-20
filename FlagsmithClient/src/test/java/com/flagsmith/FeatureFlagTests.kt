@@ -70,6 +70,7 @@ class FeatureFlagTests {
             val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
             assertNotNull(found)
             assertEquals(7.0, found?.featureStateValue)
+            assertEquals("STATIC", found?.reason)
         }
     }
 
@@ -83,6 +84,20 @@ class FeatureFlagTests {
             val found = result.getOrThrow().find { flag -> flag.feature.name == "with-value" }
             assertNotNull(found)
             assertEquals(756.0, found?.featureStateValue)
+            assertEquals("TARGETING_MATCH; segment=premium_users", found?.reason)
+        }
+    }
+
+    @Test
+    fun testGetFeatureFlagsWithoutReason() {
+        mockServer.mockResponseFor(MockEndpoint.GET_FLAGS)
+        runBlocking {
+            val result = flagsmith.getFeatureFlagsSync()
+            assertTrue(result.isSuccess)
+
+            val found = result.getOrThrow().find { flag -> flag.feature.name == "no-value" }
+            assertNotNull(found)
+            assertNull(found?.reason)
         }
     }
 
