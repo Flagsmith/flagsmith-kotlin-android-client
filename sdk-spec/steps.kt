@@ -8,11 +8,11 @@ import com.flagsmith.entities.Trait
 import java.util.concurrent.CompletableFuture
 
 /** A flag in the shape the spec expects. */
-data class SpecFlag(val feature: String, val enabled: Boolean, val value: Any?)
+data class SpecFlag(val feature: String, val enabled: Boolean, val value: Any?, val reason: String?)
 
 fun Map<String, Any>.asTraits() = map { (key, value) -> Trait(key = key, traitValue = value) }
 
-fun List<Flag>.asSpecFlags() = map { SpecFlag(it.feature.name, it.enabled, it.featureStateValue) }
+fun List<Flag>.asSpecFlags() = map { SpecFlag(it.feature.name, it.enabled, it.featureStateValue, it.reason) }
 
 /** Blocks until the SDK calls back with its result. */
 fun <T> await(call: ((Result<T>) -> Unit) -> Unit): T {
