@@ -2,7 +2,7 @@ package com.flagsmith.entities
 
 import com.google.gson.annotations.SerializedName
 
-data class Flag(
+data class Flag @JvmOverloads constructor(
     val feature: Feature,
     @SerializedName(value = "feature_state_value") val featureStateValue: Any?,
     val enabled: Boolean,
