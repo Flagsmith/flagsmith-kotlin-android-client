@@ -2,13 +2,15 @@ package com.flagsmith.entities
 
 import com.google.gson.annotations.SerializedName
 
-data class Flag(
+data class Flag @JvmOverloads constructor(
     val feature: Feature,
     @SerializedName(value = "feature_state_value") val featureStateValue: Any?,
     val enabled: Boolean,
     /** The key of the multivariate option served to the identity, if any. */
     val variant: String? = null,
-    val metadata: FlagMetadata? = null
+    val metadata: FlagMetadata? = null,
+    /** Why the flag evaluated to its value, e.g. `STATIC` or `TARGETING_MATCH; segment=<name>`, if Flagsmith says. */
+    val reason: String? = null
 )
 
 data class Feature(
