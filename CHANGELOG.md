@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.11.0...v1.12.0) (2026-11-23)
+
+
+### Features
+
+* Every SDK includes `reason` in responses for identity and environment flags ([#106](https://github.com/Flagsmith/flagsmith-kotlin-android-client/issues/106)) ([c786bff](https://github.com/Flagsmith/flagsmith-kotlin-android-client/commit/c786bff37a9c566917603f8c6aa50577321d0023))
+
 ## [1.11.0](https://github.com/Flagsmith/flagsmith-kotlin-android-client/compare/v1.10.0...v1.11.0) (2026-11-13)
 
 
