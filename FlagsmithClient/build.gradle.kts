@@ -71,6 +71,7 @@ android {
 }
 
 dependencies {
+    implementation("androidx.lifecycle:lifecycle-process:2.6.2")
     implementation("com.google.code.gson:gson:2.10")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 

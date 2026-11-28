@@ -16,21 +16,18 @@ class FlagsmithAnalytics constructor(
     private val applicationContext: Context = context.applicationContext
     private val currentEvents = getMap()
     private val timerHandler = Handler(Looper.getMainLooper())
+    private var sending = false
+    private var flushPending = false
+    private var closed = false
 
     private val timerRunnable = object : Runnable {
         override fun run() {
-            if (currentEvents.isNotEmpty()) {
-                retrofitService.postAnalytics(currentEvents).enqueueWithResult { result ->
-                    result.onSuccess { resetMap() }
-                        .onFailure { err ->
-                            Log.e(
-                                "FLAGSMITH",
-                                "Failed posting analytics - ${err.localizedMessage}"
-                            )
-                        }
+            flush()
+            synchronized(currentEvents) {
+                if (!closed) {
+                    timerHandler.postDelayed(this, flushPeriod.toLong() * 1000)
                 }
             }
-            timerHandler.postDelayed(this, flushPeriod.toLong() * 1000)
         }
     }
 
@@ -42,13 +39,78 @@ class FlagsmithAnalytics constructor(
         private const val EVENTS_KEY = "events"
     }
 
+    /**
+     * Starts an asynchronous send without resetting the periodic timer. While a send is in flight, the
+     * counts left after it completes are sent from its completion instead.
+     */
+    fun flush() {
+        val batch = synchronized(currentEvents) {
+            if (closed) return
+            takeBatch()
+        } ?: return
+        send(batch)
+    }
+
+    // Call holding the lock on currentEvents.
+    private fun takeBatch(): Map<String, Int?>? {
+        if (sending) {
+            flushPending = true
+            return null
+        }
+        if (currentEvents.isEmpty()) return null
+        sending = true
+        return currentEvents.toMap()
+    }
+
+    private fun send(batch: Map<String, Int?>) {
+        retrofitService.postAnalytics(batch).enqueueWithResult { result ->
+            val next = synchronized(currentEvents) {
+                result.onSuccess {
+                    // Preserve counts added while this request was in flight.
+                    batch.forEach { (flag, count) ->
+                        val total = currentEvents[flag] ?: 0
+                        val remaining = total - (count ?: 0)
+                        if (remaining > 0) currentEvents[flag] = remaining
+                        else currentEvents.remove(flag)
+                    }
+                    setMap(currentEvents)
+                }.onFailure { err ->
+                    Log.e("FLAGSMITH", "Failed posting analytics", err)
+                }
+                sending = false
+                if (flushPending) {
+                    flushPending = false
+                    takeBatch()
+                } else null
+            }
+            next?.let(::send)
+        }
+    }
+
+    /**
+     * Stops the timer and starts a final asynchronous send of the buffered counts, without waiting for it.
+     * Counts tracked afterwards are ignored.
+     */
+    fun close() {
+        val batch = synchronized(currentEvents) {
+            if (closed) return
+            closed = true
+            timerHandler.removeCallbacks(timerRunnable)
+            takeBatch()
+        } ?: return
+        send(batch)
+    }
+
     /// Counts the instances of a `Flag` being queried.
     fun trackEvent(flagName: String) {
-        val currentFlagCount = currentEvents[flagName] ?: 0
-        currentEvents[flagName] = currentFlagCount + 1
+        synchronized(currentEvents) {
+            if (closed) return
+            val currentFlagCount = currentEvents[flagName] ?: 0
+            currentEvents[flagName] = currentFlagCount + 1
 
-        // Update events cache
-        setMap(currentEvents)
+            // Update events cache
+            setMap(currentEvents)
+        }
     }
 
     private fun setMap(updateMap: Map<String, Int?>) {
@@ -82,11 +144,6 @@ class FlagsmithAnalytics constructor(
             Log.e("FLAGSMITH", "Exception in getMap Analytics - ${e.stackTraceToString()}")
         }
         return outputMap
-    }
-
-    private fun resetMap() {
-        currentEvents.clear()
-        setMap(currentEvents)
     }
 
 }

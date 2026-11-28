@@ -13,6 +13,25 @@ The SDK client for Kotlin based Android applications for [https://www.flagsmith.
 
 For full documentation visit [https://docs.flagsmith.com/clients/android](https://docs.flagsmith.com/clients/android)
 
+## Background event delivery
+
+By default, the client sends buffered flag-usage analytics when
+`ProcessLifecycleOwner` emits `ON_STOP` (the application enters the
+background). Buffered tracking/exposure events are sent then too, but only with
+`enableEvents = true`: tracking and exposure delivery needs it, and it defaults
+to `false`. Sends are asynchronous and use the existing event retry rules;
+the normal flush timers continue unchanged. Moving between Activities or
+recreating an Activity does not trigger a process background flush.
+
+Pass `flushOnBackground = false` to the `Flagsmith` constructor to opt out.
+`close()` removes the lifecycle observer, stops background work and starts a
+final send of buffered flag-usage analytics without waiting for it.
+
+This is best-effort delivery. Android delays the process stop notification;
+killing the process before that notification or before the request completes
+can still lose experiment events. This does not add event persistence or
+offline recovery.
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](https://gist.github.com/kyle-ssg/c36a03aebe492e45cbd3eefb21cb0486) for details on our code of conduct, and the process for submitting pull requests
