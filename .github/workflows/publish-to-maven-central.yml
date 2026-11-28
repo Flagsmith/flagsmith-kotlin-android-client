@@ -5,13 +5,21 @@ on:
     tags:
       - "*"
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
 
+    # Gates the only job that can read the release signing key and the Sonatype
+    # token. Protection rules (required reviewers, `v*` tag restriction) are
+    # configured on the environment itself, not here.
+    environment: maven-central
+
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Preconfigure gradle
         uses: ./.github/actions/prepare-gradle

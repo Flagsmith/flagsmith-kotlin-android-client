@@ -5,13 +5,16 @@ on:
     branches:
       - "main"
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Run Unit Tests
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: Preconfigure gradle
         uses: ./.github/actions/prepare-gradle
 
@@ -23,12 +26,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: Preconfigure gradle
         uses: ./.github/actions/prepare-gradle
 
+      # The release signing key is deliberately not available here. This job only
+      # needs to prove the publication assembles and signs, so it generates a
+      # throwaway key for the run rather than decrypting the real one into CI.
       - name: Test Build Process
-        run: ./gradlew publishToMavenLocal
-        env:
-          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
-          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          export GNUPGHOME="$(mktemp -d)"
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword="$(openssl rand -hex 16)"
+          gpg --batch --pinentry-mode loopback \
+            --passphrase "$ORG_GRADLE_PROJECT_signingInMemoryKeyPassword" \
+            --quick-gen-key 'Flagsmith CI (throwaway) <ci@flagsmith.invalid>' default default never
+          ORG_GRADLE_PROJECT_signingInMemoryKey="$(gpg --batch --pinentry-mode loopback \
+            --passphrase "$ORG_GRADLE_PROJECT_signingInMemoryKeyPassword" \
+            --armor --export-secret-keys)"
+          export ORG_GRADLE_PROJECT_signingInMemoryKey ORG_GRADLE_PROJECT_signingInMemoryKeyPassword
+          ./gradlew publishToMavenLocal

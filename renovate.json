@@ -1,15 +1,22 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "dependencyDashboard": true,
-    "gitIgnoredAuthors": ["216534828+flagsmith-engineering[bot]@users.noreply.github.com"],
+    "gitIgnoredAuthors": [
+        "216534828+flagsmith-engineering[bot]@users.noreply.github.com"
+    ],
     "semanticCommits": "enabled",
     "semanticCommitType": "deps",
     "semanticCommitScope": null,
-    "enabledManagers": ["custom.regex"],
+    "enabledManagers": [
+        "custom.regex",
+        "github-actions"
+    ],
     "customManagers": [
         {
             "customType": "regex",
-            "managerFilePatterns": ["/^\\.github/workflows/sdk-spec\\.yml$/"],
+            "managerFilePatterns": [
+                "/^\\.github/workflows/sdk-spec\\.yml$/"
+            ],
             "matchStrings": [
                 "run-spec\\.yml@(?<currentValue>v[\\d.]+)",
                 "spec-ref: (?<currentValue>v[\\d.]+)"
@@ -21,9 +28,32 @@
     ],
     "packageRules": [
         {
-            "matchPackageNames": ["Flagsmith/sdk-spec"],
+            "matchPackageNames": [
+                "Flagsmith/sdk-spec"
+            ],
             "groupName": "SDK spec",
-            "addLabels": ["sdk-spec"]
+            "addLabels": [
+                "sdk-spec"
+            ]
+        },
+        {
+            "matchManagers": [
+                "github-actions"
+            ],
+            "groupName": "GitHub Actions",
+            "addLabels": [
+                "github-actions"
+            ],
+            "pinDigests": true
+        },
+        {
+            "matchManagers": [
+                "github-actions"
+            ],
+            "matchPackageNames": [
+                "Flagsmith/sdk-spec"
+            ],
+            "enabled": false
         }
     ]
 }
