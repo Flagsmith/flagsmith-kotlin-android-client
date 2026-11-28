@@ -98,6 +98,44 @@ class Flagsmith constructor(
     /** Stream of flag updates from the SSE stream if enabled */
     val flagUpdateFlow = MutableStateFlow<List<Flag>>(listOf())
 
+    /** The constructor from before [flushOnBackground], kept for Java callers. Flushes on background. */
+    constructor(
+        environmentKey: String,
+        baseUrl: String,
+        eventSourceBaseUrl: String,
+        context: Context?,
+        enableAnalytics: Boolean,
+        enableRealtimeUpdates: Boolean,
+        analyticsFlushPeriod: Int,
+        cacheConfig: FlagsmithCacheConfig,
+        defaultFlags: List<Flag>,
+        requestTimeoutSeconds: Long,
+        readTimeoutSeconds: Long,
+        writeTimeoutSeconds: Long,
+        lastFlagFetchTime: Double,
+        enableEvents: Boolean,
+        eventsBaseUrl: String,
+        eventsFlushPeriod: Int
+    ) : this(
+        environmentKey = environmentKey,
+        baseUrl = baseUrl,
+        eventSourceBaseUrl = eventSourceBaseUrl,
+        context = context,
+        enableAnalytics = enableAnalytics,
+        enableRealtimeUpdates = enableRealtimeUpdates,
+        analyticsFlushPeriod = analyticsFlushPeriod,
+        cacheConfig = cacheConfig,
+        defaultFlags = defaultFlags,
+        requestTimeoutSeconds = requestTimeoutSeconds,
+        readTimeoutSeconds = readTimeoutSeconds,
+        writeTimeoutSeconds = writeTimeoutSeconds,
+        lastFlagFetchTime = lastFlagFetchTime,
+        enableEvents = enableEvents,
+        eventsBaseUrl = eventsBaseUrl,
+        eventsFlushPeriod = eventsFlushPeriod,
+        flushOnBackground = true
+    )
+
     init {
         if (cacheConfig.enableCache && context == null) {
             throw IllegalArgumentException("Flagsmith requires a context to use the cache feature")
