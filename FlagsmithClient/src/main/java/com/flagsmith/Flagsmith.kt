@@ -12,6 +12,7 @@ import com.flagsmith.internal.FlagsmithAnalytics
 import com.flagsmith.internal.FlagsmithEventProcessor
 import com.flagsmith.internal.FlagsmithEventService
 import com.flagsmith.internal.FlagsmithEventTimeTracker
+import com.flagsmith.internal.FlagsmithLifecycleObserver
 import com.flagsmith.internal.FlagsmithRetrofitService
 import com.flagsmith.internal.enqueueWithResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +33,8 @@ import java.util.concurrent.TimeUnit
  * @property enableEvents Send tracking and exposure events to Flagsmith, e.g. for experiments - default false
  * @property eventsBaseUrl The base URL of Flagsmith's events API
  * @property eventsFlushPeriod The period in seconds between attempts by the Flagsmith SDK to send events to the events API
+ * @property flushOnBackground Send buffered events and analytics when the
+ * application goes to the background. Enabled by default.
  * @constructor Create empty Flagsmith
  */
 class Flagsmith constructor(
@@ -50,12 +53,14 @@ class Flagsmith constructor(
     override var lastFlagFetchTime: Double = 0.0, // from FlagsmithEventTimeTracker
     private val enableEvents: Boolean = false,
     private val eventsBaseUrl: String = DEFAULT_EVENTS_BASE_URL,
-    private val eventsFlushPeriod: Int = DEFAULT_EVENTS_FLUSH_PERIOD_SECONDS
+    private val eventsFlushPeriod: Int = DEFAULT_EVENTS_FLUSH_PERIOD_SECONDS,
+    private val flushOnBackground: Boolean = true
 ) : FlagsmithEventTimeTracker {
     private lateinit var retrofit: FlagsmithRetrofitService
     private var cache: Cache? = null
     private var lastUsedIdentity: String? = null
     private var analytics: FlagsmithAnalytics? = null
+    private val lifecycleObserver: FlagsmithLifecycleObserver?
     private val eventProcessor: FlagsmithEventProcessor? =
         if (!enableEvents) null
         else FlagsmithEventProcessor(environmentKey, eventsBaseUrl, eventsFlushPeriod)
@@ -110,6 +115,14 @@ class Flagsmith constructor(
             }
             analytics = FlagsmithAnalytics(context, retrofit, analyticsFlushPeriod)
         }
+        lifecycleObserver = if (flushOnBackground &&
+            (eventProcessor != null || analytics != null)
+        ) {
+            FlagsmithLifecycleObserver(onStop = {
+                eventProcessor?.flush()
+                analytics?.flush()
+            })
+        } else null
     }
 
     companion object {
@@ -285,6 +298,8 @@ class Flagsmith constructor(
      * ignored. Call it off the main thread.
      */
     fun close(timeoutSeconds: Long = DEFAULT_CLOSE_TIMEOUT_SECONDS) {
+        lifecycleObserver?.close()
+        analytics?.close()
         eventService?.close()
         eventProcessor?.close(TimeUnit.SECONDS.toMillis(timeoutSeconds))
     }
