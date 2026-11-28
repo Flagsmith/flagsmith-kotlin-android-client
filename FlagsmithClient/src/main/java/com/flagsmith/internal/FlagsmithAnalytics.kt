@@ -50,7 +50,8 @@ class FlagsmithAnalytics constructor(
                 result.onSuccess {
                     // Preserve counts added while this request was in flight.
                     batch.forEach { (flag, count) ->
-                        val remaining = (currentEvents[flag] ?: 0) - (count ?: 0)
+                        val total = currentEvents[flag] ?: 0
+                        val remaining = total - (count ?: 0)
                         if (remaining > 0) currentEvents[flag] = remaining
                         else currentEvents.remove(flag)
                     }

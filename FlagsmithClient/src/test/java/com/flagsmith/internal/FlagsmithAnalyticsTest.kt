@@ -55,7 +55,8 @@ class FlagsmithAnalyticsTest {
             analytics.flush()
             val secondCallback = argumentCaptor<Callback<Unit>>()
             verify(secondCall).enqueue(secondCallback.capture())
-            secondCallback.firstValue.onFailure(secondCall, IOException("offline"))
+            val offline = IOException("offline")
+            secondCallback.firstValue.onFailure(secondCall, offline)
 
             // Failure retains that count for a later flush.
             val thirdCall = mock<Call<Unit>>()

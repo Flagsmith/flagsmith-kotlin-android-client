@@ -28,7 +28,10 @@ internal class FlagsmithLifecycleObserver(
         }
     }
 
-    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+    override fun onStateChanged(
+        source: LifecycleOwner,
+        event: Lifecycle.Event
+    ) {
         if (!closed && event == Lifecycle.Event.ON_STOP) onStop()
     }
 
