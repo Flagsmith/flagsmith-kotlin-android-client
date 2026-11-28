@@ -102,6 +102,50 @@ class FlagsmithAnalyticsTest {
         assertEquals(List(2) { mapOf("banner" to 1) }, batches)
     }
 
+    @Test
+    fun closeStartsASendOfTheBufferedCounts() {
+        // Given
+        val analytics = createAnalytics()
+        analytics.trackEvent("banner")
+
+        // When
+        analytics.close()
+
+        // Then
+        assertEquals(listOf(mapOf("banner" to 1)), batches)
+        verify(calls[0]).enqueue(any())
+    }
+
+    @Test
+    fun closeDuringASendSendsTheRemainingCountsWhenTheSendCompletes() {
+        // Given
+        val analytics = createAnalytics()
+        analytics.trackEvent("banner")
+        analytics.flush()
+        analytics.trackEvent("banner")
+
+        // When
+        analytics.close()
+        complete(0, succeeded = true)
+
+        // Then
+        assertEquals(List(2) { mapOf("banner" to 1) }, batches)
+    }
+
+    @Test
+    fun closeIgnoresLaterCountsAndFlushes() {
+        // Given
+        val analytics = createAnalytics()
+        analytics.close()
+
+        // When
+        analytics.trackEvent("banner")
+        analytics.flush()
+
+        // Then
+        assertEquals(emptyList<Map<String, Int?>>(), batches)
+    }
+
     private fun createAnalytics(): FlagsmithAnalytics {
         val context = mock<Context>()
         val preferences = mock<SharedPreferences>()

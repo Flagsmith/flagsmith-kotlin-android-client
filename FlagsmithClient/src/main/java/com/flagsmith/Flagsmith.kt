@@ -333,7 +333,8 @@ class Flagsmith constructor(
     /**
      * Stops the client's background work, and sends the events recorded so far, blocking until they are sent
      * or [timeoutSeconds] have passed. Events not sent by then are lost, and events recorded afterwards are
-     * ignored. Call it off the main thread.
+     * ignored. Buffered flag-usage analytics are sent too, without waiting for the request. Call it off the main
+     * thread.
      */
     fun close(timeoutSeconds: Long = DEFAULT_CLOSE_TIMEOUT_SECONDS) {
         lifecycleObserver?.close()

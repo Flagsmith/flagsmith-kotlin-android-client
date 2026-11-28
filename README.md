@@ -22,7 +22,8 @@ the normal flush timers continue unchanged. Moving between Activities or
 recreating an Activity does not trigger a process background flush.
 
 Pass `flushOnBackground = false` to the `Flagsmith` constructor to opt out.
-`close()` removes the lifecycle observer as well as stopping background work.
+`close()` removes the lifecycle observer, stops background work and starts a
+final send of buffered flag-usage analytics without waiting for it.
 
 This is best-effort delivery. Android delays the process stop notification;
 killing the process before that notification or before the request completes

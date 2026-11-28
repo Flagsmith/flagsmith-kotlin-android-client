@@ -87,11 +87,18 @@ class FlagsmithAnalytics constructor(
         }
     }
 
+    /**
+     * Stops the timer and starts a final asynchronous send of the buffered counts, without waiting for it.
+     * Counts tracked afterwards are ignored.
+     */
     fun close() {
-        synchronized(currentEvents) {
+        val batch = synchronized(currentEvents) {
+            if (closed) return
             closed = true
             timerHandler.removeCallbacks(timerRunnable)
-        }
+            takeBatch()
+        } ?: return
+        send(batch)
     }
 
     /// Counts the instances of a `Flag` being queried.
