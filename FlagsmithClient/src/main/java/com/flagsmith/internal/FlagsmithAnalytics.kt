@@ -17,6 +17,7 @@ class FlagsmithAnalytics constructor(
     private val currentEvents = getMap()
     private val timerHandler = Handler(Looper.getMainLooper())
     private var sending = false
+    private var flushPending = false
     private var closed = false
 
     private val timerRunnable = object : Runnable {
@@ -38,15 +39,32 @@ class FlagsmithAnalytics constructor(
         private const val EVENTS_KEY = "events"
     }
 
-    /** Starts an asynchronous send without resetting the periodic timer. */
+    /**
+     * Starts an asynchronous send without resetting the periodic timer. While a send is in flight, the
+     * counts left after it completes are sent from its completion instead.
+     */
     fun flush() {
         val batch = synchronized(currentEvents) {
-            if (closed || sending || currentEvents.isEmpty()) return
-            sending = true
-            currentEvents.toMap()
+            if (closed) return
+            takeBatch()
+        } ?: return
+        send(batch)
+    }
+
+    // Call holding the lock on currentEvents.
+    private fun takeBatch(): Map<String, Int?>? {
+        if (sending) {
+            flushPending = true
+            return null
         }
+        if (currentEvents.isEmpty()) return null
+        sending = true
+        return currentEvents.toMap()
+    }
+
+    private fun send(batch: Map<String, Int?>) {
         retrofitService.postAnalytics(batch).enqueueWithResult { result ->
-            synchronized(currentEvents) {
+            val next = synchronized(currentEvents) {
                 result.onSuccess {
                     // Preserve counts added while this request was in flight.
                     batch.forEach { (flag, count) ->
@@ -60,7 +78,12 @@ class FlagsmithAnalytics constructor(
                     Log.e("FLAGSMITH", "Failed posting analytics", err)
                 }
                 sending = false
+                if (flushPending) {
+                    flushPending = false
+                    takeBatch()
+                } else null
             }
+            next?.let(::send)
         }
     }
 
