@@ -18,6 +18,13 @@ jobs:
     # configured on the environment itself, not here.
     environment: maven-central
 
+    # id-token is what Sigstore keyless signing binds the artifact to: it proves
+    # the release came from this repo and this workflow, which is the closest
+    # thing available to trusted publishing on Maven Central.
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
@@ -25,7 +32,7 @@ jobs:
         uses: ./.github/actions/prepare-gradle
 
       - name: Publish to Maven Central
-        run: ./gradlew FlagsmithClient:publishAndReleaseToMavenCentral
+        run: ./gradlew FlagsmithClient:publishAndReleaseToMavenCentral -Psigstore
         env:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
