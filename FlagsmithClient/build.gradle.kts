@@ -16,6 +16,21 @@ plugins {
     id("maven-publish")
 
     id("com.vanniktech.maven.publish").version("0.29.0")
+
+    // Applied conditionally below, not here. See the `sigstore` property.
+    id("dev.sigstore.sign").version("2.4.0").apply(false)
+}
+
+// Sigstore signing is keyless: it needs an OIDC identity, which means GitHub
+// Actions in CI and an interactive browser flow anywhere else. Applying it
+// unconditionally would therefore hang local builds and the pull request
+// verification job, so it is opt-in via `-Psigstore` and the release workflow
+// is the only thing that passes it.
+//
+// This supplements PGP signing rather than replacing it; Maven Central still
+// requires the .asc files.
+if (providers.gradleProperty("sigstore").isPresent) {
+    apply(plugin = "dev.sigstore.sign")
 }
 
 val versionNumber: String by lazy {
