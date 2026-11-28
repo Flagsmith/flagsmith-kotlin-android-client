@@ -1,1 +1,7 @@
-* @Flagsmith/flagsmith-front-end
+# Default owners for this SDK. This previously pointed at the front-end team,
+# which does not own this codebase.
+*          @Flagsmith/flagsmith-engineering
+
+# CI and release configuration. A change here can publish to Maven Central under
+# com.flagsmith, so it carries narrower ownership than the SDK source.
+/.github/  @Flagsmith/flagsmith-infrastructure
